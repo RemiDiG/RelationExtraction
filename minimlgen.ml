@@ -58,7 +58,9 @@ let get_cstr (env, id_spec) id =
 
 (* References on Coq types. *)
 let bool_glb () = locate (qualid_of_string "Coq.Init.Datatypes.bool")
+(* Unused (09/03/2026)
 let get_booleq () = MLglob (locate (qualid_of_string "Coq.Bool.Bool.eqb"))
+*)
 let get_false () = MLcons (Tglob (bool_glb (), []), 
                      locate (qualid_of_string "Coq.Init.Datatypes.false"), [])
 let get_true () = MLcons (Tglob (bool_glb (), []), 

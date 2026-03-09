@@ -1,5 +1,6 @@
 # Configuration
 OCAMLC=ocamlc
+PYTHON=python3
 COQC=$(COQBIN)coqc
 INCLUDE=-I .. -R .. RelationExtraction
 
@@ -35,9 +36,9 @@ test: tester
 	./tester
 
 coq_test:
-	python test_coq_files.py "$(COQC)" $(COQ_TESTS)
+	$(PYTHON) test_coq_files.py "$(COQC)" $(COQ_TESTS)
 
 clean:
-	rm -f $(ML_TESTS) *.cmo *.cmi *.vo *.glob tester
+	rm -f $(ML_TESTS) *.cmo *.cmi *.vo *.glob *.aux tester
 
 install:

@@ -18,9 +18,8 @@ Inductive search : abr -> nat -> path -> Prop :=
 | searchinf : forall n m t1 t2 b, search t1 n b -> compare n m Inf -> search (Node t1 m t2) n (Left b)
 | searchsup : forall n m t1 t2 b, search t2 n b -> compare n m Sup -> search (Node t1 m t2) n (Right b).
 
-Extraction Relation Fixpoint Relaxed search [1 2] with compare [1 2].
+Extraction Relation Fixpoint Relaxed (search [1 2]) (compare [1 2]).
 Print compare12.
 Print search12.
 Check compare12_correct.
 Check search12_correct.
-

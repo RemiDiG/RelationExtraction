@@ -101,7 +101,7 @@ let gen_correction_proof env id =
       (Evd.from_env (Global.env())) (EConstr.of_constr cstr)
       (*~init_tac:tac_name*) in
     let lemma = make_proof (env, id) lemma prover ps in
-    Lemmas.save_lemma_proved ~lemma ~opaque:Proof_global.Transparent ~idopt:None in
+    Lemmas.save_lemma_proved ~lemma ~opaque:Declare.Transparent ~idopt:None in
 
   let _ind_scheme = (string_of_ident fixfun.fixfun_name ^ "_ind") in
 

@@ -39,7 +39,9 @@ let debug_print_tacs = false
 (****************)
 
 (* A pattern to search in the proof goal. *)
+(* Unused (09/03/2026)
 type 'a goal_finder = Id.t option -> EConstr.constr -> 'a option
+*)
 
 (* goal_iterator : 
      bool -> bool -> bool -> 'a goal_finder -> evar_map -> econstr -> int -> (int * 'a)
@@ -140,7 +142,9 @@ let pp_tac_atom ta = match ta with
     "ASSERTEQUAL " ^ h ^ ": " ^ v ^ " = " ^ pp_coq_constr_loc c
   | AUTO -> "AUTO"
 
+(* Unused (09/03/2026)
 let pp_tac_atom_list tal = concat_list (List.map pp_tac_atom tal) " ; "
+*)
 
 (* Tactics, to be applied at each step of the proof. *)
 type tac_info = {
@@ -150,21 +154,25 @@ type tac_info = {
   ti_after_prop : tac_atom list;
 }
 
+(* Unused (09/03/2026)
 let pp_tac_info ti =
   "BI: " ^ pp_tac_atom_list ti.ti_before_intros ^ "\n" ^
   "AI: " ^ pp_tac_atom_list ti.ti_after_intros ^ "\n" ^
   "NN: " ^ pp_tac_atom_list ti.ti_normal ^ "\n" ^
   "AP: " ^ pp_tac_atom_list ti.ti_after_prop ^ "\n"
+*)
 
 (* A set of tactics to be applied in order to prove a subgoal. *)
 type tacts = 
   | Prop_tacs of tac_info list * string
   | Tac_list of tac_atom list
 
+(* Unused (09/03/2026)
 let pp_tacts tacts = match tacts with
   | Prop_tacs (til, s) -> "Prop tacs (" ^ s ^ "):\n" ^
     concat_list (List.map pp_tac_info til) "\n"
   | Tac_list tal -> "List tacs:\n" ^ pp_tac_atom_list tal
+*)
 
 (* The result returned by a prover. *)
 type prover_result = {
@@ -172,9 +180,12 @@ type prover_result = {
   pres_tacts : tacts;
 }
 
+
+(* Unused (09/03/2026)
 let pp_prover_result pr =
   "Prover result:\nIntros: " ^ concat_list pr.pres_intros " " ^
   "\n" ^ pp_tacts pr.pres_tacts
+*)
 
 (* The type of a prover. *)
 type scheme_prover = {
@@ -199,10 +210,12 @@ let get_goal =
 let get_hyps_in f =
   Proofview.Goal.enter (fun goal_s -> f (EConstr.named_context (Proofview.Goal.env goal_s)))
 
+(* Unused (09/03/2026)
 let get_hyps =
   let hyps = ref ([]) in
   let tac = get_hyps_in (fun thehyps -> hyps := thehyps; Tacticals.New.tclIDTAC) in
   fun pstate -> (ignore (Pfedit.by tac pstate); !hyps)
+*)
 
 let get_evarmap_in f =
   Proofview.Goal.enter (fun goal_s -> f (Proofview.Goal.sigma goal_s))
@@ -212,9 +225,11 @@ let get_evarmap =
   let tac = get_evarmap_in (fun sigma -> evm := sigma; Tacticals.New.tclIDTAC ) in
   fun pstate -> (ignore (Pfedit.by tac pstate); !evm)
 
+(* Unused (09/03/2026)
 let pat_from_constr pstate constr =
   let evm = get_evarmap pstate in
   Patternops.pattern_of_constr (Global.env()) evm constr
+*)
 
 let get_proof_from_tac (env, id) lemma prover branch =
   let term = Lemmas.pf_fold get_goal lemma in
@@ -234,11 +249,13 @@ let constr_of_constr_loc_in cstr_loc f =
     get_hyps_in (fun hyps -> let h_cstr_opt, h_cstr = get_hyp_by_name hn hyps in
     get_evarmap_in (fun sigma -> f (hyp_finder h_cstr_opt sigma h_cstr)))
 
+(* Unused (09/03/2026)
 let constr_of_constr_loc pstate cstr_loc = match cstr_loc with
   | CoqConstr cstr -> cstr
   | LocInHyp (hn, hyp_finder) -> let h_cstr_opt, h_cstr = 
     get_hyp_by_name hn (get_hyps pstate) in
     hyp_finder h_cstr_opt (get_evarmap pstate) h_cstr
+*)
 
 let intros_until_n_wored i = Tactics.intros_until (Tactypes.AnonHyp i) (* TODO: is with red ok *)
 let symmetry_in id = Tactics.intros_symmetry (Locusops.onHyp id)
@@ -421,7 +438,9 @@ let find_fa_name = fun n _ _ -> match n with
 (* Hyp finders *)
 (***************)
 
+(* Unused (09/03/2026)
 let hyp_whole_hyp _ _ c = c
+*)
 
 let hyp_eq_right _ sigma c = match EConstr.kind sigma c with
   | App (f, [|_;_;c|]) when isEq sigma f -> c
@@ -437,30 +456,36 @@ let hyp_def c _ _ = match c with | Some c -> c | _ -> raise Not_found
 (* Provers *)
 (***********)
 
+(* Unused (09/03/2026)
 let mk_ti_bi tal = {
   ti_before_intros = tal;
   ti_after_intros = [];
   ti_normal = [];
   ti_after_prop = [];
 }
+*)
+(* Unused (09/03/2026)
 let mk_ti_ai tal = {
   ti_before_intros = [];
   ti_after_intros = tal;
   ti_normal = [];
   ti_after_prop = [];
 }
+*)
 let mk_ti_n tal = {
   ti_before_intros = [];
   ti_after_intros = [];
   ti_normal = tal;
   ti_after_prop = [];
 }
+(* Unused (09/03/2026)
 let mk_ti_ap tal = {
   ti_before_intros = [];
   ti_after_intros = [];
   ti_normal = [];
   ti_after_prop = tal;
 }
+*)
 let mk_ti_ai_n tal1 tal2 = {
   ti_before_intros = [];
   ti_after_intros = tal1;

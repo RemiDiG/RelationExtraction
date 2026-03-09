@@ -29,6 +29,8 @@ exception RelationExtractionError of string
 (* Utils *)
 (*********)
 
+exception Impossible
+
 let rec concat_list l sep = match l with
   | [] -> ""
   | [a] -> a
@@ -304,10 +306,12 @@ let rec pp_tree_node inc tn = match tn with
 
 let pp_tree tree = concat_list (List.map (pp_tree_node "") tree) "\n"
 
+(* Unused (09/03/2026)
 let get_kv nt = 
   match nt with
   TreeNode (_, _, _, kv) -> kv 
   | _ -> failwith "no kv in TreeOutput node" 
+*)
 
 (*****************)
 (* Fix functions *)
@@ -529,7 +533,7 @@ match term, ref_term with
   | (MLTVar i1, MLTVar i2) -> 
 (* TODO: verify that 2 variables are not renamed to the same variable. *)
       if (rename_var i1 mapping) = i2 then mapping else 
-      if List.mem_assoc i1 mapping then failwith "impossible"
+      if List.mem_assoc i1 mapping then raise Impossible
       else (i1, i2)::mapping
   | (MLTTuple tl1, MLTTuple tl2) | (MLTRecord (_, tl1), MLTRecord (_, tl2)) ->
     List.fold_left2 find_renaming_terms mapping tl1 tl2
@@ -538,7 +542,7 @@ match term, ref_term with
   | (MLTFun (_, tl1, _) | MLTFunNot (_, tl1, _)),
     (MLTFun (_, tl2, _) | MLTFunNot (_, tl2, _)) ->
     List.fold_left2 find_renaming_terms mapping tl1 tl2
-  | _ -> failwith "impossible"
+  | _ -> raise Impossible
 
 (* Find a variables substitution in order to make term_list and ref_term_list
    equals *)
@@ -580,7 +584,7 @@ let rename_prop mapping prop =
     prop_concl = rename_term mapping prop.prop_concl; }
 
 (* try to rename a node_type and the associated property to fit a tree node *)
-(* raises Failure "impossible" if it fails *)
+(* raises Impossible if it fails *)
 (* after renaming nt can be inserted into tn *)
 let rename_outputs_if_possible env nt tn prop = match nt, tn with
   | (NTConcl pdt, TreeNode (NTConcl refpdt, _, _, _ )) -> (*cath*)
@@ -594,10 +598,10 @@ let rename_outputs_if_possible env nt tn prop = match nt, tn with
     let mapping = find_renaming ts refts in
     (rename_nt mapping nt, rename_prop mapping prop)
   | _ -> 
-    failwith "impossible"
+    raise Impossible
 
 (* try to rename a node_type and the associated property to fit a tree node *)
-(* raises Failure "impossible" if it fails *)
+(* raises Impossible if it fails *)
 (* after renaming nt can be inserted in the tn list *)
 let rename_inputs_if_possible env nt tn prop =  match nt, tn with
   | NTConcl _, _ -> (nt, prop) (* nothing to do *)
@@ -609,10 +613,10 @@ let rename_inputs_if_possible env nt tn prop =  match nt, tn with
     let ts, refts = get_in_terms_func env t, get_in_terms_func env rt in
     let mapping = find_renaming ts refts in
 (*maybe we can't rename inputs...*)
-if List.length mapping > 0 then failwith "impossible"
+if List.length mapping > 0 then raise Impossible
 else (nt, prop)
 (*    (rename_nt mapping nt, rename_prop mapping prop) *)
-  | _ ->  failwith "impossible"
+  | _ ->  raise Impossible
 
   
 (* Determinism check between terms *)
@@ -631,11 +635,13 @@ let test_det_nt env nt1 nt2 =
   List.exists2 test_det_terms (get_out_terms env nt1) (get_out_terms env nt2)
 
 (* determinism test between nt and first nt of each tn *)
+(* Unused (09/03/2026)
 let test_det env nt tnl = List.for_all
   (fun tn -> let nt2 = (match tn with
     | TreeNode (nt, _, _, _) -> nt (*cath*)
     | TreeOutput (nt, _, _, _) -> nt (*cath*)
                         ) in test_det_nt env nt nt2) tnl
+*)
 
 (* Return true if t1 is an instance of t2, false else. *)
 let terms_ordering env nt1 nt2 =
@@ -680,15 +686,19 @@ let mca_check env kv nt = match nt with
 
 (* Check that output variables of premises are not known to avoid redefinition
    of variables *)
+(* Unused (09/03/2026)
 let mca_check_prem_output env kv nt = match nt with
     | NTConcl _ -> true
     | NTPrem _ -> List.for_all (fun v -> not(List.mem v kv)) (get_out_vars env nt)
+*)
 
 (* Mode coherency analysis for a predicate term *)
 (* Check that variables needed by the output are known *)
+(* Unused (09/03/2026)
 let mca_check_output env kv pdt = 
   let vars = get_in_vars env (NTConcl pdt) in
 included vars kv
+*)
 
 (* Get new knwon variables for the mode coherency analysis *)
 (* Add variables calculated with nt to the known variables *)
@@ -703,10 +713,12 @@ let select_one_prem prop =
   List.map (fun (p, prems) -> (p, {prop with prop_prems = prems}))
   (select_rec prop.prop_prems)
 (* Quick version, but not exhaustive ! *)
+(* Unused (09/03/2026)
 let select_one_prem_quick prop = 
   match prop.prop_prems with
     | [] -> []
     | p::ptail -> [(p, {prop with prop_prems = ptail})]
+*)
 
 (* try to rename inputs of a node type when this is necessary *)
 let rename_inputs_if_needed env nt tnl prop = match tnl with
@@ -797,7 +809,7 @@ then
         if List.for_all test_tail tnl then [tn::tnl]
         else []
   in io_rec tnl
-  with Failure "impossible" -> []
+  with Impossible -> []
 else []
 
 (* insert the last premisse of a property in a tree *)
@@ -832,7 +844,7 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
               (TreeNode (nti, nchild, an_add_prop ani prop.prop_name pm_n, kv)):: (*cath*)
                 acc_tail )
             (choose_prop_prem env id_spec prem_selector kv' rprop child)
-         with Failure "impossible" -> [])
+         with Impossible -> [])
       | (TreeOutput(nti, _, _, _) as tni)::acc_tail -> (*cath*)
         if nt_partial_ordering env id_spec nti nt then
           List.map (fun tnl -> tni::tnl) (ir_rec acc_tail)
@@ -850,7 +862,7 @@ and insert_prem_term env id_spec prem_selector pm_n kv nt prop tnl =
 then
     try let nt, prop = rename_inputs_if_needed env nt tnl prop in
       insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl
-    with Failure "impossible" -> []
+    with Impossible -> []
   else []
 
 and not_full_mode m args =
@@ -984,11 +996,13 @@ let rec lin_pat pat vars i lins = match pat with
   | _ -> (pat, vars, i, lins)
 in lin_pat pat vars i lins
 
+(* Unused (09/03/2026)
 let rec select_out_args_types types mode = match types, mode with
   | (_::tl_ty, MInput::tl_mode) -> select_out_args_types tl_ty tl_mode
   | (ty::tl_ty, MOutput::tl_mode) -> ty::(select_out_args_types tl_ty tl_mode)
   | (_::tl_ty, MSkip::tl_mode) -> select_out_args_types tl_ty tl_mode
   | _ -> []
+*)
 
 let gen_match_term env id_extr nt = match nt with
   | NTPrem (MLTFun (a, _, None), ty) -> gen_tuple env (get_in_terms env nt)

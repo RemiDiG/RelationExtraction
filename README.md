@@ -3,18 +3,10 @@
 ## Installation
 
 ### Prerequisites
-You need to have OCaml and Coq >= 8.9.
-The COQBIN (/usr/local/bin/ by default) and the COQDIR (/usr/local/lib/coq/
-by default) environment variables must be set prior to use this plugin.
-For example in a linux environment, type the following lines in a bash terminal or in the .bashrc file
-
-```
-export COQBIN=/usr/local/bin/
-export COQDIR=/usr/local/lib/coq/
-```
+You need to have OCaml and Coq >= 8.12.
 
 ### Building the plugin
-Simply type `make` in the plugin source directory. This will build the
+Simply type `./configure` then `make` in the plugin source directory. This will build the
 plugin and launch a test suite, which contains many examples.
 Be sure the version of OCaml used to compile Coq is the one used to compile the plugin.
 

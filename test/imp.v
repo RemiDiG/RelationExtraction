@@ -114,4 +114,3 @@ Extraction type.
 Extraction envt.
 Extraction get_type_var.
 Extraction Relation Single (typecheck [1 2]).
-
