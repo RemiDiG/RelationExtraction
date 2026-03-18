@@ -299,12 +299,12 @@ let rec build_premisse (env, id_spec) named_prod term =
       PMTerm (t, Some (fresh_ident "Pm_" ())), env
     | App (h, args) when isInd h -> let ind, _ = destInd h in
       build_predicate ind args
-    | App (h, args) when isRel h -> let i = destRel h in
+    | App (h, args) when isRel h ->
       let ind_ref = List.assoc id_spec env.extr_henv.ind_refs in
       let ind = Globnames.destIndRef (global ind_ref) in
-      let mib, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
+      let mib, _ = Inductive.lookup_mind_specif (Global.env ()) ind in
       let ind_binds = List.rev (Array.to_list mib.mind_packets) in
-      let i = i - List.length named_prod - 1 in
+      let i = destRel h - List.length named_prod - 1 in
       let good_oib = List.nth ind_binds i in
       let ind_gref = global (qualid_of_ident (good_oib.mind_typename)) in
       let ind = Globnames.destIndRef ind_gref in
@@ -345,6 +345,7 @@ let build_prop (env, id_spec) prop_name prop_type =
   let named_prod, concl = decompose_prod prop_type in
   let concl, env = build_concl (env, id_spec) named_prod concl in
   let named_prems = List.filter (fun (x, _) -> Context.binder_name x = Anonymous) named_prod in
+  (* TODO nécessite forme prenex, un warning ici serait adapté *)
   let prems = List.map snd named_prems in
   let prems, env = build_prems (env, id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 
