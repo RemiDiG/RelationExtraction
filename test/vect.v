@@ -66,8 +66,8 @@ Inductive naif : forall (n : nat), Prop :=
 | Ind : forall (n : nat), naif n -> naif n
 .
 
-Extraction Relation Fixpoint (naif [1] ).
-Print naif_full.
+Fail Extraction Relation Fixpoint (naif [1] ).
+(* Print naif_full. *)
 
 Inductive catbis : forall (n : nat), Vect n -> forall (m : nat), Vect m -> Vect (n) -> Prop :=
 | addnilbis : forall n (v : Vect n), catbis n v 0 nil v
@@ -75,7 +75,7 @@ Inductive catbis : forall (n : nat), Vect n -> forall (m : nat), Vect m -> Vect 
   catbis n v (S m) (cons a m u) w
 .
 
-Fail Extraction Relation Fixpoint Relaxed (catbis [1 2 3 4]).
+(* Fail Extraction Relation Fixpoint Relaxed (catbis [1 2 3 4]). *)
 
 (* et voir aussi sur la version fordisme *)
 
