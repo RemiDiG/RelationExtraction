@@ -152,8 +152,8 @@ let coq_type_explorer env cstr = match Constr.kind cstr with
     let (n, _) = decompose_prod oib.mind_user_lc.(i-1) in
     let n = List.map (typ_from_named env ind) (List.rev n) in
 (*basic imp args filter, TODO: unification with the host2spec algorithm ?*)
-    let imp = match Impargs.implicits_of_global (
-        Globnames.global_of_constr cstr) with
+    let imp = let (c, _) = Constr.destRef cstr in
+  	  match Impargs.implicits_of_global c with
       | (_,a)::_ -> a
       | _ -> [] in
     let filter = fun a -> not (Impargs.is_status_implicit a) in

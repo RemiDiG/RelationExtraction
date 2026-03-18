@@ -133,7 +133,9 @@ let rec map_filter f l = match l with
    h and args must come from a constr of the form App(h, args).
    When typs is not known, the function can be called with h args args. *)
 let filter_impargs_cstr h args typs =
-  let imp = match Impargs.implicits_of_global (Globnames.global_of_constr h) with
+  let imp =
+  	let (c, _) = Constr.destRef h in
+  	match Impargs.implicits_of_global c with
     | (_,a)::_ -> a
     | _ -> [] in
   let filter = fun a -> not (Impargs.is_status_implicit a) in
