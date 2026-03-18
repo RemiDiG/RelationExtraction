@@ -328,7 +328,7 @@ and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
     let tl, pltl = normalize_pltl 
       [t] (List.map (fun (p, t, an) -> [p], t, an) ptl) in
     compile_fix_match c (env, id_fun) binded_vars tl pltl
-  | MLTALin _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Not implanted yet")
+  | MLTALin _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Not implemented yet")
   | MLTATrue -> FixTrue, ty
   | MLTAFalse -> FixFalse, ty
   | MLTANone -> FixNone, ty
@@ -337,7 +337,7 @@ and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
     if is_full_extraction (List.hd (extr_get_modes env id_fun)) then 
       fake_type env FixFalse
     else fake_type env FixNone
-  | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Not implanted yet")
+  | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Not implemented yet")
 
 
 (* Transform added pattern constrs (the ones with an A) to basic pattern
