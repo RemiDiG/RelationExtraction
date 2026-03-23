@@ -122,7 +122,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
         mkLambda (Context.nameR (Id.of_string (string_of_ident i)), ty, t)
       ) il tyl (gen_constr (env,id) fn nbind t)  
     ) iltl cstrs_arg_types) in
-    mkCase (case_inf, ty, (gen_constr (env,id) fn bind t), ta)
+    mkCase (case_inf, ty, NoInvert, (gen_constr (env,id) fn bind t), ta)
   | FixCase _ -> CErrors.anomaly ~label:"RelationExtraction"
     (str "Missing type information in pattern matching")
   | FixSome (t,(ty,Some cty)) ->
@@ -174,7 +174,7 @@ let gen_fixpoint env =
     let f = mkFix (fi,recdec) in
     let univs = Entries.Monomorphic_entry (Univ.ContextSet.empty) in (* ?? *)
     let name = Id.of_string (string_of_ident fn) in
-    let scope = Declare.(Global ImportDefaultBehavior) in
+    let scope = Locality.(Global ImportDefaultBehavior) in
     let kind = Decls.(IsDefinition Fixpoint) in
     let entry = Declare.definition_entry ~opaque:false ~types:ty ~univs f in
     let uctx = Evd.evar_universe_context (Evd.from_env (Global.env())) in (* ?? *)

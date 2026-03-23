@@ -203,7 +203,7 @@ let get_goal =
   let goal = ref (EConstr.mkRel 1) in
   let tac = Proofview.Goal.enter ( fun goal_s ->
     goal := Proofview.Goal.concl goal_s; Tacticals.New.tclIDTAC) in
-  fun pstate -> (ignore (Pfedit.by tac pstate); !goal)
+  fun pstate -> (ignore (Declare.Proof.by tac pstate); !goal)
 
 (* return type : named_declaration list = 
                    (identifier * constr option * types) list *)
@@ -214,7 +214,7 @@ let get_hyps_in f =
 let get_hyps =
   let hyps = ref ([]) in
   let tac = get_hyps_in (fun thehyps -> hyps := thehyps; Tacticals.New.tclIDTAC) in
-  fun pstate -> (ignore (Pfedit.by tac pstate); !hyps)
+  fun pstate -> (ignore (Declare.Proof.by tac pstate); !hyps)
 *)
 
 let get_evarmap_in f =
@@ -223,7 +223,7 @@ let get_evarmap_in f =
 let get_evarmap =
   let evm = ref (Evd.empty) in
   let tac = get_evarmap_in (fun sigma -> evm := sigma; Tacticals.New.tclIDTAC ) in
-  fun pstate -> (ignore (Pfedit.by tac pstate); !evm)
+  fun pstate -> (ignore (Declare.Proof.by tac pstate); !evm)
 
 (* Unused (09/03/2026)
 let pat_from_constr pstate constr =
@@ -231,9 +231,11 @@ let pat_from_constr pstate constr =
   Patternops.pattern_of_constr (Global.env()) evm constr
 *)
 
+let pf_fold f (pf : Declare.Proof.t) = f pf (* TODO Remove this function? *)
+
 let get_proof_from_tac (env, id) lemma prover branch =
-  let term = Lemmas.pf_fold get_goal lemma in
-  let sigma = Lemmas.pf_fold get_evarmap lemma in
+  let term = pf_fold get_goal lemma in
+  let sigma = pf_fold get_evarmap lemma in
   prover (env, id) branch sigma term
 
 let rec get_hyp_by_name hn hyps = match hyps with
@@ -261,7 +263,7 @@ let intros_until_n_wored i = Tactics.intros_until (Tactypes.AnonHyp i) (* TODO: 
 let symmetry_in id = Tactics.intros_symmetry (Locusops.onHyp id)
 let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by cstr_pat cstr (Locusops.onHyp hid) None
 
-let print_subgoals = Lemmas.pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals ~proof:(Proof_global.get_proof lemma)))
+let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals ~proof:(Declare.Proof.get lemma)))
 
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
@@ -372,7 +374,8 @@ let make_proof (env, id) lemma prover ps =
         begin Printf.printf "\n\n%s\n\n" (pp_tac_atom t); 
         print_subgoals lemma end
       else () end;
-      let (lemma,_) = Lemmas.by (build_tac_atom t) lemma in apply_tacs lemma (Tac_list tl)
+      let lemma = let proof, _ = Declare.Proof.by (build_tac_atom t) lemma in proof in
+      apply_tacs lemma (Tac_list tl)
     | Tac_list [] -> lemma in
   let lemma = apply_tacs lemma intro in
   let lemma = List.fold_left (fun lemma branch ->

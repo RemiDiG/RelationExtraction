@@ -81,7 +81,7 @@ let build_correct_lemma env id fixfun =
   ) in_names in_types cstr in
   cstr, in_names, out_name
 
-let gen_correction_proof env id =
+let gen_correction_proof env id : unit =
   let (fixfun, ps) = extr_get_fixfun env id in
   let mode = List.hd (extr_get_modes env id) in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
@@ -94,14 +94,13 @@ let gen_correction_proof env id =
   let cstr, in_names, out_name = build_correct_lemma env id fixfun in
 
   (* Proof registering *)
-  let proof_register pstate prover ps =
-    let lemma = Lemmas.start_lemma
-      ~name:(Id.of_string (string_of_ident fixfun.fixfun_name ^ "_correct"))
-      ~poly:false
-      (Evd.from_env (Global.env())) (EConstr.of_constr cstr)
-      (*~init_tac:tac_name*) in
+  let proof_register pstate prover ps : unit =
+    let info = Declare.Info.make () in
+    let cinfo = Declare.CInfo.make ~name:(Id.of_string (string_of_ident fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
+    let lemma = Declare.Proof.start ~cinfo ~info (Evd.from_env (Global.env())) in
     let lemma = make_proof (env, id) lemma prover ps in
-    Lemmas.save_lemma_proved ~lemma ~opaque:Declare.Transparent ~idopt:None in
+    let (_ : _ list) = Declare.Proof.save_regular ~proof:lemma ~opaque:Vernacexpr.Transparent ~idopt:None in
+    () in
 
   let _ind_scheme = (string_of_ident fixfun.fixfun_name ^ "_ind") in
 
