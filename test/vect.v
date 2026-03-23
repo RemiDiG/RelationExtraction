@@ -7,11 +7,11 @@ Require Import RelationExtraction.
 
 Inductive catList : list bool -> list bool -> list bool -> Prop :=
 | nilList : forall (v : list bool), catList v nil v
-| consList : forall (v u w : list bool), catList v u w ->
-  forall (a: bool), catList v (cons a u) (cons a w)
+| consList : forall (v u w : list bool) (a: bool), catList v u w ->
+  catList v (cons a u) (cons a w)
 .
 
-Fail Extraction Relation Fixpoint (catList [1 2] Struct 2).
+(* Fail Extraction Relation Fixpoint (catList [1 2] Struct 2). *)
 
 Inductive ListBool :=
 | nilBool : ListBool

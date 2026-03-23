@@ -12,8 +12,10 @@ Extraction Relation Single (add [1 2 3]).
 Extraction Relation Single Relaxed (add [3 2]).
 
 Extraction Relation Fixpoint (add [1 2] Struct 2).
-(*Eval  compute in (add12 (Succ (Succ Zero)) (Succ Zero)).
-Eval compute in (add12 (Succ Zero) (Succ (Succ Zero))).*)
+(*
+Eval compute in (add12 (Succ (Succ Zero)) (Succ Zero)).
+Eval compute in (add12 (Succ Zero) (Succ (Succ Zero))).
+*)
 
 Extraction Relation Fixpoint Relaxed (add [2 3]). (* no proof*)
 (*
