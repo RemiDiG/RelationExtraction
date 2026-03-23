@@ -35,11 +35,11 @@ let build_ind_scheme fun_name =
   let ref_func = 
     qualid_of_ident (Id.of_string fun_name) in
   let make_fscheme () =
-    Recdef_plugin.Gen_principle.build_scheme
+    Funind_plugin.Gen_principle.build_scheme
       [Id.of_string (fun_name ^ "_ind"), ref_func,
        Sorts.InProp] in
-  try make_fscheme () with Recdef_plugin.Gen_principle.No_graph_found ->
-    let () = Recdef_plugin.Gen_principle.make_graph (Nametab.global ref_func) in
+  try make_fscheme () with Funind_plugin.Gen_principle.No_graph_found ->
+    let () = Funind_plugin.Gen_principle.make_graph (Nametab.global ref_func) in
     make_fscheme ()
 
 

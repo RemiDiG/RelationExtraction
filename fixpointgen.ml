@@ -111,7 +111,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
         | _ -> assert false (* Need to reduce? *) )
       | Ind (ind, _)  ->
         let _,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        ind, oib
+        ind, oib (* TODO oib in this FixCase seems to serve no purpose *)
       | _ -> assert false in
     let case_inf = Inductiveops.make_case_info (Global.env()) ind Sorts.Relevant MatchStyle in
     let cstrs_arg_types = find_args_types sty in
@@ -122,7 +122,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
         mkLambda (Context.nameR (Id.of_string (string_of_ident i)), ty, t)
       ) il tyl (gen_constr (env,id) fn nbind t)  
     ) iltl cstrs_arg_types) in
-    mkCase (case_inf, ty, NoInvert, (gen_constr (env,id) fn bind t), ta)
+    mkCase (Inductive.contract_case (Global.env ()) (case_inf, ty, NoInvert, (gen_constr (env,id) fn bind t), ta))
   | FixCase _ -> CErrors.anomaly ~label:"RelationExtraction"
     (str "Missing type information in pattern matching")
   | FixSome (t,(ty,Some cty)) ->
@@ -186,7 +186,7 @@ let gen_fixpoint env =
   let cst,_ = destConst cstr in
   let cst_body = Global.lookup_constant cst in
   let _ = match cst_body.Declarations.const_body with
-  | Def cs -> ignore (Mod_subst.force_constr cs)
+  | Def cs -> ignore (cs) (* TODO ??? if works, no need for this match *)
   | _ -> () (* ?? *) in
 
   (* Proofs generation *)
