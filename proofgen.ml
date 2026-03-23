@@ -91,7 +91,7 @@ let gen_correction_proof env id : unit =
   let pstate = build_ind_scheme (string_of_ident fixfun.fixfun_name) in
   
   (* Lemma building *)
-  let cstr, in_names, out_name = build_correct_lemma env id fixfun in
+  let cstr, _, _ = build_correct_lemma env id fixfun in
 
   (* Proof registering *)
   let proof_register pstate prover ps : unit =
@@ -102,7 +102,9 @@ let gen_correction_proof env id : unit =
     let (_ : _ list) = Declare.Proof.save_regular ~proof:lemma ~opaque:Vernacexpr.Transparent ~idopt:None in
     () in
 
+  (* Unused (23/03/2026)
   let _ind_scheme = (string_of_ident fixfun.fixfun_name ^ "_ind") in
+  *)
 
   if (not compl) && (not full) then
     proof_register pstate simple_pc ps
