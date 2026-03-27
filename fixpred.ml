@@ -31,8 +31,6 @@ open Names
 open Declarations
 open Util
 open Pp
-open Nametab
-open Libnames
 
 exception RelExtNoFixTuple
 exception RelExtImcompleteFunction

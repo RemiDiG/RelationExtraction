@@ -31,7 +31,6 @@ open Constr
 open Names
 open Declarations
 open Libnames
-open Nametab
 open Util
 open Pp
 

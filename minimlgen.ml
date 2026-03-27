@@ -107,7 +107,7 @@ let rec gen_pat (env, id_spec) bind nbind (p,_) = match p with
       ((Pcons (glb, pats)), nbind)
   | MLPConst id -> (* we have to linearise *)
       (*let glb = UnivGen.global_of_constr (get_cstr (env, id_spec) id) in*)
-      CErrors.user_err ~hdr:"RelationExtraction" (str "TODO - constants in patterns")
+      CErrors.user_err (str "[RelationExtraction] TODO - constants in patterns")
   | MLPVar id -> let rel, nbind = rel_from_id id bind nbind in
       (Prel rel, nbind)
   | MLPWild -> (Pwild, nbind)
