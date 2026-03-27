@@ -39,6 +39,6 @@ coq_test:
 	$(PYTHON) test_coq_files.py "$(COQC)" $(COQ_TESTS)
 
 clean:
-	rm -f $(ML_TESTS) *.cmo *.cmi *.vo *.glob *.aux tester
+	rm -f $(ML_TESTS) *.cmo *.cmi *.vo *.vos *.vok *.glob *.aux tester
 
 install:
