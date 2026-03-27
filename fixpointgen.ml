@@ -100,15 +100,11 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
   | FixFunNot _ -> 
     CErrors.anomaly ~label:"RelationExtraction" (str "Not: Not yet implemented.")
   | FixCase ((_, (_, Some sty)) as t, _, iltl) -> 
-    let ind, oib = match Constr.kind sty with
+    let ind = match Constr.kind sty with
       | App (c,_) -> (match Constr.kind c with
-        | Ind (ind, _) ->
-          let _,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-          ind, oib
+        | Ind (ind, _) -> ind
         | _ -> assert false (* Need to reduce? *) )
-      | Ind (ind, _)  ->
-        let _,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        ind, oib (* TODO oib in this FixCase seems to serve no purpose *)
+      | Ind (ind, _)  -> ind
       | _ -> assert false in
     let case_inf = Inductiveops.make_case_info (Global.env()) ind Sorts.Relevant MatchStyle in
     let cstrs_arg_types = find_args_types sty in
