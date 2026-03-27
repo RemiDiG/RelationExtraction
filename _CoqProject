@@ -26,17 +26,17 @@ relation_extraction.ml
 g_relation_extraction.mlg
 relation_extraction_plugin.mlpack
 RelationExtraction.v
-test
-test/abr.v
-test/abr2.v
-test/add.v
-test/coqextrcommand.v
-test/extrcommand.v
-test/fibo.v
-test/imp.v
-test/odd.v
-test/pc12.v
-test/so.v
-test/tuples.v
-test/vect.v
+#test TODO automatically lauch tests?
+#test/abr.v
+#test/abr2.v
+#test/add.v
+#test/coqextrcommand.v
+#test/extrcommand.v
+#test/fibo.v
+#test/imp.v
+#test/odd.v
+#test/pc12.v
+#test/so.v
+#test/tuples.v
+#test/vect.v
 

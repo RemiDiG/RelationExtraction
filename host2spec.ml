@@ -273,8 +273,7 @@ let rec build_premisse (env, id_spec) named_prod term =
         | [t, ty] -> ty
         | [] ->
           (CTSum [ident_of_string "true";ident_of_string "false"], 
-            Some (UnivGen.constr_of_monomorphic_global
-              (locate (qualid_of_string "Coq.Init.Datatypes.bool"))))
+            Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
         | _ -> unknown_type env in
       (PMTerm ((prem_term, prem_term_type), Some (fresh_ident "Pm_" ())))::pred_terms, env
     ) modes ([], env) in

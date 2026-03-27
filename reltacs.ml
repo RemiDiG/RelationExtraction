@@ -202,7 +202,7 @@ type scheme_prover = {
 let get_goal =
   let goal = ref (EConstr.mkRel 1) in
   let tac = Proofview.Goal.enter ( fun goal_s ->
-    goal := Proofview.Goal.concl goal_s; Tacticals.New.tclIDTAC) in
+    goal := Proofview.Goal.concl goal_s; Tacticals.tclIDTAC) in
   fun pstate -> (ignore (Declare.Proof.by tac pstate); !goal)
 
 (* return type : named_declaration list = 
@@ -213,7 +213,7 @@ let get_hyps_in f =
 (* Unused (09/03/2026)
 let get_hyps =
   let hyps = ref ([]) in
-  let tac = get_hyps_in (fun thehyps -> hyps := thehyps; Tacticals.New.tclIDTAC) in
+  let tac = get_hyps_in (fun thehyps -> hyps := thehyps; Tacticals.tclIDTAC) in
   fun pstate -> (ignore (Declare.Proof.by tac pstate); !hyps)
 *)
 
@@ -222,7 +222,7 @@ let get_evarmap_in f =
 
 let get_evarmap =
   let evm = ref (Evd.empty) in
-  let tac = get_evarmap_in (fun sigma -> evm := sigma; Tacticals.New.tclIDTAC ) in
+  let tac = get_evarmap_in (fun sigma -> evm := sigma; Tacticals.tclIDTAC ) in
   fun pstate -> (ignore (Declare.Proof.by tac pstate); !evm)
 
 (* Unused (09/03/2026)
@@ -310,14 +310,14 @@ let rec build_tac_atom ta = match ta with
   | APPLYPROP str -> let cstr = find_coq_constr_s str in 
     if debug_print_tacs then Printf.eprintf "apply %s; try assumption.\n" str
     else ();
-    Tacticals.New.tclTHEN (Tactics.apply (EConstr.of_constr cstr))
-      (Tacticals.New.tclTRY Tactics.assumption)
+    Tacticals.tclTHEN (Tactics.apply (EConstr.of_constr cstr))
+      (Tacticals.tclTRY Tactics.assumption)
   | APPLYPROPIN (str, h) -> let cstr = find_coq_constr_s str in
     if debug_print_tacs then 
       Printf.eprintf "apply %s in %s; try assumption.\n" str h
     else ();
-    Tacticals.New.tclTHEN (Tactics.apply_in true false (Id.of_string h) [None,CAst.make (EConstr.of_constr cstr,Tactypes.NoBindings)] None)
-      (Tacticals.New.tclTRY Tactics.assumption)
+    Tacticals.tclTHEN (Tactics.apply_in true false (Id.of_string h) [None,CAst.make (EConstr.of_constr cstr,Tactypes.NoBindings)] None)
+      (Tacticals.tclTRY Tactics.assumption)
   | APPLYIND str -> let ind_scheme = str ^ "_ind" in
     build_tac_atom (APPLY ind_scheme)
   | CHANGEC (h, cstr_pat, cloc) ->
@@ -329,7 +329,7 @@ let rec build_tac_atom ta = match ta with
     let tac = Equality.replace cstr_pat cstr in
     let t = List.fold_right (fun hid tac -> 
       if orig_hyp_id = hid then tac else
-        Tacticals.New.tclTHEN (replace_in hid cstr_pat cstr) tac
+        Tacticals.tclTHEN (replace_in hid cstr_pat cstr) tac
     ) hyps_ids tac in
     let s = "replace (" ^ (pp_coq_constr cstr_pat) ^ ") with (" ^
           (pp_coq_constr cstr) ^ ") in *" in

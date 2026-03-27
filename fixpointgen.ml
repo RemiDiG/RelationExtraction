@@ -74,14 +74,12 @@ let _extract_type_from_option ctyp = match Constr.kind ctyp with
 let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
   | FixVar i -> mkRel (Minimlgen.get_rel i bind)
   | FixConstr (i, [t,(ty,Some cty)]) when string_of_ident i = "Some" -> 
-    let some = UnivGen.constr_of_monomorphic_global
-      (locate (qualid_of_string "Coq.Init.Datatypes.Some")) in
+    let some = find_coq_constr_s "Coq.Init.Datatypes.Some" in
     let args = Array.of_list 
       [cty ; (gen_constr (env, id) fn bind (t,(ty,Some cty)))] in
     mkApp (some, args)
   | FixConstr (i, []) when string_of_ident i = "None" -> 
-    let none = UnivGen.constr_of_monomorphic_global
-      (locate (qualid_of_string "Coq.Init.Datatypes.None")) in
+    let none = find_coq_constr_s "Coq.Init.Datatypes.None" in
     let args = Array.of_list 
       [(* debug TODO: not always out_type ?*) get_out_type false (env, id)] in
     mkApp (none, args)
@@ -97,7 +95,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
         (qualid_of_ident (Id.of_string (string_of_ident i))) in
       if Global.is_polymorphic gr then CErrors.user_err (str "Polymorphic references not supported.");
       (* to support polymorphic constant, one would need to pass an evar_map *)
-      UnivGen.constr_of_monomorphic_global gr in
+      UnivGen.constr_of_monomorphic_global (Global.env ()) gr in
     let args = Array.of_list (List.map (gen_constr (env,id) fn bind) tl) in
     mkApp (c, args)
   | FixFunNot _ -> 
@@ -127,19 +125,15 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
     (str "Missing type information in pattern matching")
   | FixSome (t,(ty,Some cty)) ->
     (* TODO: "option" may become polymorphic at some time *)
-    let some = UnivGen.constr_of_monomorphic_global
-    (locate (qualid_of_string "Coq.Init.Datatypes.Some")) in
+    let some = find_coq_constr_s "Coq.Init.Datatypes.Some" in
     let args = Array.of_list 
                [cty ; (gen_constr (env,id) fn bind (t,(ty,Some cty)))] in
     mkApp (some, args)
-  | FixNone -> let non = UnivGen.constr_of_monomorphic_global
+  | FixNone -> let non = find_coq_constr_s "Coq.Init.Datatypes.None" in
     (* TODO: "option" may become polymorphic at some time *)
-    (locate (qualid_of_string "Coq.Init.Datatypes.None")) in
     mkApp (non, [|get_out_type false (env,id)|])
-  | FixTrue -> UnivGen.constr_of_monomorphic_global
-    (locate (qualid_of_string "Coq.Init.Datatypes.true"))
-  | FixFalse -> UnivGen.constr_of_monomorphic_global
-    (locate (qualid_of_string "Coq.Init.Datatypes.false"))
+  | FixTrue -> find_coq_constr_s "Coq.Init.Datatypes.true"
+  | FixFalse -> find_coq_constr_s "Coq.Init.Datatypes.false"
   | FixLetin (i, (l,(ty, Some sty)), t, _) ->
     mkLetIn (Context.nameR (Id.of_string (string_of_ident i)),
       (gen_constr (env,id) fn bind (l,(ty, Some sty))), sty,
@@ -172,17 +166,17 @@ let gen_fixpoint env =
       | StructRec i -> ([|i-1|], 0)
       | _ -> ([|0|], 0) in
     let f = mkFix (fi,recdec) in
-    let univs = Entries.Monomorphic_entry (Univ.ContextSet.empty) in (* ?? *)
+    (*let univs = Entries.Monomorphic_entry in (* ?? *)*)
     let name = Id.of_string (string_of_ident fn) in
     let scope = Locality.(Global ImportDefaultBehavior) in
     let kind = Decls.(IsDefinition Fixpoint) in
-    let entry = Declare.definition_entry ~opaque:false ~types:ty ~univs f in
+    let entry = Declare.definition_entry ~opaque:false ~types:ty (*~univs*) f in
     let uctx = Evd.evar_universe_context (Evd.from_env (Global.env())) in (* ?? *)
     Declare.declare_entry ~name ~scope ~kind ~impargs:[] ~uctx entry
   ) env.extr_fixfuns in 
   let glb = List.hd glbs in
   if Global.is_polymorphic glb then CErrors.user_err (str "Polymorphic references not supported.");
-  let cstr = UnivGen.constr_of_monomorphic_global glb in
+  let cstr = UnivGen.constr_of_monomorphic_global (Global.env ()) glb in
   let cst,_ = destConst cstr in
   let cst_body = Global.lookup_constant cst in
   let _ = match cst_body.Declarations.const_body with

@@ -36,10 +36,13 @@ type henv = {
   cstrs : (ident * Constr.constr) list;
 }
 
+let find_coq_constr_s (s : string) =
+  UnivGen.constr_of_monomorphic_global (Global.env ()) (locate (qualid_of_string s))
+
 let coq_get_fake_type () = None
 
 let coq_get_bool_type () = (["true"; "false"], 
-  Some (UnivGen.constr_of_monomorphic_global (locate (qualid_of_string "Coq.Init.Datatypes.bool"))))
+  Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
 
 let coq_functions = {
   h_get_fake_type = coq_get_fake_type;
@@ -69,7 +72,7 @@ let rec gen_param_args nb =
   else (gen_param_args (nb-1))@[nb]
 
 let adapt_mode ind_ref mode = 
-  let ind,_ = Constr.destInd (UnivGen.constr_of_monomorphic_global (Nametab.global ind_ref)) in
+  let ind,_ = Constr.destInd (UnivGen.constr_of_monomorphic_global (Global.env ()) (Nametab.global ind_ref)) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
   let parameters = oib.Declarations.mind_arity_ctxt in
   let fil = List.filter (get_name %> Names.Name.is_name) parameters in
@@ -90,7 +93,7 @@ let get_user_arity = function
   | _ -> CErrors.user_err (Pp.str "Cannot deal with polymorphic inductive arity")
 
 let make_mode ind_glb user_mode =
-  let ind, _ = Constr.destInd (UnivGen.constr_of_monomorphic_global ind_glb) in
+  let ind, _ = Constr.destInd (UnivGen.constr_of_monomorphic_global (Global.env ()) ind_glb) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
   let typ = get_user_arity oib.Declarations.mind_arity in
   let (args_real, _) = Term.decompose_prod typ in
@@ -139,8 +142,7 @@ let get_in_types (env, id) =
     | FixCount ->
       (* When a function is extracted with a counter, we have to add
          an argument (at first position) of type nat. *)
-      let coq_nat = Some (UnivGen.constr_of_monomorphic_global
-          (locate (qualid_of_string "Coq.Init.Datatypes.nat"))) in
+      let coq_nat = Some (find_coq_constr_s "Coq.Init.Datatypes.nat") in
       let nat_typ = CTSum [ident_of_string "O"; ident_of_string "S"], coq_nat in
       MInput::mode, nat_typ::args_types
     | _ -> mode, args_types in
@@ -157,17 +159,12 @@ let get_out_type opt (env, id) =
   let mode = List.hd (extr_get_modes env id) in
   let args_types = (extr_get_spec env id).spec_args_types in
   match get_out_rec args_types mode with
-    | [] -> UnivGen.constr_of_monomorphic_global
-              (locate (qualid_of_string "Coq.Init.Datatypes.bool"))
+    | [] -> find_coq_constr_s "Coq.Init.Datatypes.bool"
     | (_ , Some t)::_ -> if opt && comp then
-      let opt = UnivGen.constr_of_monomorphic_global
-              (locate (qualid_of_string "Coq.Init.Datatypes.option")) in
+      let opt = find_coq_constr_s "Coq.Init.Datatypes.option" in
       Constr.mkApp (opt, [|t|])
       else t
     | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Missing type information")
-
-let find_coq_constr_s s = 
-  UnivGen.constr_of_monomorphic_global (locate (qualid_of_string s))
 
 let find_coq_constr_i i = 
   find_coq_constr_s (string_of_ident i)

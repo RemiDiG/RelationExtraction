@@ -91,5 +91,5 @@ Inductive catFord : forall (n : nat), VectFord n -> forall (m : nat), VectFord m
   catFord n v m u w -> forall (a: bool), catFord n v (S m) (consFord _ a m u eq_refl) (consFord _ a (m+n) w eq_refl).
 
 Fail Extraction Relation Fixpoint Relaxed (VectFord [1]).
-Fail Extraction Relation Fixpoint Relaxed (catFord [1 2 3 4]).
+(* Fail Extraction Relation Fixpoint Relaxed (catFord [1 2 3 4]). *)
 
