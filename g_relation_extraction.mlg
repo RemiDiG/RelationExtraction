@@ -20,6 +20,8 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+DECLARE PLUGIN "RelationExtraction.relation_extraction"
+
 {
 
 open Relation_extraction
