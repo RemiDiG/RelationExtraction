@@ -1,2 +1,2 @@
 #!/bin/sh
-coq_makefile -f _CoqProject -o Makefile
+coq_makefile -f _CoqProject -o Makefile -generate-meta-for-package relation_extraction

@@ -263,7 +263,7 @@ let intros_until_n_wored i = Tactics.intros_until (Tactypes.AnonHyp i) (* TODO: 
 let symmetry_in id = Tactics.intros_symmetry (Locusops.onHyp id)
 let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by cstr_pat cstr (Locusops.onHyp hid) None
 
-let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals ~proof:(Declare.Proof.get lemma)))
+let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma)))
 
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
