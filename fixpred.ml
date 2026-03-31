@@ -129,7 +129,7 @@ let typ_from_named env ind (_,c) = match Constr.kind c with
     CTSum (List.map (fun cstr_id  -> 
       (ident_of_string (Id.to_string cstr_id))
     ) (Array.to_list idc.mind_consnames)), Some c (* c is the type of idc *)
-  | Rel _ -> let ty = mkInd ind in
+  | Rel _ -> let ty = mkIndU (to_puniverses ind) in
     let _,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     CTSum (List.map (fun cstr_id  -> 
       (ident_of_string (Id.to_string cstr_id))

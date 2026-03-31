@@ -84,7 +84,7 @@ let find_types_of_constr constr = match Constr.kind constr with
         CTSum (List.map (fun cstr_id  -> 
           (ident_of_string (Id.to_string cstr_id))
         ) (Array.to_list oib.mind_consnames)), Some c
-      | Rel _ -> let ty = mkInd ind in
+      | Rel _ -> let ty = mkIndU (to_puniverses ind) in
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
         CTSum (List.map (fun cstr_id  -> 
           (ident_of_string (Id.to_string cstr_id))
@@ -106,7 +106,7 @@ let find_types_of_ind ind =
         CTSum (List.map (fun cstr_id  -> 
           (ident_of_string (Id.to_string cstr_id))
         ) (Array.to_list oib.mind_consnames)), Some c
-      | Rel _ -> let ty = mkInd ind in
+      | Rel _ -> let ty = mkIndU (to_puniverses ind) in
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
         CTSum (List.map (fun cstr_id  -> 
           (ident_of_string (Id.to_string cstr_id))
@@ -178,7 +178,7 @@ match Constr.kind term with
     let constr = List.nth it_constrs (i-1) in
     (* Add all the constructors to env. *)
     let env, _ = List.fold_left (fun (env, i) constr ->
-      let construct = mkConstruct (ind, i) in
+      let construct = mkConstructU (to_puniverses (ind, i)) in
       (add_cstr_to_env env constr construct, i+1)
     ) (env, 1) it_constrs in
 (*    let env = add_cstr_to_env env constr term in*)

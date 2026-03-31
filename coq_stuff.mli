@@ -69,3 +69,7 @@ val find_coq_constr_s : string -> Constr.constr
 (* Prints a Coq constr. *)
 val pp_coq_constr : EConstr.constr -> string
 
+
+(* Add the empty universe, turning a type into a puniverse *)
+val to_puniverses : 'a -> 'a UVars.puniverses
+

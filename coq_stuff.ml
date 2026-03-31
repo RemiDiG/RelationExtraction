@@ -173,3 +173,6 @@ let get_out_type opt (env, id) =
 let find_coq_constr_i i = 
   find_coq_constr_s (string_of_ident i)
 
+let to_puniverses x =
+	(x, UVars.Instance.empty) (* TODO should the universe always be empty? *)
+

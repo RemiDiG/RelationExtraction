@@ -48,7 +48,7 @@ let mk_dummy_cst (env, id_spec) id =
   let mod_path = Extraction_plugin.Table.modpath_of_r (glob_to_global pred_glb) in
   let lbl = Obj.magic (string_of_ident id) in
   (* Dummy universes... *)
-  Constr.mkConst (Constant.make2 mod_path lbl)
+  Constr.mkConstU (to_puniverses (Constant.make2 mod_path lbl))
 
 let mk_dummy_glb (env, id_spec) id =
   Constr.destRef (mk_dummy_cst (env, id_spec) id)
