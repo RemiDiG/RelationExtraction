@@ -39,10 +39,13 @@ let get_indgref env id =
 let generic_eq_bool () =
   Coqlib.lib_ref "plugins.relation_extraction.generic_eq_bool"
 
+let glob_to_global glb =
+  { glob = glb; inst = InfvInst.empty } (* TODO should it really be InfvIbst.empty everywhere? *)
+
 (* Makes a dummy Coq global_reference. *)
 let mk_dummy_cst (env, id_spec) id =
   let pred_glb = get_indgref env id_spec in
-  let mod_path = Extraction_plugin.Table.modpath_of_r pred_glb in
+  let mod_path = Extraction_plugin.Table.modpath_of_r (glob_to_global pred_glb) in
   let lbl = Obj.magic (string_of_ident id) in
   (* Dummy universes... *)
   Constr.mkConst (Constant.make2 mod_path lbl)
@@ -61,14 +64,14 @@ let bool_glb () = locate (qualid_of_string "Corelib.Init.Datatypes.bool")
 (* Unused (09/03/2026)
 let get_booleq () = MLglob (locate (qualid_of_string "Coq.Bool.Bool.eqb"))
 *)
-let get_false () = MLcons (Tglob (bool_glb (), []), 
-                     locate (qualid_of_string "Corelib.Init.Datatypes.false"), [])
-let get_true () = MLcons (Tglob (bool_glb (), []), 
-                     locate (qualid_of_string "Corelib.Init.Datatypes.true"), [])
+let get_false () = MLcons (Tglob (glob_to_global (bool_glb ()), []),
+                     glob_to_global (locate (qualid_of_string "Corelib.Init.Datatypes.false")), [])
+let get_true () = MLcons (Tglob (glob_to_global (bool_glb ()), []), 
+                     glob_to_global (locate (qualid_of_string "Corelib.Init.Datatypes.true")), [])
 let get_pfalse () =
-  Pcons (locate (qualid_of_string "Corelib.Init.Datatypes.false"), [])
+  Pcons (glob_to_global (locate (qualid_of_string "Corelib.Init.Datatypes.false")), [])
 let get_ptrue () =
-  Pcons (locate (qualid_of_string "Corelib.Init.Datatypes.true"), [])
+  Pcons (glob_to_global (locate (qualid_of_string "Corelib.Init.Datatypes.true")), [])
 
 (* Gets an MiniML id from a ident. *)
 let ml_id_of_ident id = Id (Id.of_string (string_of_ident id))
@@ -104,7 +107,7 @@ let rec gen_pat (env, id_spec) bind nbind (p,_) = match p with
         let (pat, nbind) = gen_pat (env, id_spec) bind nbind p in
         (pats@[pat], nbind))
       ([], nbind) pl in
-      ((Pcons (glb, pats)), nbind)
+      ((Pcons (glob_to_global glb, pats)), nbind)
   | MLPConst id -> (* we have to linearise *)
       (*let glb = UnivGen.global_of_constr (get_cstr (env, id_spec) id) in*)
       CErrors.user_err (str "[RelationExtraction] TODO - constants in patterns")
@@ -122,6 +125,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
   | MLTConstr (id, tl) -> 
     let cstr = get_cstr (env, id_spec) id in
     let ref,_ = Constr.destRef cstr in
+    let ref = glob_to_global ref in
     MLcons (Tglob (ref, []), ref,
       List.map (gen_term (env, id_spec) default bind) tl)
   | MLTConst id -> let s = string_of_ident id in
@@ -132,14 +136,14 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
         let cstr = get_cstr (env, id_spec) id in
         Constr.destRef cstr
     in 
-    MLglob ref
+    MLglob (glob_to_global ref)
   | MLTFun (i, tl, _) | MLTFunNot (i, tl, _) -> (* TODO: the *not* case *)
     let glb = 
       if string_of_ident i = "eq_full" then
         generic_eq_bool ()
       else
         fst (Constr.destRef (get_cstr (env, id_spec) i)) in
-    MLapp (MLglob glb, List.map (gen_term (env, id_spec) default bind) tl)
+    MLapp (MLglob (glob_to_global glb), List.map (gen_term (env, id_spec) default bind) tl)
   | MLTATrue -> get_true ()
   | MLTAFalse -> get_false ()
   | MLTMatch (t, _, ptl) ->
@@ -154,11 +158,11 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
       | _ -> assert false
     ) cl in
     let cl' = List.map (fun (c1, c2) -> 
-      MLapp (MLglob (generic_eq_bool ()),
+      MLapp (MLglob (glob_to_global (generic_eq_bool ())),
         [MLrel (get_rel c1 bind); MLrel (get_rel c2 bind)])) cli in
     List.fold_left
-      (fun t c -> MLapp (MLglob (fst (mk_dummy_glb (env, id_spec)
-        (ident_of_string "(&&)"))), [t; c]))
+      (fun t c -> MLapp (MLglob (glob_to_global (fst (mk_dummy_glb (env, id_spec)
+        (ident_of_string "(&&)")))), [t; c]))
       (List.hd cl') (List.tl cl')
   | MLTADefault -> default
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Unknown term in MiniML")
@@ -167,9 +171,9 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
 (* Gets the type of a constr. *)
 let rec type_of_constr c =
   match Constr.kind c with
-  | Const _ | Ind _ | Construct _ | Var _ -> Tglob (fst (Constr.destRef c), [])
+  | Const _ | Ind _ | Construct _ | Var _ -> Tglob (glob_to_global (fst (Constr.destRef c)), [])
   | App (h, a) ->
-    Tglob (fst (Constr.destRef h), List.map type_of_constr (Array.to_list a))
+    Tglob (glob_to_global (fst (Constr.destRef h)), List.map type_of_constr (Array.to_list a))
   | Rel i -> Tvar i
   | _ -> assert false
 
@@ -177,7 +181,7 @@ let rec type_of_constr c =
 let rec type_of_concl mode prod = match mode, prod with
   | (MInput|MSkip)::modet, _::prodt -> type_of_concl modet prodt
   | MOutput::_, (_,c)::_ -> type_of_constr c
-  | _ -> Tglob (bool_glb (), [])
+  | _ -> Tglob (glob_to_global (bool_glb ()), [])
 
 (* Gets the type of a function. *)
 let rec gen_type mode prod concl = match mode, prod with
@@ -258,11 +262,12 @@ let gen_miniml env =
   let mlfuncs = List.map (gen_miniml_func env) funs in
   let glbs, mlas, mlts = list_split3 mlfuncs in
   let mld =
-    Dfix (Array.of_list glbs, Array.of_list mlas, Array.of_list mlts) in
+    Dfix (Array.of_list (List.map glob_to_global glbs), Array.of_list mlas, Array.of_list mlts) in
   let fn = string_of_ident (fst (List.hd funs)) in
   let id = fst (List.hd funs) in
   let glb = get_indgref env id in
   let lbl = Label.make fn in
-  let mpt = Extraction_plugin.Table.modpath_of_r glb in
+  let mpt = Extraction_plugin.Table.modpath_of_r (glob_to_global glb) in
   let mls = [mpt, [lbl, SEdecl mld]] in 
-  Feedback.msg_info (print_one_decl mls mpt mld)
+  Feedback.msg_info (print_one_decl (Extraction_plugin.Common.State.make ~modular:false ~library:false ~keywords:Names.Id.Set.empty ()) mls mpt mld) (* TODO modular library and keywords??? *)
+  

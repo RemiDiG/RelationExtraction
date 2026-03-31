@@ -89,14 +89,17 @@ let rec list_mem_option x l = match l with
 
 
 (* Gets the type of one inductive body *)
+(*
 let get_user_arity = function
   | Declarations.RegularArity m -> m.Declarations.mind_user_arity
   | _ -> CErrors.user_err (Pp.str "Cannot deal with polymorphic inductive arity")
+  *)
+  (* TODO same as Host2spec.get_prod_type_from_oib? *)
 
 let make_mode ind_glb user_mode =
   let ind, _ = Constr.destInd (UnivGen.constr_of_monomorphic_global (Global.env ()) ind_glb) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-  let typ = get_user_arity oib.Declarations.mind_arity in
+  let typ = oib.Declarations.mind_user_arity in
   let (args_real, _) = Term.decompose_prod typ in
   let args_nb = List.length args_real in
 
