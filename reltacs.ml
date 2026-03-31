@@ -286,7 +286,7 @@ let rec build_tac_atom ta = match ta with
     if debug_print_tacs && List.length strl > 0 then 
       Printf.eprintf "revert %s.\n" (concat_list strl " ")
     else ();
-    Tactics.revert (List.map Id.of_string strl)
+    Generalize.revert (List.map Id.of_string strl)
   | SYMMETRY str -> 
     if debug_print_tacs then Printf.eprintf "symmetry in %s.\n" str
     else ();

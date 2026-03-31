@@ -106,7 +106,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
         | _ -> assert false (* Need to reduce? *) )
       | Ind (ind, _)  -> ind
       | _ -> assert false in
-    let case_inf = Inductiveops.make_case_info (Global.env()) ind Sorts.Relevant MatchStyle in
+    let case_inf = Inductiveops.make_case_info (Global.env()) ind MatchStyle in
     let cstrs_arg_types = find_args_types sty in
     let ty = mkLambda (Context.anonR, sty, (get_out_type true (env,id))) in
     let ta = Array.of_list (List.map2 (fun (il, t, _) tyl ->
@@ -115,7 +115,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
         mkLambda (Context.nameR (Id.of_string (string_of_ident i)), ty, t)
       ) il tyl (gen_constr (env,id) fn nbind t)  
     ) iltl cstrs_arg_types) in
-    mkCase (Inductive.contract_case (Global.env ()) (case_inf, ty, NoInvert, (gen_constr (env,id) fn bind t), ta))
+    mkCase (Inductive.contract_case (Global.env ()) (case_inf, (ty, Sorts.Relevant), NoInvert, (gen_constr (env,id) fn bind t), ta))
   | FixCase _ -> CErrors.anomaly ~label:"RelationExtraction"
     (str "Missing type information in pattern matching")
   | FixSome (t,(ty,Some cty)) ->
