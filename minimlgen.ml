@@ -37,7 +37,7 @@ let get_indgref env id =
   try List.assoc id env.extr_henv.ind_grefs with _ -> failwith "get_indgref"
 
 let generic_eq_bool () =
-  Coqlib.lib_ref "plugins.relation_extraction.generic_eq_bool"
+  Rocqlib.lib_ref "plugins.relation_extraction.generic_eq_bool"
 
 let glob_to_global glb =
   { glob = glb; inst = InfvInst.empty } (* TODO should it really be InfvIbst.empty everywhere? *)

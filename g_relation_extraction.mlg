@@ -25,8 +25,8 @@ DECLARE PLUGIN "relation_extraction.plugin"
 {
 
 open Relation_extraction
-open Pcoq.Prim
-open Pcoq.Constr
+open Procq.Prim
+open Procq.Constr
 
 }
 

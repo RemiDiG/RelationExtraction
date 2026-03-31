@@ -166,7 +166,7 @@ let gen_fixpoint env =
     let scope = Locality.(Global ImportDefaultBehavior) in
     let kind = Decls.(IsDefinition Fixpoint) in
     let entry = Declare.definition_entry ~opaque:false ~types:ty (*~univs*) f in
-    let uctx = Evd.evar_universe_context (Evd.from_env (Global.env())) in (* ?? *)
+    let uctx = Evd.ustate (Evd.from_env (Global.env())) in (* ?? *)
     Declare.declare_entry ~name ~scope ~kind ~impargs:[] ~uctx entry
   ) env.extr_fixfuns in 
   let glb = List.hd glbs in
