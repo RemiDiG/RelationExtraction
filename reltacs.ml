@@ -261,7 +261,7 @@ let constr_of_constr_loc pstate cstr_loc = match cstr_loc with
 
 let intros_until_n_wored i = Tactics.intros_until (Tactypes.AnonHyp i) (* TODO: is with red ok *)
 let symmetry_in id = Tactics.intros_symmetry (Locusops.onHyp id)
-let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by cstr_pat cstr (Locusops.onHyp hid) None
+let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by None cstr_pat cstr (Locusops.onHyp hid) None
 
 let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma)))
 

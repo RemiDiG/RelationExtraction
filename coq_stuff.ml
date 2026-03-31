@@ -63,7 +63,8 @@ let extract_dependencies henv =
   (*let refl = (Libnames.Qualid 
     (Util.dummy_loc, Libnames.qualid_of_string "Coq.Init.Datatypes.bool"))::
     refl in *)
-  Extraction_plugin.Extract_env.full_extraction None refl
+  let access : Global.indirect_accessor = Library.indirect_accessor in (* TODO not sure what access should be, this is the only generator I found *)
+  Extraction_plugin.Extract_env.full_extraction ~opaque_access:access None refl
 
 
 (* Generates mode arguments for nb parameters. *)
