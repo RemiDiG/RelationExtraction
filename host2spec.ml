@@ -66,7 +66,7 @@ let find_it_constrs constr =
 let get_prod_type_from_oib oib =
   match oib.mind_arity with
       | RegularArity a -> a.mind_user_arity
-      | _ -> CErrors.user_err (str "[RelationExtraction] Non monomorphic arity") (* TODO to use instead of anomaly? *)
+      | _ -> CErrors.user_err (str "[RelationExtraction] Non monomorphic arity")
 
 (* TODO: make compatibility with mutual inductives (see the <Rel _> case) *)
 (* Finds type of a constructor. For each argument of this constructor:
@@ -273,7 +273,7 @@ let rec build_premisse (env, id_spec) named_prod term =
         | [t, ty] -> ty
         | [] ->
           (CTSum [ident_of_string "true";ident_of_string "false"], 
-            Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
+            Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
         | _ -> unknown_type env in
       (PMTerm ((prem_term, prem_term_type), Some (fresh_ident "Pm_" ())))::pred_terms, env
     ) modes ([], env) in

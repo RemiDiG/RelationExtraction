@@ -35,8 +35,8 @@ open Fixpointgen
 (* Predicate extraction *)
 (************************)
 
-(* TODO: order specifications (by dependency) befrore doing a fixpoint 
-         extratction. *)
+(* TODO: order specifications (by dependency) before doing a fixpoint 
+         extraction. *)
 
 let ident_of_string_option s_opt = match s_opt with
   | None -> None

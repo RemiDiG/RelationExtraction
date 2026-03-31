@@ -73,12 +73,12 @@ let _extract_type_from_option ctyp = match Constr.kind ctyp with
 let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
   | FixVar i -> mkRel (Minimlgen.get_rel i bind)
   | FixConstr (i, [t,(ty,Some cty)]) when string_of_ident i = "Some" -> 
-    let some = find_coq_constr_s "Coq.Init.Datatypes.Some" in
+    let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
     let args = Array.of_list 
       [cty ; (gen_constr (env, id) fn bind (t,(ty,Some cty)))] in
     mkApp (some, args)
   | FixConstr (i, []) when string_of_ident i = "None" -> 
-    let none = find_coq_constr_s "Coq.Init.Datatypes.None" in
+    let none = find_coq_constr_s "Corelib.Init.Datatypes.None" in
     let args = Array.of_list 
       [(* debug TODO: not always out_type ?*) get_out_type false (env, id)] in
     mkApp (none, args)
@@ -120,15 +120,15 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
     (str "Missing type information in pattern matching")
   | FixSome (t,(ty,Some cty)) ->
     (* TODO: "option" may become polymorphic at some time *)
-    let some = find_coq_constr_s "Coq.Init.Datatypes.Some" in
+    let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
     let args = Array.of_list 
                [cty ; (gen_constr (env,id) fn bind (t,(ty,Some cty)))] in
     mkApp (some, args)
-  | FixNone -> let non = find_coq_constr_s "Coq.Init.Datatypes.None" in
+  | FixNone -> let non = find_coq_constr_s "Corelib.Init.Datatypes.None" in
     (* TODO: "option" may become polymorphic at some time *)
     mkApp (non, [|get_out_type false (env,id)|])
-  | FixTrue -> find_coq_constr_s "Coq.Init.Datatypes.true"
-  | FixFalse -> find_coq_constr_s "Coq.Init.Datatypes.false"
+  | FixTrue -> find_coq_constr_s "Corelib.Init.Datatypes.true"
+  | FixFalse -> find_coq_constr_s "Corelib.Init.Datatypes.false"
   | FixLetin (i, (l,(ty, Some sty)), t, _) ->
     mkLetIn (Context.nameR (Id.of_string (string_of_ident i)),
       (gen_constr (env,id) fn bind (l,(ty, Some sty))), sty,

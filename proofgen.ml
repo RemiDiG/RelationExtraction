@@ -53,8 +53,8 @@ let build_correct_lemma env id fixfun =
   let mode = List.hd (extr_get_modes env id) in
   let full = is_full_extraction mode in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
-  let tru = find_coq_constr_s "Coq.Init.Datatypes.true" in
-  let some = find_coq_constr_s "Coq.Init.Datatypes.Some" in
+  let tru = find_coq_constr_s "Corelib.Init.Datatypes.true" in
+  let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
   
   (* rels for the prem definition *)
   let in_start = if full then 1 else 2 in
@@ -69,7 +69,7 @@ let build_correct_lemma env id fixfun =
     (i+1, (mkRel i)::rels) ) in_names (in_start', []) in
   let out_term' = if full then [] else [mkRel 2] in
 
-  let eq = find_coq_constr_s "Coq.Init.Logic.eq" in
+  let eq = find_coq_constr_s "Corelib.Init.Logic.eq" in
   let pred = find_coq_constr_i spec.spec_name in
   let prem = 
     mkApp (eq, [|out_type; mkApp (func, Array.of_list in_rels); out_term|]) in

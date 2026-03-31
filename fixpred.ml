@@ -346,10 +346,10 @@ let rec transform_pat_constrs (lpat, ty) = match lpat with
   | MLPConstr (i, pl) -> MLPConstr (i, transform_pat_constrs_list pl), ty
   | MLPATrue -> MLPConstr (ident_of_string "true", []), 
     (CTSum [ident_of_string "true";ident_of_string "false"], 
-     Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
+     Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLPAFalse -> MLPConstr (ident_of_string "false", []), 
     (CTSum [ident_of_string "true";ident_of_string "false"], 
-      Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
+      Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLPASome p -> 
     MLPConstr (ident_of_string "Some", [transform_pat_constrs p]), ty
   | MLPANone -> MLPConstr (ident_of_string "None", []), ty
@@ -369,10 +369,10 @@ let rec transform_constrs (lterm, ty) = match lterm with
       transform_pat_constrs p, transform_constrs t, an) ptl), ty
   | MLTATrue -> MLTConstr (ident_of_string "true", []), 
     (CTSum [ident_of_string "true";ident_of_string "false"], 
-      Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
+      Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLTAFalse -> MLTConstr (ident_of_string "false", []), 
     (CTSum [ident_of_string "true";ident_of_string "false"], 
-      Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
+      Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLTASome t -> MLTConstr (ident_of_string "Some", [transform_constrs t]), ty
   | MLTANone -> MLTConstr (ident_of_string "None", []), ty
   | _ -> lterm, ty
@@ -381,10 +381,10 @@ and transform_constrs_list lterm_list =
 
 (* We must add this constructors: true, false, Some, None *)
 let add_standard_constr_to_spec env = 
-  let true_cstr = find_coq_constr_s "Coq.Init.Datatypes.true"
-  and false_cstr = find_coq_constr_s "Coq.Init.Datatypes.false"
-  and some_cstr = find_coq_constr_s "Coq.Init.Datatypes.Some"
-  and none_cstr = find_coq_constr_s "Coq.Init.Datatypes.None"
+  let true_cstr = find_coq_constr_s "Corelib.Init.Datatypes.true"
+  and false_cstr = find_coq_constr_s "Corelib.Init.Datatypes.false"
+  and some_cstr = find_coq_constr_s "Corelib.Init.Datatypes.Some"
+  and none_cstr = find_coq_constr_s "Corelib.Init.Datatypes.None"
   in 
 let henv = { env.extr_henv with cstrs =
     (ident_of_string "true", true_cstr)::(ident_of_string "false", false_cstr)::
@@ -398,7 +398,7 @@ let complete_fun_with_option env f =
     | MLTVar _ | MLTTuple _ | MLTRecord _ | MLTConstr _ | MLTConst _ | MLTFun _ 
     | MLTFunNot _ | MLTATrue | MLTAFalse | MLTASome _ | MLTANone -> 
       if fix_get_completion_status env f.mlfun_name then
-        let opt = find_coq_constr_s "Coq.Init.Datatypes.option" in
+        let opt = find_coq_constr_s "Corelib.Init.Datatypes.option" in
         match ty with
         | _, Some ctyp ->
           let ctyp = Some (mkApp (opt, [|ctyp|])) in
@@ -410,7 +410,7 @@ let complete_fun_with_option env f =
     | MLTMatch ((MLTFun(i,args,m), (_,Some ctyp)), an, ptl) 
     when fix_get_completion_status env i -> 
 
-     let opt = find_coq_constr_s "Coq.Init.Datatypes.option" in
+     let opt = find_coq_constr_s "Corelib.Init.Datatypes.option" in
      let ctyp = Some (mkApp (opt, [|ctyp|])) in
      let typ = (CTSum [ident_of_string "Some";ident_of_string "None"], ctyp) in
      MLTMatch ((MLTFun(i,args,m), typ), an,
@@ -425,9 +425,9 @@ let complete_fun_with_option env f =
 
 (* Generates a Coq natural number. *)
 let rec _gen_coq_nat n = if n = 0 then
-    find_coq_constr_s "Coq.Init.Datatypes.O"
+    find_coq_constr_s "Corelib.Init.Datatypes.O"
   else
-    let s = find_coq_constr_s "Coq.Init.Datatypes.S" in
+    let s = find_coq_constr_s "Corelib.Init.Datatypes.S" in
     mkApp (s, [|_gen_coq_nat (n-1)|])
 
 (* Add a counter for FixCount recursion style in an ml function. *)
@@ -436,7 +436,7 @@ let rec _gen_coq_nat n = if n = 0 then
 let add_ml_counter env f = 
   let fname = f.mlfun_name in
   let (mlt, typ) = f.mlfun_body in
-  let coq_nat = Some (find_coq_constr_s "Coq.Init.Datatypes.nat") in
+  let coq_nat = Some (find_coq_constr_s "Corelib.Init.Datatypes.nat") in
   let nat_typ = CTSum [ident_of_string "O"; ident_of_string "S"], coq_nat in
   let fcount = MLTVar (ident_of_string "fcounter"), nat_typ in
   let fcount_pat = MLPVar (ident_of_string "fcounter"), nat_typ in

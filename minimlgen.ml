@@ -57,18 +57,18 @@ let get_cstr (env, id_spec) id =
 
 
 (* References on Coq types. *)
-let bool_glb () = locate (qualid_of_string "Coq.Init.Datatypes.bool")
+let bool_glb () = locate (qualid_of_string "Corelib.Init.Datatypes.bool")
 (* Unused (09/03/2026)
 let get_booleq () = MLglob (locate (qualid_of_string "Coq.Bool.Bool.eqb"))
 *)
 let get_false () = MLcons (Tglob (bool_glb (), []), 
-                     locate (qualid_of_string "Coq.Init.Datatypes.false"), [])
+                     locate (qualid_of_string "Corelib.Init.Datatypes.false"), [])
 let get_true () = MLcons (Tglob (bool_glb (), []), 
-                     locate (qualid_of_string "Coq.Init.Datatypes.true"), [])
+                     locate (qualid_of_string "Corelib.Init.Datatypes.true"), [])
 let get_pfalse () =
-  Pcons (locate (qualid_of_string "Coq.Init.Datatypes.false"), [])
+  Pcons (locate (qualid_of_string "Corelib.Init.Datatypes.false"), [])
 let get_ptrue () =
-  Pcons (locate (qualid_of_string "Coq.Init.Datatypes.true"), [])
+  Pcons (locate (qualid_of_string "Corelib.Init.Datatypes.true"), [])
 
 (* Gets an MiniML id from a ident. *)
 let ml_id_of_ident id = Id (Id.of_string (string_of_ident id))
@@ -198,10 +198,10 @@ let miniml_init =
 (*    let _ = Library.require_library 
         [(Util.dummy_loc, qualid_of_string "Coq.Bool.Bool")] (Some false) in *)
 (*    let _ = Extract_env.simple_extraction (Qualid 
-        (Util.dummy_loc, qualid_of_string "Coq.Init.Datatypes.bool")) in*)
+        (Util.dummy_loc, qualid_of_string "Corelib.Init.Datatypes.bool")) in*)
 (*      let _ = Printf.printf "(* Required by relation extraction. *)\n%s\n\n"
         "let ocaml_beq = fun x y -> if x = y then True else False" in*)
-      let bool_ref = qualid_of_string "Coq.Init.Datatypes.bool" in
+      let bool_ref = qualid_of_string "Corelib.Init.Datatypes.bool" in
       let _ = Extraction_plugin.Table.extract_inductive bool_ref "bool" ["true"; "false"] None in
       init_done := true;
       ()

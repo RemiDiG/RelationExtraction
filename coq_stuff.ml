@@ -42,7 +42,7 @@ let find_coq_constr_s (s : string) =
 let coq_get_fake_type () = None
 
 let coq_get_bool_type () = (["true"; "false"], 
-  Some (find_coq_constr_s "Coq.Init.Datatypes.bool"))
+  Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
 
 let coq_functions = {
   h_get_fake_type = coq_get_fake_type;
@@ -61,7 +61,7 @@ let extract_dependencies henv =
   ) henv.cstrs in
   (* Not required anymore (Coq bool is mapped to OCaml bool) *)
   (*let refl = (Libnames.Qualid 
-    (Util.dummy_loc, Libnames.qualid_of_string "Coq.Init.Datatypes.bool"))::
+    (Util.dummy_loc, Libnames.qualid_of_string "Corelib.Init.Datatypes.bool"))::
     refl in *)
   let access : Global.indirect_accessor = Library.indirect_accessor in (* TODO not sure what access should be, this is the only generator I found *)
   Extraction_plugin.Extract_env.full_extraction ~opaque_access:access None refl
@@ -85,7 +85,7 @@ let adapt_mode ind_ref mode =
 let rec list_mem_option x l = match l with
   | Some (a::tl) -> x = a || list_mem_option x (Some tl)
   | Some [] -> false
-  | _ -> true
+  | _ -> true (* TODO [31/03/2026] x is present in None?! *)
 
 
 (* Gets the type of one inductive body *)
@@ -143,7 +143,7 @@ let get_in_types (env, id) =
     | FixCount ->
       (* When a function is extracted with a counter, we have to add
          an argument (at first position) of type nat. *)
-      let coq_nat = Some (find_coq_constr_s "Coq.Init.Datatypes.nat") in
+      let coq_nat = Some (find_coq_constr_s "Corelib.Init.Datatypes.nat") in
       let nat_typ = CTSum [ident_of_string "O"; ident_of_string "S"], coq_nat in
       MInput::mode, nat_typ::args_types
     | _ -> mode, args_types in
@@ -160,14 +160,13 @@ let get_out_type opt (env, id) =
   let mode = List.hd (extr_get_modes env id) in
   let args_types = (extr_get_spec env id).spec_args_types in
   match get_out_rec args_types mode with
-    | [] -> find_coq_constr_s "Coq.Init.Datatypes.bool"
+    | [] -> find_coq_constr_s "Corelib.Init.Datatypes.bool"
     | (_ , Some t)::_ -> if opt && comp then
-      let opt = find_coq_constr_s "Coq.Init.Datatypes.option" in
+      let opt = find_coq_constr_s "Corelib.Init.Datatypes.option" in
       Constr.mkApp (opt, [|t|])
       else t
     | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Missing type information")
 
 let find_coq_constr_i i = 
   find_coq_constr_s (string_of_ident i)
-
 
