@@ -48,22 +48,22 @@ VERNAC ARGUMENT EXTEND modewithrec
 END
 
 
-VERNAC COMMAND EXTEND ExtractionRelation CLASSIFIED AS SIDEFF
+VERNAC COMMAND EXTEND ExtractionRelation CLASSIFIED AS QUERY STATE opaque_access
 | [ "Extraction" "Relation" mode_list(modes) ] ->
   { relation_extraction modes }
 END
 
-VERNAC COMMAND EXTEND ExtractionRelationRelaxed CLASSIFIED AS SIDEFF
+VERNAC COMMAND EXTEND ExtractionRelationRelaxed CLASSIFIED AS QUERY STATE opaque_access
 | [ "Extraction" "Relation" "Relaxed" mode_list(modes) ] ->
   { relation_extraction_order modes }
 END
 
-VERNAC COMMAND EXTEND ExtractionRelationSingle CLASSIFIED AS SIDEFF
+VERNAC COMMAND EXTEND ExtractionRelationSingle CLASSIFIED AS QUERY STATE opaque_access
 | [ "Extraction" "Relation" "Single" mode_list(modes) ] ->
   { relation_extraction_single modes }
 END
 
-VERNAC COMMAND EXTEND ExtractionRelationSingleRelaxed CLASSIFIED AS SIDEFF
+VERNAC COMMAND EXTEND ExtractionRelationSingleRelaxed CLASSIFIED AS QUERY STATE opaque_access
 | [ "Extraction" "Relation" "Single" "Relaxed" mode_list(modes) ] ->
   { relation_extraction_single_order modes }
 END

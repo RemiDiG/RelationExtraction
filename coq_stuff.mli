@@ -37,7 +37,7 @@ type henv = {
 val coq_functions : (htyp, henv) host_functions
 
 (* Extraction of dependencies *)
-val extract_dependencies : henv -> unit
+val extract_dependencies : opaque_access:Global.indirect_accessor -> henv -> unit
 
 (*********)
 (* Utils *)

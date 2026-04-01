@@ -51,7 +51,7 @@ let coq_functions = {
 
 
 (* Extraction of dependencies *)
-let extract_dependencies henv =
+let extract_dependencies ~opaque_access henv =
   (* We need a list of references; Extraction missing an entry point with GlobRef.t ?? *)
   let refl = List.map (fun (_, c) -> 
     match Constr.kind c with
@@ -63,8 +63,7 @@ let extract_dependencies henv =
   (*let refl = (Libnames.Qualid 
     (Util.dummy_loc, Libnames.qualid_of_string "Corelib.Init.Datatypes.bool"))::
     refl in *)
-  let access : Global.indirect_accessor = Library.indirect_accessor in (* TODO not sure what access should be, this is the only generator I found *)
-  Extraction_plugin.Extract_env.full_extraction ~opaque_access:access None refl
+  Extraction_plugin.Extract_env.full_extraction ~opaque_access:opaque_access None refl
 
 
 (* Generates mode arguments for nb parameters. *)

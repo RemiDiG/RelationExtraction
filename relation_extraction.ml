@@ -109,29 +109,29 @@ let extract_relation_common dep ord ind_ref modes =
   (* Printf.eprintf "%s\n" *)
   env
 
-let extract_relation_miniml dep ord ind_ref modes =
+let extract_relation_miniml ~opaque_access dep ord ind_ref modes =
   let env = extract_relation_common dep ord ind_ref modes in
   (* Before generating the MiniML code, we first extract all the dependences *)
-  let _ = if dep then extract_dependencies env.extr_henv else () in
+  let _ = if dep then extract_dependencies ~opaque_access:opaque_access env.extr_henv else () in
 
   Minimlgen.gen_miniml env
 
 
-let relation_extraction_single modes =
+let relation_extraction_single ~opaque_access modes =
   let (_, ind_ref, _, _) = List.hd modes in
-  extract_relation_miniml false false [ind_ref] modes
+  extract_relation_miniml ~opaque_access:opaque_access false false [ind_ref] modes
 
-let relation_extraction_single_order modes =
+let relation_extraction_single_order ~opaque_access modes =
   let (_, ind_ref, _, _) = List.hd modes in
-  extract_relation_miniml false true [ind_ref] modes
+  extract_relation_miniml ~opaque_access:opaque_access false true [ind_ref] modes
 
-let relation_extraction modes =
+let relation_extraction ~opaque_access modes =
   let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  extract_relation_miniml true false ind_refs modes
+  extract_relation_miniml ~opaque_access:opaque_access true false ind_refs modes
 
-let relation_extraction_order modes =
+let relation_extraction_order ~opaque_access modes =
   let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  extract_relation_miniml true true ind_refs modes
+  extract_relation_miniml ~opaque_access:opaque_access true true ind_refs modes
 
 let relation_extraction_fixpoint modes =
   let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
