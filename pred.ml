@@ -409,7 +409,7 @@ let rec fix_assoc fix_env id = match fix_env with
 
 let rec fix_set fix_env id v = match fix_env with
   | [] -> raise Not_found
-  | ((i1, i2), v')::tail when i1 = id || i2 = id -> ((i1, i2), v)::tail
+  | ((i1, i2), _)::tail when i1 = id || i2 = id -> ((i1, i2), v)::tail
   | x::tail -> x::(fix_set tail id v)
 
 let fix_get_completion_status env id =
@@ -965,7 +965,7 @@ let rec gen_term_pat (t, ty) = match t with
 let gen_tuple env terms_list = match terms_list with
   | [t] -> t
   | _ -> fake_type env (MLTTuple terms_list)
-let gen_tuple_pat env terms_list orig_nt = match terms_list with
+let gen_tuple_pat env terms_list = match terms_list with
   | [t] -> gen_term_pat t
   | _ -> fake_type env (MLPTuple (List.map gen_term_pat terms_list))
 
@@ -1004,8 +1004,8 @@ let rec select_out_args_types types mode = match types, mode with
   | _ -> []
 *)
 
-let gen_match_term env id_extr nt = match nt with
-  | NTPrem (MLTFun (a, _, None), ty) -> gen_tuple env (get_in_terms env nt)
+let gen_match_term env nt = match nt with
+  | NTPrem (MLTFun (_, _, None), _) -> gen_tuple env (get_in_terms env nt)
   | NTConcl (MLTFun (pn, _, Some m), ty) 
   | NTPrem (MLTFun (pn, _, Some m), ty) ->
     let in_terms = get_in_terms env nt in
@@ -1034,7 +1034,7 @@ let gen_match_term env id_extr nt = match nt with
 let gen_pat_term env nt_kv next_term an =
 let (nt, kv) = nt_kv in  (*cath*)
   let (pat, _, _, lins) = 
-       lin_pat_new (gen_tuple_pat env (get_out_terms env nt) nt) [] 1 kv [] in (*cath*)
+       lin_pat_new (gen_tuple_pat env (get_out_terms env nt)) [] 1 kv [] in (*cath*)
   if List.length lins > 0 then
     (pat, fake_type env (MLTMatch (fake_type env (MLTALin lins), an, 
       [(fake_type env MLPATrue, next_term, an);
@@ -1051,7 +1051,7 @@ let rec gen_pat env id_extr tn = match tn with
 
 and gen_match env id_extr tree = match List.hd tree with
   | TreeNode (nt, _, _, _) | TreeOutput (nt, _, _, _) -> (*cath*)
-    let mt = gen_match_term env id_extr nt in
+    let mt = gen_match_term env nt in
     let an = flatmap
       (function | TreeNode (_, _, an, _) | TreeOutput (_, _, an, _) -> an) tree in (*cath*)
     fake_type env (MLTMatch (mt, an, 

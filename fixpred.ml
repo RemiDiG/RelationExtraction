@@ -102,7 +102,7 @@ let rec normalize_pltl_tuples tl pltl = match tl with
  and must not contain any tuple. 
  If there is a default case, it is removed. *)
 let normalize_pltl tl pltl =
-  let npltl = List.filter (fun (pl, t, an) ->
+  let npltl = List.filter (fun (pl, _, _) ->
     List.for_all (function MLPWild, _ -> false | _ -> true) pl
   ) pltl in
   normalize_pltl_tuples tl npltl
@@ -146,7 +146,7 @@ let rec filter2 p l1 l2 = match l1, l2 with
 (* Finds the Coq type of constr *)
 let coq_type_explorer env cstr = match Constr.kind cstr with
   | Construct ((ind, i), _) ->
-    let mib,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
+    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     let (n, _) = decompose_prod oib.mind_user_lc.(i-1) in
     let n = List.map (typ_from_named env ind) (List.rev n) in
 (*basic imp args filter, TODO: unification with the host2spec algorithm ?*)
@@ -198,7 +198,7 @@ let filter_next_pats pltl tl =
       else List.map2 (fun pl npl -> (List.hd pl)::npl) pll npll, t::ntl 
     with _ -> assert false in
   let filtered_pll, ntl = 
-    filter_pll (List.map (fun (pl, t, an) -> pl) pltl) tl in
+    filter_pll (List.map (fun (pl, _, _) -> pl) pltl) tl in
   (List.map2 (fun pl (_,t,an) -> pl, t, an) filtered_pll pltl, ntl)
 
 (* Compiles a normalized pattern matching. *)
@@ -268,7 +268,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
               | MLPVar v -> ((MLPWild, ty)::pl, rename_var_term v pv t, an)
               | _ -> ((a, ty)::pl, t, an)
             ) args pat_vars (pl_tail, t, an)]
-          | (MLPWild, ty)::pl_tail -> [(wild_pats@pl_tail, t, an)]
+          | (MLPWild, _)::pl_tail -> [(wild_pats@pl_tail, t, an)]
           | _ -> []
         ) npltl in
         let ntl = (List.map2 (fun v ty -> 
@@ -305,7 +305,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
         FixLetin (i, l, t, anlams), (CTNone, None)) lams nterm
 
 
-  | (mt, ((_, _) ))::_ -> CErrors.anomaly ~label:"RelationExtraction"
+  | (_, ((_, _) ))::_ -> CErrors.anomaly ~label:"RelationExtraction"
                                  (str "Missing type information")
 
 
@@ -314,7 +314,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
 and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
 (* TODO: check if there are renaming matches, if not, add the Some constr. *)
   | MLTVar i -> FixVar i, ty
-  | MLTTuple tl -> raise RelExtNoFixTuple
+  | MLTTuple _ -> raise RelExtNoFixTuple
   | MLTConstr (i, tl) -> 
     FixConstr (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
   | MLTConst i -> FixConst i, ty
@@ -521,8 +521,8 @@ let rec list_exists_tuple f l = match l with
 let propag_one_func env (spec_id, mlf) = 
   let rec browse_func (mlt, _) = match mlt with
     | MLTTuple tl -> list_exists_tuple browse_func tl
-    | MLTRecord (il, tl) -> list_exists_tuple browse_func tl
-    | MLTConstr (i, tl) -> list_exists_tuple browse_func tl
+    | MLTRecord (_, tl) -> list_exists_tuple browse_func tl
+    | MLTConstr (_, tl) -> list_exists_tuple browse_func tl
     | MLTFun (i, _, _) | MLTFunNot (i, _, _) -> 
       let dep_compl = fix_get_completion_status env i in
       let dep_count = match fix_get_recursion_style env i with

@@ -90,7 +90,7 @@ let get_rel id bind = match find_rel bind id with
   | Some i -> i
 
 (* Make a new rel for an id. *)
-let rel_from_id id bind nbind = (List.length nbind) + 1, id::nbind
+let rel_from_id id nbind = (List.length nbind) + 1, id::nbind
 
 (* Generates a term in a pattern. *)
 let rec gen_pat (env, id_spec) bind nbind (p,_) = match p with
@@ -111,7 +111,7 @@ let rec gen_pat (env, id_spec) bind nbind (p,_) = match p with
   | MLPConst id -> (* we have to linearise *)
       (*let glb = UnivGen.global_of_constr (get_cstr (env, id_spec) id) in*)
       CErrors.user_err (str "[RelationExtraction] TODO - constants in patterns")
-  | MLPVar id -> let rel, nbind = rel_from_id id bind nbind in
+  | MLPVar id -> let rel, nbind = rel_from_id id nbind in
       (Prel rel, nbind)
   | MLPWild -> (Pwild, nbind)
   | MLPATrue -> (get_ptrue (), nbind)

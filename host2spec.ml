@@ -56,9 +56,9 @@ let get_name (binder,_) = match Context.binder_name binder with
 
 (* Finds a list of the constructors of an inductive type. *)
 let find_it_constrs constr = 
-  let (ind, i), univ = destConstruct constr in
+  let (ind, _), _ = destConstruct constr in
   let _,idc = Inductive.lookup_mind_specif (Global.env ()) ind in
-  List.map (fun cstr_id  -> 
+  List.map (fun cstr_id -> 
     ident_of_string (Id.to_string cstr_id)
   ) (Array.to_list idc.mind_consnames)
 
@@ -76,7 +76,7 @@ let get_prod_type_from_oib oib =
      - the argument type itself. *)
 let find_types_of_constr constr = match Constr.kind constr with
   | Construct ((ind, i), _) ->
-    let mib, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
+    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     let (n, _) = decompose_prod oib.mind_user_lc.(i-1) in
     List.map (fun (_, c) -> match Constr.kind c with
       | Ind (ind, _) ->
@@ -188,9 +188,9 @@ match Constr.kind term with
     let c, _ = destConst h in
     let n = Constant.label c in
     let s = ident_of_string (Label.to_string n) in
-    let args, inf = List.fold_right (fun a (args, env) ->
+    let args, _ = List.fold_right (fun a (args, env) ->
       let a, env = build_term (env, id_spec) prod None a in
-      a::args, env) (Array.to_list args) ([], env) in
+      a::args, env) (Array.to_list args) ([], env) in (* TODO possibly to not use env here? *)
     let env = add_cstr_to_env env s h in
     MLTFun (s, args, None), env
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Unknown Coq construction")
@@ -202,7 +202,7 @@ and build_term (env, id_spec) prod typ term =
 
 (* Mode Skip filter *)
 let rec filter_mode_skip mode args = match (mode, args) with
-  | (MSkip::tl_mode, a::tl_args) -> filter_mode_skip tl_mode tl_args
+  | (MSkip::tl_mode, _::tl_args) -> filter_mode_skip tl_mode tl_args
   | (_::tl_mode, a::tl_args) -> a::(filter_mode_skip tl_mode tl_args)
   | _ -> []
 
@@ -272,7 +272,7 @@ let rec build_premisse (env, id_spec) named_prod term =
       let prem_term = MLTFun (id, args, Some mode) in
       let prem_term_type = match get_out_terms_func env 
         (fake_type env prem_term) with
-        | [t, ty] -> ty
+        | [_, ty] -> ty
         | [] ->
           (CTSum [ident_of_string "true";ident_of_string "false"], 
             Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
@@ -322,7 +322,7 @@ and build_premisse_list (env, id_spec) named_prod terms =
   ) terms ([], env)
 
 let build_prem (env, id_spec) named_prod cstr = match Constr.kind cstr with
-  | App (_, args) ->
+  | App (_, _) ->
     let t, env = build_premisse (env, id_spec) named_prod cstr in
     begin match t with
       | PMTerm ((MLTFun (_, [], _),_),_) ->

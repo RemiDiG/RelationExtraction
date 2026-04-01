@@ -579,7 +579,7 @@ let simple_pc_branch (env, id) branch sigma goal =
           let hn = (*fresh_string_id "HLREC_" () in *) v in
           i, [ASSERTEQUAL (hrec, v, LocInHyp (hn, hyp_def), EConstr.of_constr t); AUTO;
               SYMMETRY hrec], hn, [v,hrec]
-        | CaseConstr (_, cstr_name, pil, _) ->
+        | CaseConstr (_, _, _, _) ->
           let i, (_, _) = goal_iterator false false true 
                               find_eq_get_sides sigma goal (last_i+1) in
           i, [], hrec, []
@@ -599,8 +599,8 @@ let simple_pc_branch (env, id) branch sigma goal =
                   [ASSERTEQUAL (eqhname, v, LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
                   [CHANGEV (eqhname, v, LocInHyp (eqhname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
-      | CaseConstr (mt, cstr_name, pil, _) -> 
-        let i, (c1, _) = goal_iterator false false true 
+      | CaseConstr (_, _, _, _) -> 
+        let i, (_, _) = goal_iterator false false true 
                                         find_eq_get_sides sigma goal (last_i+1) in
         let hname = fresh_string_id "HCC_" () in
         let ti = mk_ti_n [CHANGEC (hname, LocInHyp (hname, hyp_eq_left), 
