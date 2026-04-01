@@ -26,6 +26,7 @@ fixpointgen.ml
 relation_extraction.mli
 relation_extraction.ml
 g_relation_extraction.mlg
+g_relation_extraction.mli
 relation_extraction_plugin.mlpack
 RelationExtraction.v
 #test TODO automatically lauch tests?
