@@ -171,12 +171,6 @@ let gen_fixpoint env =
   ) env.extr_fixfuns in 
   let glb = List.hd glbs in
   if Global.is_polymorphic glb then CErrors.user_err (str "Polymorphic references not supported.");
-  let cstr = UnivGen.constr_of_monomorphic_global (Global.env ()) glb in
-  let cst,_ = destConst cstr in
-  let cst_body = Global.lookup_constant cst in
-  let _ = match cst_body.Declarations.const_body with
-  | Def cs -> ignore (cs) (* TODO ??? if works, no need for this match *)
-  | _ -> () (* ?? *) in
 
   (* Proofs generation *)
   List.iter (fun (id, _) -> gen_correction_proof env id) 
