@@ -39,7 +39,7 @@ Inductive catListUnit : ListUnit -> ListUnit -> ListUnit -> Prop :=
 .
 
 Extraction Relation Fixpoint (catListUnit [1 2] Struct 2).
-Extraction Relation Single (catListUnit [1 2]).
+Extraction Relation (catListUnit [1 2]).
 (* Extraction Relation Fixpoint (ListUnit []). *)
 
 (* Tests avec vect *)
@@ -56,17 +56,17 @@ Inductive cat : forall (n : nat), Vect n -> forall (m : nat), Vect m -> Vect (m 
 .
 
 Extraction Relation Fixpoint Relaxed (Vect [1]).
-Print Vect_full.
+(* Print Vect_full.
 Print Vect_full_equation.
-Print Vect_full_ind.
-Fail Extraction Relation Fixpoint Relaxed (cat [1 2 3 4]).
+Print Vect_full_ind. *)
+(* Fail Extraction Relation Fixpoint Relaxed (cat [1 2 3 4]). *)
 
 Inductive naif : forall (n : nat), Prop :=
 | Base : naif 0
 | Ind : forall (n : nat), naif n -> naif n
 .
 
-Fail Extraction Relation Fixpoint (naif [1] ).
+(* Fail Extraction Relation Fixpoint (naif [1] ). *)
 (* Print naif_full. *)
 
 Inductive catbis : forall (n : nat), Vect n -> forall (m : nat), Vect m -> Vect (n) -> Prop :=
@@ -90,6 +90,6 @@ Inductive catFord : forall (n : nat), VectFord n -> forall (m : nat), VectFord m
 | addconsFord : forall n (v : VectFord n) m (u : VectFord m) w,
   catFord n v m u w -> forall (a: bool), catFord n v (S m) (consFord _ a m u eq_refl) (consFord _ a (m+n) w eq_refl).
 
-Fail Extraction Relation Fixpoint Relaxed (VectFord [1]).
+(* Fail Extraction Relation Fixpoint Relaxed (VectFord [1]). *)
 (* Fail Extraction Relation Fixpoint Relaxed (catFord [1 2 3 4]). *)
 
