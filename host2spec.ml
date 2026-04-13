@@ -277,29 +277,29 @@ let rec build_premisse (env, id_spec) named_prod term =
           (CTSum [ident_of_string "true";ident_of_string "false"], 
             Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
         | _ -> unknown_type env in
-      (PMTerm ((prem_term, prem_term_type), Some (fresh_ident "Pm_" ())))::pred_terms, env
+      (PMTerm ((prem_term, prem_term_type), Some (fresh_ident "Pm_")))::pred_terms, env
     ) modes ([], env) in
     let env = add_indgref_to_env env id ind_gref in
     begin match pred_terms with
       | [] -> CErrors.anomaly ~label:"RelationExtraction" (str "Bad premisse form")
       | [pred_term] -> pred_term, env
-      | _ -> PMChoice (pred_terms, Some (fresh_ident "Pm_" ())), env 
+      | _ -> PMChoice (pred_terms, Some (fresh_ident "Pm_")), env 
     end in
   begin match Constr.kind term with
     | App (h, [|arg|]) when isNot h ->
       let pm, env = build_premisse (env, id_spec) named_prod arg in
-      (PMNot (pm, Some (fresh_ident "Pm_" ())), env)
+      (PMNot (pm, Some (fresh_ident "Pm_")), env)
     | App (h, args) when isOr h ->
       let pms, env = build_premisse_list (env, id_spec) 
         named_prod (Array.to_list args) in
-      (PMOr (pms, Some (fresh_ident "Pm_" ())), env)
+      (PMOr (pms, Some (fresh_ident "Pm_")), env)
     | App (h, args) when isAnd h ->
       let pms, env = build_premisse_list (env, id_spec) 
         named_prod (Array.to_list args) in
-      (PMAnd (pms, Some (fresh_ident "Pm_" ())), env)
+      (PMAnd (pms, Some (fresh_ident "Pm_")), env)
     | App (h, _) when isConst h -> let t, env = build_term (env, id_spec) 
         named_prod None term in
-      PMTerm (t, Some (fresh_ident "Pm_" ())), env
+      PMTerm (t, Some (fresh_ident "Pm_")), env
     | App (h, args) when isInd h -> let ind, _ = destInd h in
       build_predicate ind args
     | App (h, args) when isRel h ->

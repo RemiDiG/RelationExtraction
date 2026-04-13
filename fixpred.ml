@@ -115,7 +115,7 @@ let gen_default_case env mode =
 (* Makes a list of n fresh variables. *)
 let rec make_cstr_pat_vars n =
   if n = 0 then [] 
-  else (ident_of_string (fresh_string_id "fix_" ())) :: 
+  else (fresh_ident "fix_") :: 
     (make_cstr_pat_vars (n-1))
 
 (* Makes a list of n wild patterns. *)
@@ -223,7 +223,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
       | p::_ -> (match p with | MLPConstr _, _ -> true | _ -> false)
       | _ -> assert false) pltl in
     let nmt, lams, npltl = if is_variables then 
-        let nvar = ident_of_string (fresh_string_id "fix_" ()) in
+        let nvar = fresh_ident "fix_" in
         (* if there is at least one variable: we create a variable for 
                                                                     the letin *)
         let npltl = List.map ( fun (pl, t, an) -> match pl with

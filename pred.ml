@@ -49,7 +49,7 @@ let ident_of_string i = i
 let fresh_string_id =
   let i = ref 0 in
   fun base_name () -> i := !i + 1; base_name ^ (string_of_int !i)
-let fresh_ident base_name () = ident_of_string (fresh_string_id base_name ())
+let fresh_ident base_name = ident_of_string (fresh_string_id base_name ())
 
 
 (*************************)
