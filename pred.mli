@@ -34,6 +34,8 @@ exception RelationExtractionError of string
 type ident
 val string_of_ident : ident -> string
 val ident_of_string : string -> ident
+val ident_of_id : Names.Id.t -> ident
+val id_of_ident : ident -> Names.Id.t
 val fresh_ident : string -> ident
 val fresh_string_id : string -> unit -> string
 

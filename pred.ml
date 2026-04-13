@@ -46,6 +46,10 @@ let flatmap f l = List.flatten ((List.map f) l)
 type ident = string
 let string_of_ident i = i
 let ident_of_string i = i
+let ident_of_id (id : Names.Id.t) : ident =
+  ident_of_string (Names.Id.to_string id)
+let id_of_ident (id : ident) : Names.Id.t =
+  Names.Id.of_string (string_of_ident id)
 let fresh_string_id =
   let i = ref 0 in
   fun base_name () -> i := !i + 1; base_name ^ (string_of_int !i)
