@@ -101,7 +101,6 @@ type tac_atom =
   | EAPPLY of ident
   | APPLYPROP of ident (* spec constr name *)
   | APPLYPROPIN of ident (* spec constr name *) * ident
-  | APPLYIND of ident (* fun name *)
   | CHANGEV of ident * ident * coq_constr_loc
     (* CHANGEV (h, v, c) : change v with c if h is v = c *)
   | CHANGEC of ident * coq_constr_loc * coq_constr_loc
@@ -133,7 +132,6 @@ let pp_tac_atom ta = match ta with
   | EAPPLY s -> "EAPPLY " ^ string_of_ident s
   | APPLYPROP s -> "APPLYPROP " ^ string_of_ident s
   | APPLYPROPIN (s, h) -> "APPLYPROP " ^ string_of_ident s ^ " IN " ^ string_of_ident h
-  | APPLYIND s -> "APPLYIND " ^ string_of_ident s
   | CHANGEV (h, v, c) -> 
     "CHANGEV " ^ string_of_ident h ^ ": " ^ string_of_ident v ^ " -> " ^ pp_coq_constr_loc c
   | CHANGEC (h, c1, c2) ->  
@@ -316,8 +314,6 @@ let rec build_tac_atom ta = match ta with
     else ();
     Tacticals.tclTHEN (Tactics.apply_in true false (id_of_ident h) [None,CAst.make (EConstr.of_constr cstr,Tactypes.NoBindings)] None)
       (Tacticals.tclTRY Tactics.assumption)
-  | APPLYIND id -> let ind_scheme = ident_of_string ((string_of_ident id) ^ "_ind") in (* TODO 13/04/2026 fresh instead? *)
-    build_tac_atom (APPLY ind_scheme)
   | CHANGEC (h, cstr_pat, cloc) ->
     constr_of_constr_loc_in cstr_pat (fun cstr_pat ->
     constr_of_constr_loc_in cloc (fun cstr ->
@@ -506,16 +502,18 @@ let mk_ti_ai_n tal1 tal2 = {
 let simple_pc_intro =
   let premisse = ident_of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
   let tacl = fun (env, id) _ ->
+    let rewrite_premisse = ident_of_string "po" in (* TODO 13/04/2026 fresh name for that! *)
     let f_name = (fst (extr_get_fixfun env id)).fixfun_name in
+    let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
     Tac_list [
       (* intros predicate arguments *)
       INTROSUNTIL 0; (* TODO 13/04/2026 we only ever use INTROSUNTIL with 0?! *)
       (* intro H (lemma premisse) *)
       INTRO premisse;
       (* rewrite H (or subst H or change right with left) *)
-      SUBST (ident_of_string "po"); (* TODO 13/04/2026 fresh name for that! *)
+      SUBST rewrite_premisse;
       (* apply ind scheme *)
-      APPLYIND f_name
+      APPLY f_name
     ]
   in (tacl, premisse)
 
