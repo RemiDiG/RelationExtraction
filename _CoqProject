@@ -1,7 +1,7 @@
 -R . RelationExtraction
 -I .
 
-COQMF_WARN = "-w +a-4-9-27-37-44"
+COQMF_WARN = "-w +a-4-9-27-44"
 CAMLPKGS = "-package rocq-runtime.plugins.extraction -package rocq-runtime.plugins.funind"
 
 host_stuff.mli

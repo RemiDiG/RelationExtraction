@@ -97,8 +97,8 @@ type tac_atom =
   | SYMMETRY of ident
   | SUBST of ident
   | APPLY of ident
-  | APPLYIN of ident * ident
-  | EAPPLY of ident
+(*  | APPLYIN of ident * ident *) (* Unused 13/04/2026 *)
+(*  | EAPPLY of ident *) (* Unused 13/04/2026 *)
   | APPLYPROP of ident (* spec constr name *)
   | APPLYPROPIN of ident (* spec constr name *) * ident
   | CHANGEV of ident * ident * coq_constr_loc
@@ -128,8 +128,8 @@ let pp_tac_atom ta = match ta with
   | SYMMETRY s -> "SYMMETRY " ^ string_of_ident s
   | SUBST s -> "SUBST " ^ string_of_ident s
   | APPLY s -> "APPLY " ^ string_of_ident s
-  | APPLYIN (s, h) -> "APPLY " ^ string_of_ident s ^ " IN " ^ string_of_ident h
-  | EAPPLY s -> "EAPPLY " ^ string_of_ident s
+(*  | APPLYIN (s, h) -> "APPLY " ^ string_of_ident s ^ " IN " ^ string_of_ident h *) (* Unused 13/04/2026 *)
+(*  | EAPPLY s -> "EAPPLY " ^ string_of_ident s *) (* Unused 13/04/2026 *)
   | APPLYPROP s -> "APPLYPROP " ^ string_of_ident s
   | APPLYPROPIN (s, h) -> "APPLYPROP " ^ string_of_ident s ^ " IN " ^ string_of_ident h
   | CHANGEV (h, v, c) -> 
@@ -295,14 +295,14 @@ let rec build_tac_atom ta = match ta with
     if debug_print_tacs then Printf.eprintf "apply %s.\n" (string_of_ident id)
     else ();
     Tactics.apply (EConstr.of_constr cstr)
-  | APPLYIN (id, h) -> let cstr = find_coq_constr_s (string_of_ident id) in 
+(*  | APPLYIN (id, h) -> let cstr = find_coq_constr_s (string_of_ident id) in 
     if debug_print_tacs then Printf.eprintf "apply %s in %s.\n" (string_of_ident id) (string_of_ident h)
     else ();
-    Tactics.apply_in true false (id_of_ident h) [None,CAst.make (EConstr.of_constr cstr,Tactypes.NoBindings)] None
-  | EAPPLY id -> let cstr = find_coq_constr_s (string_of_ident id) in 
+    Tactics.apply_in true false (id_of_ident h) [None,CAst.make (EConstr.of_constr cstr,Tactypes.NoBindings)] None *) (* Unused 13/04/2026 *)
+(*  | EAPPLY id -> let cstr = find_coq_constr_s (string_of_ident id) in 
     if debug_print_tacs then Printf.eprintf "eapply %s.\n" (string_of_ident id)
     else ();
-    Tactics.eapply (EConstr.of_constr cstr)
+    Tactics.eapply (EConstr.of_constr cstr) *) (* Unused 13/04/2026 *)
   | APPLYPROP id -> let cstr = find_coq_constr_s (string_of_ident id) in 
     if debug_print_tacs then Printf.eprintf "apply %s; try assumption.\n" (string_of_ident id)
     else ();
