@@ -325,9 +325,9 @@ let rec build_tac_atom ta = match ta with
       if orig_hyp_id = hid then tac else
         Tacticals.tclTHEN (replace_in hid cstr_pat cstr) tac
     ) hyps_ids tac in
-    let s = "replace (" ^ (pp_coq_constr cstr_pat) ^ ") with (" ^
-          (pp_coq_constr cstr) ^ ") in *" in
-    if debug_print_tacs then Printf.eprintf "%s.\n" s
+    if debug_print_tacs then
+      let s = "replace (" ^ (pp_coq_constr cstr_pat) ^ ") with (" ^
+         (pp_coq_constr cstr) ^ ") in *" in Printf.eprintf "%s.\n" s
     else ();
     t)))
   | CHANGEV (h, v, cloc) -> 
@@ -346,7 +346,6 @@ let rec build_tac_atom ta = match ta with
     if debug_print_tacs then Printf.eprintf "auto.\n"
     else ();
     Auto.default_auto
-(* TODO 13/04/2026 separate the printing from the rest; directly print for Rocq tactics? *)
 
 (* Proves a goal, with a given prover. *)
 let make_proof (env, id) lemma prover ps =
@@ -499,23 +498,20 @@ let mk_ti_ai_n tal1 tal2 = {
 (*   no logical connectors                               *)
 (*********************************************************)
 
-let simple_pc_intro =
-  let premisse = ident_of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
-  let tacl = fun (env, id) _ ->
-    let rewrite_premisse = ident_of_string "po" in (* TODO 13/04/2026 fresh name for that! *)
-    let f_name = (fst (extr_get_fixfun env id)).fixfun_name in
-    let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
-    Tac_list [
-      (* intros predicate arguments *)
-      INTROSUNTIL 0; (* TODO 13/04/2026 we only ever use INTROSUNTIL with 0?! *)
-      (* intro H (lemma premisse) *)
-      INTRO premisse;
-      (* rewrite H (or subst H or change right with left) *)
-      SUBST rewrite_premisse;
-      (* apply ind scheme *)
-      APPLY f_name
-    ]
-  in (tacl, premisse)
+let simple_pc_intro premisse (env, id) _ =
+  let rewrite_premisse = ident_of_string "po" in (* TODO 13/04/2026 fresh name for that! *)
+  let f_name = (fst (extr_get_fixfun env id)).fixfun_name in
+  let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
+  Tac_list [
+    (* intros predicate arguments *)
+    INTROSUNTIL 0; (* TODO 13/04/2026 we only ever use INTROSUNTIL with 0?! *)
+    (* intro H (lemma premisse) *)
+    INTRO premisse;
+    (* rewrite H (or subst H or change right with left) *)
+    SUBST rewrite_premisse;
+    (* apply ind scheme *)
+    APPLY f_name
+  ]
 
 let simple_pc_concl _ _ = Tac_list []
 
@@ -670,10 +666,10 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
   }
 
 let simple_pc =
-  let (intro_tacs, premisse) = simple_pc_intro in
+  let premisse = ident_of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
   {
-  prov_intro = intro_tacs;
+  prov_intro = simple_pc_intro premisse;
   prov_branch = simple_pc_branch premisse;
   prov_concl = simple_pc_concl;
-}
+  }
 
