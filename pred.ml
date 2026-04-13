@@ -466,7 +466,7 @@ exception RelationExtractionProp of ident option * string
 (************************)
 
 (* Select inputs or outputs of a inductive predicate term *)
-let get_in_terms_func env mlt =
+let get_in_terms_func _ mlt =
   let rec get_rec args mode = match (args, mode) with
     | (a::tl_args, MInput::tl_mode) -> a::(get_rec tl_args tl_mode)
     | (_::tl_args, MOutput::tl_mode) -> get_rec tl_args tl_mode

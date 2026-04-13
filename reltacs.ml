@@ -508,7 +508,7 @@ let simple_pc_intro (env, id) _ =
   let f_name = string_of_ident (fst (extr_get_fixfun env id)).fixfun_name in
   Tac_list [
     (* intros predicate arguments *)
-    INTROSUNTIL 0;
+    INTROSUNTIL 0; (* TODO 12/04/2026 we only ever use INTROSUNTIL with 0?! *)
     (* intro H (lemma premisse) *)
     INTRO "H";
     (* rewrite H (or subst H or change right with left) *)
@@ -621,7 +621,7 @@ let simple_pc_branch (env, id) branch sigma goal =
       | _ -> (hname_index, til, pmn, last_i, recvars)
   ) ([], [], None, 0, []) branch.psb_branch in
   let nb_h = get_hyp_num sigma goal in
-  let hnames, p_h = let rec mk_hnames hnames p_h nb_h = 
+  let hnames, _ = let rec mk_hnames hnames p_h nb_h = 
    if nb_h = 0 then hnames, p_h else
     let hn, p_h = try List.assoc nb_h hname_index, p_h
         with Not_found -> try let i, n = 

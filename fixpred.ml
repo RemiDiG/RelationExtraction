@@ -261,7 +261,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
         let pat_vars = make_cstr_pat_vars cstr_arity in
         (* next_pats will be added to the patterns matrix. *)
         let next_pats = flatmap (fun (pl, t, an) -> match pl with
-          | (MLPConstr (c, args), ty)::pl_tail when c = cstr ->
+          | (MLPConstr (c, args), _)::pl_tail when c = cstr ->
             (* when an argument is a var, it is replaced by the pat_var;
                when it is a contr, it is left untouched. *)
             [List.fold_right2 (fun (a, ty) pv (pl, t, an) -> match a with

@@ -94,7 +94,7 @@ let gen_correction_proof env id : unit =
   let cstr, _, _ = build_correct_lemma env id fixfun in
 
   (* Proof registering *)
-  let proof_register pstate prover ps : unit =
+  let proof_register _ prover ps : unit =
     let info = Declare.Info.make () in
     let cinfo = Declare.CInfo.make ~name:(Id.of_string (string_of_ident fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
     let lemma = Declare.Proof.start ~cinfo ~info (Evd.from_env (Global.env())) in
