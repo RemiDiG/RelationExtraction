@@ -32,7 +32,7 @@ open Proof_scheme
 open Coq_stuff
 
 let debug_print_goals = false
-let debug_print_tacs = false
+let debug_print_tacs = true
 
 (****************)
 (* Proofs stuff *)
@@ -92,7 +92,7 @@ type coq_constr_loc =
 type tac_atom =
   | INTRO of ident
   | INTROS of ident list
-  | INTROSUNTIL of int (* intros until i *)
+  | INTROSUNTILZERO (* intros until 0 *)
   | REVERT of ident list
   | SYMMETRY of ident
   | SUBST of ident
@@ -123,7 +123,7 @@ let pp_coq_constr_loc ccl = match ccl with
 let pp_tac_atom ta = match ta with
   | INTRO s -> "INTRO " ^ string_of_ident s
   | INTROS sl -> "INTROS " ^ concat_list (List.map string_of_ident sl) " "
-  | INTROSUNTIL i -> "INTROSUNTIL" ^ string_of_int i
+  | INTROSUNTILZERO -> "INTROSUNTILZERO"
   | REVERT sl -> "REVERT " ^ concat_list (List.map string_of_ident sl) " "
   | SYMMETRY s -> "SYMMETRY " ^ string_of_ident s
   | SUBST s -> "SUBST " ^ string_of_ident s
@@ -271,13 +271,10 @@ let rec build_tac_atom ta = match ta with
     if debug_print_tacs then Printf.eprintf "intros %s.\n" (concat_list (List.map string_of_ident idl) " ")
     else ();
     Tactics.intros_using (List.map id_of_ident idl)
-  | INTROSUNTIL i -> 
-    if debug_print_tacs then Printf.eprintf "intros until %d.\n" i
+  | INTROSUNTILZERO -> 
+    if debug_print_tacs then Printf.eprintf "intros until 0.\n"
     else ();
-    if i = 0 then
-      Tactics.intros_patterns false [CAst.make (Tactypes.IntroForthcoming true)]
-    else
-      Tactics.intros_until (Tactypes.AnonHyp i) (* TODO: is with red ok *)
+    Tactics.intros_patterns false [CAst.make (Tactypes.IntroForthcoming true)]
   | REVERT idl -> 
     if debug_print_tacs && List.length idl > 0 then 
       Printf.eprintf "revert %s.\n" (concat_list (List.map string_of_ident idl) " ")
@@ -504,7 +501,7 @@ let simple_pc_intro premisse (env, id) _ =
   let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
   Tac_list [
     (* intros predicate arguments *)
-    INTROSUNTIL 0; (* TODO 13/04/2026 we only ever use INTROSUNTIL with 0?! *)
+    INTROSUNTILZERO;
     (* intro H (lemma premisse) *)
     INTRO premisse;
     (* rewrite H (or subst H or change right with left) *)
@@ -660,9 +657,16 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       order_prem p_h init_order branch_order
     in
     let p_h = premisse_reorder p_h in
-    let ti_revert_rec = mk_ti_n [REVERT (List.rev p_h)] in
+    (* Use REVERT only if list of size non-zero *)
+    let til' =
+      if List.length p_h > 0 then
+    	let ti_revert_rec = mk_ti_n [REVERT (List.rev p_h)] in
+    	til@[ti_revert_rec]
+      else
+        til
+    in
   { pres_intros = hnames;
-    pres_tacts = Prop_tacs (til@[ti_revert_rec], prop_name);
+    pres_tacts = Prop_tacs (til', prop_name);
   }
 
 let simple_pc =

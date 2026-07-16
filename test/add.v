@@ -1,4 +1,5 @@
 Require Import RelationExtraction.
+(* Set Mangle Names. *) (* TODO uncompatible with mangle names *)
 
 Inductive n : Set := | Zero : n | Succ : n -> n.
 
@@ -11,7 +12,7 @@ Extraction Relation Single Relaxed (add [2 3]).
 Extraction Relation Single (add [1 2 3]).
 Extraction Relation Single Relaxed (add [3 2]).
 
-(* Axiom (H: Prop). *) (* TODO bug if name H already there! *)
+(* Axiom (H: Prop). *) (* TODO bug if name H or po already there! *)
 (* Axiom (po : Prop). *)
 Extraction Relation Fixpoint (add [1 2] Struct 2).
 (*
@@ -19,7 +20,7 @@ Eval compute in (add12 (Succ (Succ Zero)) (Succ Zero)).
 Eval compute in (add12 (Succ Zero) (Succ (Succ Zero))).
 *)
 
-Extraction Relation Fixpoint Relaxed (add [2 3]). (* no proof*)
+Extraction Relation Fixpoint Relaxed (add [2 3]). (* no proof *)
 (*
 Eval compute in (add23 (Succ (Succ Zero)) (Succ Zero)).
 Eval compute in (add23 (Succ Zero) (Succ (Succ Zero))).
