@@ -35,3 +35,6 @@ val make_proof : ((htyp, henv) extract_env * ident) -> Declare.Proof.t -> scheme
 (* Very basic correction prover. *)
 val simple_pc : scheme_prover
 
+(* Fixe name *)
+val fixed_name_po : string
+
