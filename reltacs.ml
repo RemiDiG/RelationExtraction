@@ -93,7 +93,7 @@ type coq_constr_loc =
 type tac_atom =
   | INTRO of ident
   | INTROS of ident list
-  | INTROSUNTILZERO (* intros until 0 *)
+  | INTROSUNTILZERO (* intros * *)
   | REVERT of ident list
   | SYMMETRY of ident
   | SUBST of ident
@@ -124,7 +124,7 @@ let pp_coq_constr_loc ccl = match ccl with
 let pp_tac_atom ta = match ta with
   | INTRO s -> "INTRO " ^ string_of_ident s
   | INTROS sl -> "INTROS " ^ concat_list (List.map string_of_ident sl) " "
-  | INTROSUNTILZERO -> "INTROSUNTILZERO"
+  | INTROSUNTILZERO -> "INTROS *"
   | REVERT sl -> "REVERT " ^ concat_list (List.map string_of_ident sl) " "
   | SYMMETRY s -> "SYMMETRY " ^ string_of_ident s
   | SUBST s -> "SUBST " ^ string_of_ident s
@@ -504,7 +504,7 @@ let simple_pc_intro premisse (env, id) _ =
   let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
   Tac_list [
     (* intros predicate arguments *)
-    INTROSUNTILZERO;
+    INTROSUNTILZERO; (* TODO 04/09/2026 use any fresh name instead? *)
     (* intro H (lemma premisse) *)
     INTRO premisse;
     (* rewrite H (or subst H or change right with left) *)
