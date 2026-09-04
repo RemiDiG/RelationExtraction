@@ -25,16 +25,10 @@ open Proof_scheme
 open Pred
 open Coq_stuff
 
-(* Type of an automatic prover for extracted functions. *)
-type scheme_prover
-
-(* Proves a lemma with a given scheme prover. *)
-val make_proof : ((htyp, henv) extract_env * ident) -> Declare.Proof.t -> scheme_prover ->
+(* Proves a lemma with a simple scheme prover. *)
+val make_proof_simple : ((htyp, henv) extract_env * ident) -> Declare.Proof.t ->
                  (htyp fix_term) proof_scheme -> Declare.Proof.t
 
-(* Very basic correction prover. *)
-val simple_pc : scheme_prover
-
-(* Fixe name *)
+(* Fixed name *)
 val fixed_name_po : string
 

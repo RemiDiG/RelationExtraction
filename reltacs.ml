@@ -186,7 +186,7 @@ let pp_prover_result pr =
   "\n" ^ pp_tacts pr.pres_tacts
 *)
 
-(* The type of a prover. *)
+(* The type of a prover for extracted functions. *)
 type scheme_prover = {
   prov_intro : 
     ((htyp, henv) extract_env * ident) -> (htyp fix_term) proof_scheme -> tacts;
@@ -347,7 +347,7 @@ let rec build_tac_atom ta = match ta with
     else ();
     Auto.default_auto
 
-(* Proves a goal, with a given prover. *)
+(* Proves a goal, with a given scheme prover. *)
 let make_proof (env, id) lemma prover ps =
   if debug_print_tacs then
     let (fixfun, _) = extr_get_fixfun env id in
@@ -513,7 +513,7 @@ let simple_pc_intro premisse (env, id) _ =
     APPLY f_name
   ]
 
-let simple_pc_concl _ _ = Tac_list []
+let simple_pc_concl _ _ = Tac_list [] (* TODO 04/09/2026 useless? *)
 
 let list_pos l e =
   let rec rec_pos l i = match l with
@@ -672,6 +672,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
     pres_tacts = Prop_tacs (til', prop_name);
   }
 
+(* Very basic correction prover. *)
 let simple_pc =
   let premisse = ident_of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
   {
@@ -679,4 +680,8 @@ let simple_pc =
   prov_branch = simple_pc_branch premisse;
   prov_concl = simple_pc_concl;
   }
+
+(* Proves a lemma with a simple scheme prover. *)
+let make_proof_simple (env, id) lemma ps =
+  make_proof (env, id) lemma simple_pc ps
 

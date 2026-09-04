@@ -95,11 +95,11 @@ let gen_correction_proof env id : unit =
   let cstr, _, _ = build_correct_lemma env id fixfun in
 
   (* Proof registering *)
-  let proof_register _ prover ps : unit =
+  let proof_register _ ps : unit =
     let info = Declare.Info.make () in
     let cinfo = Declare.CInfo.make ~name:(Id.of_string (string_of_ident fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
     let lemma = Declare.Proof.start ~cinfo ~info (Evd.from_env (Global.env())) in
-    let lemma = make_proof (env, id) lemma prover ps in
+    let lemma = make_proof_simple (env, id) lemma ps in
     let (_ : _ list) = Declare.Proof.save_regular ~proof:lemma ~opaque:Vernacexpr.Transparent ~idopt:None in
     () in
 
@@ -108,7 +108,7 @@ let gen_correction_proof env id : unit =
   *)
 
   if (not compl) && (not full) then
-    proof_register pstate simple_pc ps
+    proof_register pstate ps
   else
     pstate
 
