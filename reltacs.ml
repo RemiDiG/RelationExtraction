@@ -262,7 +262,7 @@ let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by None cstr
 
 let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma)))
 
-let fixed_name_po : string = "popu" (* TODO 13/04/2026 fresh name for that, using Rocq mechanisms! *)
+let fixed_name_po : string = "po" (* TODO 13/04/2026 fresh name for that, using Rocq mechanisms! *)
 
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
@@ -504,7 +504,7 @@ let simple_pc_intro premisse (env, id) _ =
   let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
   Tac_list [
     (* intros predicate arguments *)
-    INTROSUNTILZERO; (* TODO 04/09/2026 use any fresh name instead? *)
+    INTROSUNTILZERO;
     (* intro H (lemma premisse) *)
     INTRO premisse;
     (* rewrite H (or subst H or change right with left) *)
@@ -653,8 +653,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       let branch_order, _ = get_branch_prem_order branch.psb_branch in
       let rec order_prem pml init branch = match init with 
         | [] -> []
-        | i::init -> (List.nth pml (list_pos branch i))::
-                                      (order_prem pml init branch)
+        | i::init -> (List.nth pml (list_pos branch i))::(order_prem pml init branch)
       in
 (*TODO: find all the HRECs !*)
       order_prem p_h init_order branch_order
@@ -673,7 +672,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
   }
 
 (* Very basic correction prover. *)
-let simple_pc =
+let simple_pc : scheme_prover =
   let premisse = ident_of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
   {
   prov_intro = simple_pc_intro premisse;

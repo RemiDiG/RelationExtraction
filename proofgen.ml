@@ -80,7 +80,7 @@ let build_correct_lemma env id fixfun =
   let cstr = List.fold_right2 ( fun n t c ->
     mkProd (Context.nameR (Id.of_string n), t, c)
   ) in_names in_types cstr in
-  cstr, in_names, out_name
+  cstr
 
 let gen_correction_proof env id : unit =
   let (fixfun, ps) = extr_get_fixfun env id in
@@ -92,7 +92,7 @@ let gen_correction_proof env id : unit =
   let pstate = build_ind_scheme (string_of_ident fixfun.fixfun_name) in
   
   (* Lemma building *)
-  let cstr, _, _ = build_correct_lemma env id fixfun in
+  let cstr = build_correct_lemma env id fixfun in
 
   (* Proof registering *)
   let proof_register _ ps : unit =
@@ -102,10 +102,6 @@ let gen_correction_proof env id : unit =
     let lemma = make_proof_simple (env, id) lemma ps in
     let (_ : _ list) = Declare.Proof.save_regular ~proof:lemma ~opaque:Vernacexpr.Transparent ~idopt:None in
     () in
-
-  (* Unused (23/03/2026)
-  let _ind_scheme = (string_of_ident fixfun.fixfun_name ^ "_ind") in
-  *)
 
   if (not compl) && (not full) then
     proof_register pstate ps
