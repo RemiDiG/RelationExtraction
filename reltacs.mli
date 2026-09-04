@@ -20,9 +20,10 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
 open Proof_scheme
-open Coq_stuff
 open Pred
+open Coq_stuff
 
 (* Type of an automatic prover for extracted functions. *)
 type scheme_prover

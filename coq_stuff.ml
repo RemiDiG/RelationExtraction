@@ -20,8 +20,11 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
 open Host_stuff
 open Pred
+
+(* Rocq dependencies *)
 open Libnames
 open Nametab
 open Util

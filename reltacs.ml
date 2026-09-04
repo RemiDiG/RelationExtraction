@@ -20,16 +20,17 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
+open Proof_scheme
+open Pred
+open Coq_stuff
 
+(* Rocq dependencies *)
 open Constr
 open Names
 open Util
 open Declarations
 open EConstr
-
-open Pred
-open Proof_scheme
-open Coq_stuff
 
 let debug_print_goals = false
 let debug_print_tacs = true

@@ -20,16 +20,17 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
-
-open Constr
-open Names
-open Libnames
-open Util
-
+(* Internal dependencies *)
 open Pred
 open Coq_stuff
 open Minimlgen
 open Reltacs
+
+(* Rocq dependencies *)
+open Constr
+open Names
+open Libnames
+open Util
 
 let build_ind_scheme fun_name =
   let ref_func = 

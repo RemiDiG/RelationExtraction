@@ -20,9 +20,9 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
-open Coq_stuff
+(* Internal dependencies *)
 open Pred
-
+open Coq_stuff
 
 (* Normalization of Coq specifications. *)
 val find_specifications : (htyp, henv) extract_env -> (htyp, henv) extract_env

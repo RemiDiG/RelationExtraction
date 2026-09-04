@@ -20,6 +20,11 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
+open Pred
+open Coq_stuff
+
+(* Rocq dependencies *)
 open Util
 open Pp
 open Declarations
@@ -28,8 +33,6 @@ open Constr
 open Names
 open Libnames
 open Nametab
-open Pred
-open Coq_stuff
 
 (* TODO:
    - correct types annotations for (=) arguments.

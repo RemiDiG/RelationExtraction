@@ -20,6 +20,7 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
 open Pred
 
 (* Print a string to the extraction file. *)

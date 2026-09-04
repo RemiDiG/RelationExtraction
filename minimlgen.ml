@@ -20,8 +20,11 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
 open Pred
 open Coq_stuff
+
+(* Rocq dependencies *)
 open Util
 open Pp
 open Nametab

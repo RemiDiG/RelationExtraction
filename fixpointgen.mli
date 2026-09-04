@@ -20,9 +20,11 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
-
-open Constr
+(* Internal dependencies *)
 open Pred
+
+(* Rocq dependencies *)
+open Constr
 
 (* Generates Coq Fixpoints and register them in the Coq environment. *)
 val gen_fixpoint :

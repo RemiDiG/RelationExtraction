@@ -1,4 +1,4 @@
-# coq
+# rocq
 *.vo
 *.glob
 *.v.d
@@ -18,3 +18,5 @@
 *.mli.d
 *.mllib.d
 *.ml4.d
+# plugin
+META.relation_extraction

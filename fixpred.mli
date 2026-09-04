@@ -20,7 +20,10 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
 open Pred
+
+(* Rocq dependencies *)
 open Constr
 
 exception RelExtNoFixTuple

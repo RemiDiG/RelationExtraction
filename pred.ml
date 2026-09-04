@@ -20,6 +20,7 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
 open Host_stuff
 open Proof_scheme
 

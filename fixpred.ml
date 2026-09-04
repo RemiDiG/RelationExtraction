@@ -20,11 +20,13 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
+open Proof_scheme
 open Pred
 open Coq_stuff
 open Minimlgen
-open Proof_scheme
 
+(* Rocq dependencies *)
 open Term
 open Constr
 open Names

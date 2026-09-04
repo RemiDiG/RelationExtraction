@@ -20,16 +20,18 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
-open Util
-open Pp
-open Declarations
-open Names
-open Nametab
+(* Internal dependencies *)
 open Pred
 open Coq_stuff
 open Fixpred
 open Fixpointgen
 
+(* Rocq dependencies *)
+open Util
+open Pp
+open Declarations
+open Names
+open Nametab
 
 (************************)
 (* Predicate extraction *)
