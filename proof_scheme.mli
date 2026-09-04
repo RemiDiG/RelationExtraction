@@ -24,7 +24,7 @@
 (* Proof schemes *)
 (*****************)
 
-(* An identivier (for variables), with the variable name in the fix function
+(* An identifier (for variables), with the variable name in the fix function
    and eventually in the specification. *)
 type pident = {
   pi_func_name : string;

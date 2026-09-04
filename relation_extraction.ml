@@ -23,6 +23,7 @@
 (* Internal dependencies *)
 open Pred
 open Coq_stuff
+open Host2spec
 open Fixpred
 open Fixpointgen
 
@@ -98,7 +99,7 @@ let extract_relation_common dep ord ind_ref modes =
     extr_hf = coq_functions;
     extr_fix_env = [];
   } in
-  let env = Host2spec.find_specifications empty_env in
+  let env = find_specifications empty_env in
   (*Printf.eprintf "%s\n" (pp_extract_env env);*)
   let env = try Pred.make_trees env with
     | RelationExtractionProp (Some p_id, s) -> CErrors.user_err

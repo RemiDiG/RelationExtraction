@@ -272,5 +272,5 @@ let gen_miniml env =
   let lbl = Label.make fn in
   let mpt = Extraction_plugin.Table.modpath_of_r (glob_to_global glb) in
   let mls = [mpt, [lbl, SEdecl mld]] in 
-  Feedback.msg_info (print_one_decl (Extraction_plugin.Common.State.make ~modular:false ~library:false ~keywords:Names.Id.Set.empty ()) mls mpt mld) (* TODO modular library and keywords??? *)
+  Feedback.msg_info (print_one_decl (Extraction_plugin.Common.State.make ~modular:false ~library:false ~keywords:Names.Id.Set.empty ()) mls mpt mld) (* TODO modular, library and keywords??? *)
   
