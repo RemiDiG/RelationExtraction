@@ -275,7 +275,7 @@ let rec build_tac_atom ta = match ta with
     else ();
     Tactics.intros_using (List.map id_of_ident idl)
   | INTROSUNTILZERO -> 
-    if debug_print_tacs then Printf.eprintf "intros until 0.\n"
+    if debug_print_tacs then Printf.eprintf "intros *.\n"
     else ();
     Tactics.intros_patterns false [CAst.make (Tactypes.IntroForthcoming true)]
   | REVERT idl -> 
