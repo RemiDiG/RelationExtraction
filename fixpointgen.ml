@@ -50,7 +50,7 @@ let rec find_args_types sty = match Constr.kind sty with
     [[t];[]] (* Some and None *)
   | App (c, _) -> find_args_types c
   | Ind (ind, _) ->
-    let mib,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
+    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     let constrs = Array.to_list oib.mind_user_lc in
     List.map ( fun t ->
       let (n, _) = decompose_prod t in

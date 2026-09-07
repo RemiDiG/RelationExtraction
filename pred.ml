@@ -610,10 +610,10 @@ let rename_outputs_if_possible env nt tn prop = match nt, tn with
 (* after renaming nt can be inserted in the tn list *)
 let rename_inputs_if_possible env nt tn prop =  match nt, tn with
   | NTConcl _, _ -> (nt, prop) (* nothing to do *)
-  |          ( NTPrem (((MLTFun(i,a,m)|MLTFunNot(i,a,m)),_) as t),
-   TreeOutput ( (NTPrem (((MLTFun(ri,ra,rm)|MLTFunNot(ri,ra,rm)),_) as rt)),_,_, _) ) (*cath*)
-  |          ( NTPrem (((MLTFun(i,a,m)|MLTFunNot(i,a,m)),_) as t),
-    TreeNode ( (NTPrem (((MLTFun(ri,ra,rm)|MLTFunNot(ri,ra,rm)),_) as rt),_,_, _) )) (*cath*)
+  |          ( NTPrem (((MLTFun(i,_,m)|MLTFunNot(i,_,m)),_) as t),
+   TreeOutput ( (NTPrem (((MLTFun(ri,_,rm)|MLTFunNot(ri,_,rm)),_) as rt)),_,_, _) ) (*cath*)
+  |          ( NTPrem (((MLTFun(i,_,m)|MLTFunNot(i,_,m)),_) as t),
+    TreeNode ( (NTPrem (((MLTFun(ri,_,rm)|MLTFunNot(ri,_,rm)),_) as rt),_,_, _) )) (*cath*)
                                                          when i=ri && m=rm ->
     let ts, refts = get_in_terms_func env t, get_in_terms_func env rt in
     let mapping = find_renaming ts refts in

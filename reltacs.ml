@@ -188,10 +188,11 @@ let pp_prover_result pr =
 
 (* The type of a prover for extracted functions. *)
 type scheme_prover = {
-  prov_intro : 
+  prov_intro :
     ((htyp, henv) extract_env * ident) -> (htyp fix_term) proof_scheme -> tacts;
-  prov_branch : ((htyp, henv) extract_env * ident) -> 
-    (htyp fix_term) ps_branch -> Evd.evar_map -> EConstr.constr -> prover_result;
+  prov_branch :
+    ((htyp, henv) extract_env * ident) -> (htyp fix_term) ps_branch
+      -> Evd.evar_map -> EConstr.constr -> prover_result;
   prov_concl : 
     ((htyp, henv) extract_env * ident) -> (htyp fix_term) proof_scheme -> tacts;
 }
@@ -506,7 +507,7 @@ let simple_pc_intro premisse (env, id) _ =
     (* intros predicate arguments *)
     INTROSUNTILZERO;
     (* intro H (lemma premisse) *)
-    INTRO premisse;
+    INTRO (ident_of_string "toto");
     (* rewrite H (or subst H or change right with left) *)
     SUBST rewrite_premisse;
     (* apply ind scheme *)
@@ -526,8 +527,7 @@ let rec get_pmterm_name_order pm = match pm with
   | PMNot (pm, _) -> get_pmterm_name_order pm
   | PMOr (pml, _) -> List.flatten (List.map get_pmterm_name_order pml)
   | PMAnd (pml, _) -> List.flatten (List.map get_pmterm_name_order pml)
-  | PMChoice (pml, _) -> assert false 
-                         (* not imp yet, TODO: find wich one is used. *)
+  | PMChoice (_, _) -> assert false (* not imp yet, TODO: find wich one is used. *)
   | _ -> []
 
 let get_init_prem_order (env, id) prop_name = 
