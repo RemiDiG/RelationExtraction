@@ -55,12 +55,12 @@ type 'a goal_finder = Id.t option -> EConstr.constr -> 'a option
 (* TODO: check that forall term = type ? *)
 let goal_iterator premisse fa li pr f sigma goal start =
   let rec rec_it i term = match EConstr.kind sigma term with
-    | Prod ({Context.binder_name = Name n}, c, c_next) when (fa || pr) && i >= start && 
+    | Prod ({Context.binder_name = Name n}, c, c_next) when (fa || pr) && i >= start &&
         Id.to_string n <> string_of_ident premisse (* premisse is rec hyp name *) ->
       begin match f (Some n) sigma c with
       | Some res -> i, res
       | None -> rec_it (i+1) c_next end
-    | Prod ({Context.binder_name = Anonymous}, c, c_next) when pr && i >= start -> 
+    | Prod ({Context.binder_name = Anonymous}, c, c_next) when pr && i >= start ->
       begin match f None sigma c with
       | Some res -> i, res
       | None -> rec_it (i+1) c_next end
@@ -499,14 +499,14 @@ let mk_ti_ai_n tal1 tal2 = {
 (*   no logical connectors                               *)
 (*********************************************************)
 
-let simple_pc_intro premisse (env, id) _ =
+let simple_pc_intro (env, id) _ =
   let rewrite_premisse = ident_of_string fixed_name_po in
   let f_name = (fst (extr_get_fixfun env id)).fixfun_name in
   let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
   Tac_list [
     (* intros predicate arguments *)
     INTROSUNTILZERO;
-    (* intro H (lemma premisse) *)
+    (* intro H (nonsensical name since we directly substitute) *)
     INTRO (ident_of_string "toto");
     (* rewrite H (or subst H or change right with left) *)
     SUBST rewrite_premisse;
@@ -675,7 +675,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
 let simple_pc : scheme_prover =
   let premisse = ident_of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
   {
-  prov_intro = simple_pc_intro premisse;
+  prov_intro = simple_pc_intro;
   prov_branch = simple_pc_branch premisse;
   prov_concl = simple_pc_concl;
   }

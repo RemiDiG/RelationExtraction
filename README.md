@@ -5,7 +5,7 @@
 ### Prerequisites
 You need to have OCaml and Coq >= 8.12.
 
-Updated and tested with Rocq 9.1.1.
+Updated and tested with Rocq 9.1.1 and Ocaml 4.14.0.
 
 ### Building the plugin
 Simply type `./configure` then `make` in the plugin source directory. This will build the
