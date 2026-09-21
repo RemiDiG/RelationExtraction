@@ -45,7 +45,7 @@ type 'a goal_finder = Id.t option -> EConstr.constr -> 'a option
 *)
 
 (* goal_iterator : 
-     bool -> bool -> bool -> 'a goal_finder -> evar_map -> econstr -> int -> (int * 'a)
+    Id.t ->  bool -> bool -> bool -> 'a goal_finder -> evar_map -> econstr -> int -> (int * 'a)
    goal_iterator browses the goal and try to identify one part of the product
    with f and return the f result and the position of the product part in the
    goal.
@@ -56,7 +56,7 @@ type 'a goal_finder = Id.t option -> EConstr.constr -> 'a option
 let goal_iterator premisse fa li pr f sigma goal start =
   let rec rec_it i term = match EConstr.kind sigma term with
     | Prod ({Context.binder_name = Name n}, c, c_next) when (fa || pr) && i >= start &&
-        Id.to_string n <> string_of_ident premisse (* premisse is rec hyp name *) ->
+        n <> premisse (* premisse is rec hyp name *) ->
       begin match f (Some n) sigma c with
       | Some res -> i, res
       | None -> rec_it (i+1) c_next end
@@ -673,7 +673,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
 
 (* Very basic correction prover. *)
 let simple_pc : scheme_prover =
-  let premisse = ident_of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
+  let premisse = Id.of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
   {
   prov_intro = simple_pc_intro;
   prov_branch = simple_pc_branch premisse;
@@ -683,4 +683,3 @@ let simple_pc : scheme_prover =
 (* Proves a lemma with a simple scheme prover. *)
 let make_proof_simple (env, id) lemma ps =
   make_proof (env, id) lemma simple_pc ps
-
