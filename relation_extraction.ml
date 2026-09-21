@@ -31,7 +31,6 @@ open Fixpointgen
 open Util
 open Pp
 open Declarations
-open Names
 open Nametab
 
 (************************)
@@ -41,24 +40,24 @@ open Nametab
 (* TODO: order specifications (by dependency) before doing a fixpoint 
          extraction. *)
 
-let ident_of_string_option s_opt = match s_opt with
+let id_of_string_option s_opt = match s_opt with
   | None -> None
-  | Some s -> Some (ident_of_string s)
+  | Some s -> Some (fresh_id s)
 
 let rec find_func_name ind_ref modes = match modes with
   | (fn, ind_ref', _, rs)::modes ->
-      if ind_ref == ind_ref' then (ident_of_string_option fn, rs)
+      if ind_ref == ind_ref' then (id_of_string_option fn, rs)
       else find_func_name ind_ref modes
   | [] -> raise Not_found
 
 (* Main routine *)
 let extract_relation_common dep ord ind_ref modes =
   (* Initial henv *)
-  let ind_refs, ind_grefs = List.split (List.map ( fun (_, ind_ref, _, _) ->
+  let ind_refs, ind_grefs = List.split (List.map (fun (_, ind_ref, _, _) ->
     let ind = Globnames.destIndRef (global ind_ref) in
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    let id = ident_of_string (Id.to_string oib.mind_typename) in
-    (id, ind_ref), (id, global ind_ref) ) modes) in
+    let id = ident_of_id oib.mind_typename in
+    (id, ind_ref), (id, global ind_ref)) modes) in
   let henv = { ind_refs = ind_refs; ind_grefs = ind_grefs; cstrs = [] } in
   
   (* Extractions *)
@@ -69,22 +68,21 @@ let extract_relation_common dep ord ind_ref modes =
              oibs in*)
   (*TODO: add irds to ind_refs if they are not present ? 
           ie no mode given, or fail ? *)
-    ident_of_string (Id.to_string oib.mind_typename), ind_ref
+    oib.mind_typename, ind_ref
   ) ind_ref in
   let extractions = List.map (fun (id, ind_ref) ->
     let (fn, rs) = find_func_name ind_ref modes in
-  id, (fn, ord, rs)) ids in
+  ident_of_id id, ((fun o -> match o with | None -> None | Some i -> Some (ident_of_id i)) fn, ord, rs)) ids in
 
   (* Modes *)
-  let modes = List.map ( fun (_, ind_ref, mode, _) ->
+  let modes = List.map (fun (_, ind_ref, mode, _) ->
     let ind_glb = global ind_ref in
     let ind = Globnames.destIndRef ind_glb in
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    let id = ident_of_string (Id.to_string oib.mind_typename) in
+    let id = ident_of_id oib.mind_typename in
     (id, [make_mode ind_glb (Some (adapt_mode ind_ref mode))]) 
   ) modes in
-  let eq_modes = [[MSkip;MInput;MOutput]; [MSkip;MOutput;MInput]; 
-                  [MSkip;MInput;MInput]] in
+  let eq_modes = [[MSkip;MInput;MOutput]; [MSkip;MOutput;MInput]; [MSkip;MInput;MInput]] in
   let modes = (ident_of_string "eq", eq_modes)::modes in
 
   (* Compilation *)
