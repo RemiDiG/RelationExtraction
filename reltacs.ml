@@ -133,12 +133,9 @@ let pp_tac_atom ta = match ta with
 (*  | EAPPLY s -> "EAPPLY " ^ string_of_ident s *) (* Unused 13/04/2026 *)
   | APPLYPROP s -> "APPLYPROP " ^ Id.to_string s
   | APPLYPROPIN (s, h) -> "APPLYPROP " ^ Id.to_string s ^ " IN " ^ Id.to_string h
-  | CHANGEV (h, v, c) -> 
-    "CHANGEV " ^ Id.to_string h ^ ": " ^ Id.to_string v ^ " -> " ^ pp_coq_constr_loc c
-  | CHANGEC (h, c1, c2) ->  
-    "CHANGEC " ^ Id.to_string h ^ ": " ^ pp_coq_constr_loc c1 ^ " -> " ^ pp_coq_constr_loc c2
-  | ASSERTEQUAL (h, v, c, _) -> 
-    "ASSERTEQUAL " ^ Id.to_string h ^ ": " ^ Id.to_string v ^ " = " ^ pp_coq_constr_loc c
+  | CHANGEV (h, v, c) -> "CHANGEV " ^ Id.to_string h ^ ": " ^ Id.to_string v ^ " -> " ^ pp_coq_constr_loc c
+  | CHANGEC (h, c1, c2) -> "CHANGEC " ^ Id.to_string h ^ ": " ^ pp_coq_constr_loc c1 ^ " -> " ^ pp_coq_constr_loc c2
+  | ASSERTEQUAL (h, v, c, _) -> "ASSERTEQUAL " ^ Id.to_string h ^ ": " ^ Id.to_string v ^ " = " ^ pp_coq_constr_loc c
   | AUTO -> "AUTO"
 
 (* Unused (09/03/2026)
@@ -318,10 +315,9 @@ let rec build_tac_atom ta = match ta with
     constr_of_constr_loc_in cloc (fun cstr ->
     get_hyps_in (fun hyps ->
     let hyps_ids = List.map Context.Named.Declaration.get_id hyps in
-    let orig_hyp_id = h in
     let tac = Equality.replace cstr_pat cstr in
     let t = List.fold_right (fun hid tac -> 
-      if orig_hyp_id = hid then tac else
+      if h = hid then tac else
         Tacticals.tclTHEN (replace_in hid cstr_pat cstr) tac
     ) hyps_ids tac in
     if debug_print_tacs then
