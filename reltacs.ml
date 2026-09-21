@@ -53,7 +53,7 @@ type 'a goal_finder = Id.t option -> EConstr.constr -> 'a option
    letins, and premisses.
 *)
 (* TODO: check that forall term = type ? *)
-let goal_iterator premisse fa li pr f sigma goal start =
+let goal_iterator (premisse: Id.t) fa li pr f sigma goal start =
   let rec rec_it i term = match EConstr.kind sigma term with
     | Prod ({Context.binder_name = Name n}, c, c_next) when (fa || pr) && i >= start &&
         n <> premisse (* premisse is rec hyp name *) ->
@@ -87,26 +87,26 @@ type hyp_finder = constr option -> Evd.evar_map -> EConstr.constr -> EConstr.con
    it in an hypothesis. *)
 type coq_constr_loc =
   | CoqConstr of constr
-  | LocInHyp of ident * hyp_finder
+  | LocInHyp of Id.t * hyp_finder
 
 (* A coq tactic. *)
 type tac_atom =
-  | INTRO of ident
-  | INTROS of ident list
+  | INTRO of Id.t
+  | INTROS of Id.t list
   | INTROSUNTILZERO (* intros * *)
-  | REVERT of ident list
-  | SYMMETRY of ident
-  | SUBST of ident
-  | APPLY of ident
+  | REVERT of Id.t list
+  | SYMMETRY of Id.t
+  | SUBST of Id.t
+  | APPLY of Id.t
 (*  | APPLYIN of ident * ident *) (* Unused 13/04/2026 *)
 (*  | EAPPLY of ident *) (* Unused 13/04/2026 *)
-  | APPLYPROP of ident (* spec constr name *)
-  | APPLYPROPIN of ident (* spec constr name *) * ident
-  | CHANGEV of ident * ident * coq_constr_loc
+  | APPLYPROP of Id.t (* spec constr name *)
+  | APPLYPROPIN of Id.t (* spec constr name *) * Id.t
+  | CHANGEV of Id.t * Id.t * coq_constr_loc
     (* CHANGEV (h, v, c) : change v with c if h is v = c *)
-  | CHANGEC of ident * coq_constr_loc * coq_constr_loc
+  | CHANGEC of Id.t * coq_constr_loc * coq_constr_loc
     (* CHANGEC (h, cp, c) : change cp with c if h is cp = c *)
-  | ASSERTEQUAL of ident * ident * coq_constr_loc * types
+  | ASSERTEQUAL of Id.t * Id.t * coq_constr_loc * types
     (* ASSERTEQUAL (h, v, c, t) : assert (h : v = c) if c has type t *)
   | AUTO
 
@@ -119,26 +119,26 @@ let rec concat_list l sep = match l with
 
 let pp_coq_constr_loc ccl = match ccl with
   | CoqConstr _ -> "[constr]"
-  | LocInHyp (h, _) -> "[in hyp: " ^ string_of_ident h ^ "]"
+  | LocInHyp (h, _) -> "[in hyp: " ^ Id.to_string h ^ "]"
 
 let pp_tac_atom ta = match ta with
-  | INTRO s -> "INTRO " ^ string_of_ident s
-  | INTROS sl -> "INTROS " ^ concat_list (List.map string_of_ident sl) " "
+  | INTRO s -> "INTRO " ^ Id.to_string s
+  | INTROS sl -> "INTROS " ^ concat_list (List.map Id.to_string sl) " "
   | INTROSUNTILZERO -> "INTROS *"
-  | REVERT sl -> "REVERT " ^ concat_list (List.map string_of_ident sl) " "
-  | SYMMETRY s -> "SYMMETRY " ^ string_of_ident s
-  | SUBST s -> "SUBST " ^ string_of_ident s
-  | APPLY s -> "APPLY " ^ string_of_ident s
+  | REVERT sl -> "REVERT " ^ concat_list (List.map Id.to_string sl) " "
+  | SYMMETRY s -> "SYMMETRY " ^ Id.to_string s
+  | SUBST s -> "SUBST " ^ Id.to_string s
+  | APPLY s -> "APPLY " ^ Id.to_string s
 (*  | APPLYIN (s, h) -> "APPLY " ^ string_of_ident s ^ " IN " ^ string_of_ident h *) (* Unused 13/04/2026 *)
 (*  | EAPPLY s -> "EAPPLY " ^ string_of_ident s *) (* Unused 13/04/2026 *)
-  | APPLYPROP s -> "APPLYPROP " ^ string_of_ident s
-  | APPLYPROPIN (s, h) -> "APPLYPROP " ^ string_of_ident s ^ " IN " ^ string_of_ident h
+  | APPLYPROP s -> "APPLYPROP " ^ Id.to_string s
+  | APPLYPROPIN (s, h) -> "APPLYPROP " ^ Id.to_string s ^ " IN " ^ Id.to_string h
   | CHANGEV (h, v, c) -> 
-    "CHANGEV " ^ string_of_ident h ^ ": " ^ string_of_ident v ^ " -> " ^ pp_coq_constr_loc c
+    "CHANGEV " ^ Id.to_string h ^ ": " ^ Id.to_string v ^ " -> " ^ pp_coq_constr_loc c
   | CHANGEC (h, c1, c2) ->  
-    "CHANGEC " ^ string_of_ident h ^ ": " ^ pp_coq_constr_loc c1 ^ " -> " ^ pp_coq_constr_loc c2
+    "CHANGEC " ^ Id.to_string h ^ ": " ^ pp_coq_constr_loc c1 ^ " -> " ^ pp_coq_constr_loc c2
   | ASSERTEQUAL (h, v, c, _) -> 
-    "ASSERTEQUAL " ^ string_of_ident h ^ ": " ^ string_of_ident v ^ " = " ^ pp_coq_constr_loc c
+    "ASSERTEQUAL " ^ Id.to_string h ^ ": " ^ Id.to_string v ^ " = " ^ pp_coq_constr_loc c
   | AUTO -> "AUTO"
 
 (* Unused (09/03/2026)
@@ -175,7 +175,7 @@ let pp_tacts tacts = match tacts with
 
 (* The result returned by a prover. *)
 type prover_result = {
-  pres_intros : ident list;
+  pres_intros : Id.t list;
   pres_tacts : tacts;
 }
 
@@ -189,12 +189,12 @@ let pp_prover_result pr =
 (* The type of a prover for extracted functions. *)
 type scheme_prover = {
   prov_intro :
-    ((htyp, henv) extract_env * ident) -> (htyp fix_term) proof_scheme -> tacts;
+    ((htyp, henv) extract_env * Id.t) -> (htyp fix_term) proof_scheme -> tacts;
   prov_branch :
-    ((htyp, henv) extract_env * ident) -> (htyp fix_term) ps_branch
+    ((htyp, henv) extract_env * Id.t) -> (htyp fix_term) ps_branch
       -> Evd.evar_map -> EConstr.constr -> prover_result;
   prov_concl : 
-    ((htyp, henv) extract_env * ident) -> (htyp fix_term) proof_scheme -> tacts;
+    ((htyp, henv) extract_env * Id.t) -> (htyp fix_term) proof_scheme -> tacts;
 }
 
 (* Coq useful functions. *)
@@ -221,7 +221,7 @@ let get_evarmap_in f =
   Proofview.Goal.enter (fun goal_s -> f (Proofview.Goal.sigma goal_s))
 
 let get_evarmap =
-  let evm = ref (Evd.empty) in
+  let evm = ref Evd.empty in
   let tac = get_evarmap_in (fun sigma -> evm := sigma; Tacticals.tclIDTAC) in
   fun pstate -> (ignore (Declare.Proof.by tac pstate); !evm)
 
@@ -241,7 +241,7 @@ let get_proof_from_tac (env, id) lemma prover branch =
 let rec get_hyp_by_name hn hyps = match hyps with
   | [] -> raise Not_found
   | decl::hyps_tl -> let (id, topt, t) = Context.Named.Declaration.to_tuple decl in
-    if Id.to_string (Context.binder_name id) = string_of_ident hn then topt, t else (* TODO (13/04/2026) instead of ident, use Names.Id.t? *)
+    if Context.binder_name id = hn then topt, t else
     get_hyp_by_name hn hyps_tl
 
 let constr_of_constr_loc_in cstr_loc f =
@@ -266,32 +266,32 @@ let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
   | INTRO id -> 
-    if debug_print_tacs then Printf.eprintf "intro %s.\n" (string_of_ident id)
+    if debug_print_tacs then Printf.eprintf "intro %s.\n" (Id.to_string id)
     else ();
-    Tactics.intro_using (id_of_ident id)
+    Tactics.intro_using id
   | INTROS idl -> 
-    if debug_print_tacs then Printf.eprintf "intros %s.\n" (concat_list (List.map string_of_ident idl) " ")
+    if debug_print_tacs then Printf.eprintf "intros %s.\n" (concat_list (List.map Id.to_string idl) " ")
     else ();
-    Tactics.intros_using (List.map id_of_ident idl)
+    Tactics.intros_using idl
   | INTROSUNTILZERO -> 
     if debug_print_tacs then Printf.eprintf "intros *.\n"
     else ();
     Tactics.intros_patterns false [CAst.make (Tactypes.IntroForthcoming true)]
   | REVERT idl -> 
     if debug_print_tacs && List.length idl > 0 then 
-      Printf.eprintf "revert %s.\n" (concat_list (List.map string_of_ident idl) " ")
+      Printf.eprintf "revert %s.\n" (concat_list (List.map Id.to_string idl) " ")
     else ();
-    Generalize.revert (List.map id_of_ident idl)
+    Generalize.revert idl
   | SYMMETRY id -> 
-    if debug_print_tacs then Printf.eprintf "symmetry in %s.\n" (string_of_ident id)
+    if debug_print_tacs then Printf.eprintf "symmetry in %s.\n" (Id.to_string id)
     else ();
-    Tactics.intros_symmetry (Locusops.onHyp (id_of_ident id))
+    Tactics.intros_symmetry (Locusops.onHyp id)
   | SUBST id -> 
-    if debug_print_tacs then Printf.eprintf "subst %s.\n" (string_of_ident id)
+    if debug_print_tacs then Printf.eprintf "subst %s.\n" (Id.to_string id)
     else ();
-    Equality.subst [id_of_ident id]
-  | APPLY id -> let cstr = find_coq_constr_s (string_of_ident id) in 
-    if debug_print_tacs then Printf.eprintf "apply %s.\n" (string_of_ident id)
+    Equality.subst [id]
+  | APPLY id -> let cstr = find_coq_constr_s (Id.to_string id) in 
+    if debug_print_tacs then Printf.eprintf "apply %s.\n" (Id.to_string id)
     else ();
     Tactics.apply (EConstr.of_constr cstr)
 (*  | APPLYIN (id, h) -> let cstr = find_coq_constr_s (string_of_ident id) in 
@@ -302,23 +302,23 @@ let rec build_tac_atom ta = match ta with
     if debug_print_tacs then Printf.eprintf "eapply %s.\n" (string_of_ident id)
     else ();
     Tactics.eapply (EConstr.of_constr cstr) *) (* Unused 13/04/2026 *)
-  | APPLYPROP id -> let cstr = find_coq_constr_s (string_of_ident id) in 
-    if debug_print_tacs then Printf.eprintf "apply %s; try assumption.\n" (string_of_ident id)
+  | APPLYPROP id -> let cstr = find_coq_constr_s (Id.to_string id) in (* TODO[21/09/2026] find_coq_constr should not be used? *) 
+    if debug_print_tacs then Printf.eprintf "apply %s; try assumption.\n" (Id.to_string id)
     else ();
     Tacticals.tclTHEN (Tactics.apply (EConstr.of_constr cstr))
       (Tacticals.tclTRY Tactics.assumption)
-  | APPLYPROPIN (id, h) -> let cstr = find_coq_constr_s (string_of_ident id) in
+  | APPLYPROPIN (id, h) -> let cstr = find_coq_constr_s (Id.to_string id) in
     if debug_print_tacs then 
-      Printf.eprintf "apply %s in %s; try assumption.\n" (string_of_ident id) (string_of_ident h)
+      Printf.eprintf "apply %s in %s; try assumption.\n" (Id.to_string id) (Id.to_string h)
     else ();
-    Tacticals.tclTHEN (Tactics.apply_in true false (id_of_ident h) [None,CAst.make (EConstr.of_constr cstr,Tactypes.NoBindings)] None)
+    Tacticals.tclTHEN (Tactics.apply_in true false h [None,CAst.make (EConstr.of_constr cstr,Tactypes.NoBindings)] None)
       (Tacticals.tclTRY Tactics.assumption)
   | CHANGEC (h, cstr_pat, cloc) ->
     constr_of_constr_loc_in cstr_pat (fun cstr_pat ->
     constr_of_constr_loc_in cloc (fun cstr ->
     get_hyps_in (fun hyps ->
     let hyps_ids = List.map Context.Named.Declaration.get_id hyps in
-    let orig_hyp_id = id_of_ident h in
+    let orig_hyp_id = h in
     let tac = Equality.replace cstr_pat cstr in
     let t = List.fold_right (fun hid tac -> 
       if orig_hyp_id = hid then tac else
@@ -330,17 +330,17 @@ let rec build_tac_atom ta = match ta with
     else ();
     t)))
   | CHANGEV (h, v, cloc) -> 
-    let cstr_pat = mkVar (id_of_ident v) in
+    let cstr_pat = mkVar v in
     build_tac_atom (CHANGEC (h, CoqConstr cstr_pat, cloc))
   | ASSERTEQUAL (h, v, cloc, t) -> 
     constr_of_constr_loc_in cloc (fun cstr ->
     let eq = find_coq_constr_s "eq" in
-    let var = mkVar (id_of_ident v) in
+    let var = mkVar v in
     let assert_cstr = mkApp (EConstr.of_constr eq, [|t; var; cstr|]) in
     if debug_print_tacs then 
-      Printf.eprintf "assert (%s : %s).\n" (string_of_ident h) (pp_coq_constr assert_cstr)
+      Printf.eprintf "assert (%s : %s).\n" (Id.to_string h) (pp_coq_constr assert_cstr)
     else ();
-    Tactics.assert_before (Name (id_of_ident h)) assert_cstr)
+    Tactics.assert_before (Name h) assert_cstr)
   | AUTO -> 
     if debug_print_tacs then Printf.eprintf "auto.\n"
     else ();
@@ -348,12 +348,13 @@ let rec build_tac_atom ta = match ta with
 
 (* Proves a goal, with a given scheme prover. *)
 let make_proof (id_po: Id.t) (env, id) lemma prover ps =
+  let id = id_of_ident id in
   if debug_print_tacs then
-    let (fixfun, _) = extr_get_fixfun env id in
+    let (fixfun, _) = extr_get_fixfun env (ident_of_id id) in
     let fn = string_of_ident fixfun.fixfun_name in
     let in_s = concat_list (List.map string_of_ident fixfun.fixfun_args) " " in
     let lem = "Lemma " ^ fn ^ "_correct_printed : forall " ^ in_s ^ " " ^ Id.to_string id_po ^ ", " ^
-              fn ^ " " ^ in_s ^ " = " ^ Id.to_string id_po ^ " -> " ^ string_of_ident id ^ " " ^ in_s ^
+              fn ^ " " ^ in_s ^ " = " ^ Id.to_string id_po ^ " -> " ^ Id.to_string id ^ " " ^ in_s ^
               " " ^ Id.to_string id_po ^ "." in
     Printf.eprintf "\n\n\n%s\nProof.\n" lem
   else ();
@@ -387,7 +388,7 @@ let make_proof (id_po: Id.t) (env, id) lemma prover ps =
         let ai_tac = Tac_list (List.flatten aint) in
         let n_tac = Tac_list (List.flatten norm) in
         let ap_tac = Tac_list (List.flatten apro) in
-        let prop_tac = Tac_list [APPLYPROP (ident_of_string prop)] in
+        let prop_tac = Tac_list [APPLYPROP (Id.of_string prop)] in (* TODO[21/09/2026] fresh *)
         let lemma = apply_tacs lemma bi_tac in
         let lemma = apply_tacs lemma intros_tac in
         let lemma = apply_tacs lemma ai_tac in
@@ -498,16 +499,15 @@ let mk_ti_ai_n tal1 tal2 = {
 (*********************************************************)
 
 let simple_pc_intro (id_po: Id.t) (env, id) _ =
-  let rewrite_premisse = ident_of_string (Id.to_string id_po) in
-  let f_name = (fst (extr_get_fixfun env id)).fixfun_name in
-  let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
+  let f_name = id_of_ident ((fst (extr_get_fixfun env (ident_of_id id))).fixfun_name) in (* TODO[21/09/2026] fresh *)
+  let f_name = id_of_ident (ident_of_string ((Id.to_string f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
   Tac_list [
     (* intros predicate arguments *)
     INTROSUNTILZERO;
-    (* intro H (nonsensical name since we directly substitute) *)
-    INTRO (ident_of_string "toto");
+    (* intro H *)
+    INTRO (Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string "to_subst") Id.Set.empty);
     (* rewrite H (or subst H or change right with left) *)
-    SUBST rewrite_premisse;
+    SUBST id_po;
     (* apply ind scheme *)
     APPLY f_name
   ]
@@ -537,7 +537,7 @@ let get_init_prem_order (env, id) prop_name =
   
 
 let simple_pc_branch premisse (env, id) branch sigma goal =
-  let fun_name = string_of_ident (fst (extr_get_fixfun env id)).fixfun_name in
+  let fun_name = string_of_ident (fst (extr_get_fixfun env (ident_of_id id))).fixfun_name in
   let prop_name = match branch.psb_prop_name with Some n -> n 
     | _ -> assert false in
   let (hname_index, til, _, _, recvars) = 
@@ -571,15 +571,15 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
           let i, _ = goal_iterator premisse false true false 
                           (find_let_in_cstr v) sigma goal (last_i+1) in
           let hn = (*fresh_string_id "HLREC_" () in *) ident_of_string v in
-          i, [ASSERTEQUAL (hrec, ident_of_string v, LocInHyp (hn, hyp_def), EConstr.of_constr t); AUTO;
-              SYMMETRY hrec], hn, [v,hrec]
+          i, [ASSERTEQUAL (id_of_ident hrec, Id.of_string v, LocInHyp (id_of_ident hn, hyp_def), EConstr.of_constr t); AUTO; (* TODO[21/09/2026] fresh names *)
+              SYMMETRY (id_of_ident hrec)], hn, [v,hrec]
         | CaseConstr (_, _, _, _) ->
           let i, (_, _) = goal_iterator premisse false false true 
                               find_eq_get_sides sigma goal (last_i+1) in
           i, [], hrec, []
         | _ -> assert false (* TODO? *) in
 
-      let ti = mk_ti_n (tacs@[APPLYPROPIN (ident_of_string (dep_pred ^ "_correct"), hrec)]) in
+      let ti = mk_ti_n (tacs@[APPLYPROPIN (Id.of_string (dep_pred ^ "_correct"), id_of_ident hrec)]) in (* TODO[21/09/2026] fresh names *)
       ((i, hn)::hname_index, ti::til, pmn, i, recvars@rv)
     else match at with
       | LetVar (pi, (_, (_, Some t)), _) 
@@ -590,15 +590,15 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
         let hname = (*fresh_string_id "HLV_" ()*) ident_of_string v in
         let eqhname = ident_of_string (string_of_ident hname ^ "EQ") in
         let ti = mk_ti_ai_n 
-                  [ASSERTEQUAL (eqhname, ident_of_string v, LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
-                  [CHANGEV (eqhname, ident_of_string v, LocInHyp (eqhname, hyp_eq_right))] in
+                  [ASSERTEQUAL (id_of_ident eqhname, id_of_ident (ident_of_string v), LocInHyp (id_of_ident hname, hyp_def), EConstr.of_constr t); AUTO]
+                  [CHANGEV (id_of_ident eqhname, id_of_ident (ident_of_string v), LocInHyp (id_of_ident eqhname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
       | CaseConstr (_, _, _, _) -> 
         let i, (_, _) = goal_iterator premisse false false true 
                                         find_eq_get_sides sigma goal (last_i+1) in
         let hname = fresh_ident "HCC_" in
-        let ti = mk_ti_n [CHANGEC (hname, LocInHyp (hname, hyp_eq_left), 
-                                   LocInHyp (hname, hyp_eq_right))] in
+        let ti = mk_ti_n [CHANGEC (id_of_ident hname, LocInHyp (id_of_ident hname, hyp_eq_left), 
+                                   LocInHyp (id_of_ident hname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
       | CaseDum _ -> 
         let i, _ = goal_iterator premisse false false true 
@@ -646,7 +646,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       let prop_name = 
         match branch.psb_prop_name with Some n -> n | _ -> assert false in
       let init_order = 
-        get_init_prem_order (env, id) (ident_of_string prop_name) in
+        get_init_prem_order (env, ident_of_id id) (ident_of_string prop_name) in
       let init_order = List.map string_of_ident init_order in
       let branch_order, _ = get_branch_prem_order branch.psb_branch in
       let rec order_prem pml init branch = match init with 
@@ -660,12 +660,12 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
     (* Use REVERT only if list of size non-zero *)
     let til' =
       if List.length p_h > 0 then
-    	let ti_revert_rec = mk_ti_n [REVERT (List.rev p_h)] in
+    	let ti_revert_rec = mk_ti_n [REVERT (List.rev (List.map id_of_ident p_h))] in
     	til@[ti_revert_rec]
       else
         til
     in
-  { pres_intros = hnames;
+  { pres_intros = List.map id_of_ident hnames;
     pres_tacts = Prop_tacs (til', prop_name);
   }
 
