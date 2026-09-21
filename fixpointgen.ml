@@ -37,7 +37,7 @@ open Pp
 (* Is a coq constr the option type ? *)
 let is_ind_type_option c = match Constr.kind c with
   | Ind (ind, _) ->
-    let _,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
+    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     Id.to_string oib.mind_typename = "option"
   | _ -> false
 
@@ -91,7 +91,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
     let c = if i = fn then mkRel (List.length bind + 1)
             else try List.assoc i (env.extr_henv.cstrs) with Not_found -> 
       let gr = Nametab.global
-        (qualid_of_ident (Id.of_string (string_of_ident i))) in
+        (qualid_of_ident (id_of_ident i)) in
       if Global.is_polymorphic gr then CErrors.user_err (str "Polymorphic references not supported.");
       (* to support polymorphic constant, one would need to pass an evar_map *)
       UnivGen.constr_of_monomorphic_global (Global.env ()) gr in
@@ -112,7 +112,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
     let ta = Array.of_list (List.map2 (fun (il, t, _) tyl ->
       let nbind = (List.rev il) @ bind in
       List.fold_right2 (fun i ty t -> 
-        mkLambda (Context.nameR (Id.of_string (string_of_ident i)), ty, t)
+        mkLambda (Context.nameR (id_of_ident i), ty, t)
       ) il tyl (gen_constr (env,id) fn nbind t)  
     ) iltl cstrs_arg_types) in
     mkCase (Inductive.contract_case (Global.env ()) (case_inf, (ty, Sorts.Relevant), NoInvert, (gen_constr (env,id) fn bind t), ta))
@@ -130,7 +130,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
   | FixTrue -> find_coq_constr_s "Corelib.Init.Datatypes.true"
   | FixFalse -> find_coq_constr_s "Corelib.Init.Datatypes.false"
   | FixLetin (i, (l,(ty, Some sty)), t, _) ->
-    mkLetIn (Context.nameR (Id.of_string (string_of_ident i)),
+    mkLetIn (Context.nameR (id_of_ident i),
       (gen_constr (env,id) fn bind (l,(ty, Some sty))), sty,
       (gen_constr (env,id) fn (i::bind) t))
   | FixLetin _ -> CErrors.anomaly ~label:"RelationExtraction"
@@ -156,13 +156,13 @@ let gen_fixpoint env =
       (List.map string_of_ident args) typs c in
     let ty = gen_fix_type (env,i) (List.map string_of_ident args) in
     let recdec = 
-      ([|(Context.nameR (Id.of_string (string_of_ident fn)))|], [|ty|], [|c|]) in
+      ([|(Context.nameR (id_of_ident fn))|], [|ty|], [|c|]) in
     let fi = match fix_get_recursion_style env i with
       | StructRec i -> ([|i-1|], 0)
       | _ -> ([|0|], 0) in
     let f = mkFix (fi,recdec) in
     (*let univs = Entries.Monomorphic_entry in (* ?? *)*)
-    let name = Id.of_string (string_of_ident fn) in
+    let name = id_of_ident fn in
     let scope = Locality.(Global ImportDefaultBehavior) in
     let kind = Decls.(IsDefinition Fixpoint) in
     let entry = Declare.definition_entry ~opaque:false ~types:ty (*~univs*) f in

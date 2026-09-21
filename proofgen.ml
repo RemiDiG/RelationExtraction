@@ -37,7 +37,7 @@ let build_ind_scheme fun_name =
     qualid_of_ident (Id.of_string fun_name) in
   let make_fscheme () =
     Funind_plugin.Gen_principle.build_scheme
-      [CAst.make (Id.of_string (fun_name ^ "_ind")), ref_func,
+      [CAst.make (Id.of_string (fun_name ^ "_ind")), ref_func, (* TODO[21/09/2026] sensitive! should be the same as in reltacs.ml*)
        UnivGen.QualityOrSet.Qual (Sorts.Quality.QConstant Sorts.Quality.QProp)] in
   try make_fscheme () with Funind_plugin.Gen_principle.No_graph_found ->
     let () = Funind_plugin.Gen_principle.make_graph (Nametab.global ref_func) in

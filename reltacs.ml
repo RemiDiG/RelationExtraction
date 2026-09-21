@@ -495,12 +495,12 @@ let mk_ti_ai_n tal1 tal2 = {
 
 let simple_pc_intro (id_po: Id.t) (env, id) _ =
   let f_name = id_of_ident ((fst (extr_get_fixfun env (ident_of_id id))).fixfun_name) in (* TODO[21/09/2026] fresh *)
-  let f_name = id_of_ident (ident_of_string ((Id.to_string f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
+  let f_name = id_of_ident (ident_of_string ((Id.to_string f_name) ^ "_ind")) in (* TODO[21/09/2026] fresh instead? but this is sensitive! should be the same as in proofgen.ml *)
   Tac_list [
     (* intros predicate arguments *)
     INTROSUNTILZERO;
     (* intro H *)
-    INTRO (Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string "to_subst") Id.Set.empty);
+    INTRO (fresh_id "to_subst");
     (* rewrite H (or subst H or change right with left) *)
     SUBST id_po;
     (* apply ind scheme *)
@@ -666,7 +666,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
 
 (* Very basic correction prover. *)
 let simple_pc (id_po: Id.t) : scheme_prover =
-  let premisse = Id.of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
+  let premisse = Id.of_string "H" in (* TODO 13/04/2026 fresh name for that! used by FunInd??!! *)
   {
   prov_intro = simple_pc_intro id_po;
   prov_branch = simple_pc_branch premisse;
