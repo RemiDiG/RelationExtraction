@@ -40,6 +40,7 @@ val id_of_ident : ident -> Names.Id.t
 val fresh_ident : string -> ident
 val fresh_string_id : string -> unit -> string
 
+val fresh_id : string -> Names.Id.t
 
 (*************************)
 (* Annotation for proofs *)

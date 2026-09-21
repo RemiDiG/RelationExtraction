@@ -56,6 +56,9 @@ let fresh_string_id =
   fun base_name () -> i := !i + 1; base_name ^ (string_of_int !i)
 let fresh_ident base_name = ident_of_string (fresh_string_id base_name ())
 
+let fresh_id (base_name: string) : Names.Id.t =
+   Namegen.next_ident_away_in_goal (Global.env()) (Names.Id.of_string base_name) Names.Id.Set.empty
+
 
 (*************************)
 (* Annotation for proofs *)

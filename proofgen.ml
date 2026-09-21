@@ -83,7 +83,7 @@ let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
   cstr
 
 let gen_correction_proof env (id: Id.t) : unit =
-  let id_po : Id.t = Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string "po") Id.Set.empty in (* Fresh id *)
+  let id_po : Id.t = fresh_id "po" in
   let (fixfun, ps) = extr_get_fixfun env (ident_of_id id) in
   let mode = List.hd (extr_get_modes env (ident_of_id id)) in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
