@@ -24,10 +24,13 @@
 open Pred
 open Coq_stuff
 
+(* Rocq dependencies *)
+open Names
+
 (********************)
 (* Proof generation *)
 (********************)
 
 (* Try to generate the correction lemma and the associated tactical proof. *)
-val gen_correction_proof : (htyp, henv) extract_env -> ident -> unit
+val gen_correction_proof : (htyp, henv) extract_env -> Id.t -> unit
 

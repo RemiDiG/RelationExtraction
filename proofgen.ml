@@ -44,7 +44,8 @@ let build_ind_scheme fun_name =
     make_fscheme ()
 
 
-let build_correct_lemma (out_name: Id.t) env id fixfun =
+let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
+  let id = ident_of_id id in
   let spec = extr_get_spec env id in
   let in_names = List.map string_of_ident fixfun.fixfun_args in
   let in_types = List.map get_coq_type (get_in_types (env, id)) in
@@ -81,10 +82,10 @@ let build_correct_lemma (out_name: Id.t) env id fixfun =
   ) in_names in_types cstr in
   cstr
 
-let gen_correction_proof env id : unit =
+let gen_correction_proof env (id: Id.t) : unit =
   let id_po : Id.t = Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string "po") Id.Set.empty in (* Fresh id *)
-  let (fixfun, ps) = extr_get_fixfun env id in
-  let mode = List.hd (extr_get_modes env id) in
+  let (fixfun, ps) = extr_get_fixfun env (ident_of_id id) in
+  let mode = List.hd (extr_get_modes env (ident_of_id id)) in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
   let full = is_full_extraction mode in
 

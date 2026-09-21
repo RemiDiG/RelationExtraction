@@ -348,7 +348,6 @@ let rec build_tac_atom ta = match ta with
 
 (* Proves a goal, with a given scheme prover. *)
 let make_proof (id_po: Id.t) (env, id) lemma prover ps =
-  let id = id_of_ident id in
   if debug_print_tacs then
     let (fixfun, _) = extr_get_fixfun env (ident_of_id id) in
     let fn = string_of_ident fixfun.fixfun_name in
