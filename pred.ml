@@ -24,6 +24,9 @@
 open Host_stuff
 open Proof_scheme
 
+(* Rocq dependencies *)
+open Names
+
 exception RelationExtractionError of string
 
 (*********)
@@ -47,17 +50,17 @@ let flatmap f l = List.flatten ((List.map f) l)
 type ident = string
 let string_of_ident i = i
 let ident_of_string i = i
-let ident_of_id (id : Names.Id.t) : ident =
-  ident_of_string (Names.Id.to_string id)
-let id_of_ident (id : ident) : Names.Id.t =
-  Names.Id.of_string (string_of_ident id)
+let ident_of_id (id : Id.t) : ident =
+  ident_of_string (Id.to_string id)
+let id_of_ident (id : ident) : Id.t =
+  Id.of_string (string_of_ident id)
 let fresh_string_id =
   let i = ref 0 in
   fun base_name () -> i := !i + 1; base_name ^ (string_of_int !i)
 let fresh_ident base_name = ident_of_string (fresh_string_id base_name ())
 
-let fresh_id (base_name: string) : Names.Id.t =
-   Namegen.next_ident_away_in_goal (Global.env()) (Names.Id.of_string base_name) Names.Id.Set.empty
+let fresh_id (base_name: string) : Id.t =
+   Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) Id.Set.empty
 
 
 (*************************)
