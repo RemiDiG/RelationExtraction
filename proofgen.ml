@@ -82,8 +82,7 @@ let build_correct_lemma (out_name: Id.t) env id fixfun =
   cstr
 
 let gen_correction_proof env id : unit =
-  let id_po : Id.t = Namegen.next_name_away (Name.mk_name (Id.of_string "po")) Id.Set.empty in (* TODO 13/04/2026 fresh name for that, using Rocq mechanisms! *)
-  let _ = Printf.eprintf "\n\n%s.\n\n" (Id.to_string id_po) in
+  let id_po : Id.t = Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string "po") Id.Set.empty in (* Fresh id *)
   let (fixfun, ps) = extr_get_fixfun env id in
   let mode = List.hd (extr_get_modes env id) in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
