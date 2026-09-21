@@ -60,10 +60,8 @@ let get_name (binder,_) = match Context.binder_name binder with
 (* Finds a list of the constructors of an inductive type. *)
 let find_it_constrs constr = 
   let (ind, _), _ = destConstruct constr in
-  let _,idc = Inductive.lookup_mind_specif (Global.env ()) ind in
-  List.map (fun cstr_id -> 
-    ident_of_string (Id.to_string cstr_id)
-  ) (Array.to_list idc.mind_consnames)
+  let _, idc = Inductive.lookup_mind_specif (Global.env ()) ind in
+  List.map ident_of_id (Array.to_list idc.mind_consnames)
 
 (* Gets type of one inductive body. *)
 (*
@@ -84,14 +82,10 @@ let find_types_of_constr constr = match Constr.kind constr with
     List.map (fun (_, c) -> match Constr.kind c with
       | Ind (ind, _) ->
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map (fun cstr_id  -> 
-          (ident_of_string (Id.to_string cstr_id))
-        ) (Array.to_list oib.mind_consnames)), Some c
+        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some c
       | Rel _ -> let ty = mkIndU (to_puniverses ind) in
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map (fun cstr_id  -> 
-          (ident_of_string (Id.to_string cstr_id))
-        ) (Array.to_list oib.mind_consnames)), Some ty
+        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some ty
       | _ -> CTNone, Some c
     ) (List.rev n)
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Constructor type not found")
@@ -106,14 +100,10 @@ let find_types_of_ind ind =
     List.map (fun (_, c) -> match Constr.kind c with
       | Ind (ind, _) ->
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map (fun cstr_id  -> 
-          (ident_of_string (Id.to_string cstr_id))
-        ) (Array.to_list oib.mind_consnames)), Some c
+        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some c
       | Rel _ -> let ty = mkIndU (to_puniverses ind) in
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map (fun cstr_id  -> 
-          (ident_of_string (Id.to_string cstr_id))
-        ) (Array.to_list oib.mind_consnames)), Some ty
+        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some ty
       | _ -> CTNone, Some c
     ) (List.rev n)
 
@@ -162,7 +152,7 @@ match Constr.kind term with
     let env = add_cstr_to_env env i term in
     MLTConst i, env
   | Rel i -> let n = 
-    ident_of_string (Id.to_string (get_name (List.nth prod (i-1)))) in
+    ident_of_id (get_name (List.nth prod (i-1))) in
     MLTVar n, env
   | App (h, args) when isConstruct h ->
     let typs = find_types_of_constr h in
@@ -258,7 +248,7 @@ let rec build_premisse (env, id_spec) named_prod term =
   let build_predicate ind args = 
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     let ind_gref = locate (qualid_of_ident oib.mind_typename) in
-    let id = ident_of_string (Id.to_string oib.mind_typename) in
+    let id = ident_of_id oib.mind_typename in
     let modes = begin match extr_get_modes env id with
       | [] -> [make_mode ind_gref None]
       | modes -> modes end in
@@ -355,7 +345,7 @@ let build_prop (env, id_spec) prop_name prop_type =
   let prems = List.map snd named_prems in
   let prems, env = build_prems (env, id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 
-    | Name id -> true, ident_of_string (Id.to_string id)
+    | Name id -> true, ident_of_id id
     | Anonymous -> false, ident_of_string "") named_prod in
   {
     prop_name = Some prop_name;
@@ -371,7 +361,7 @@ let find_one_spec env (id_spec, _) =
   let ind = Globnames.destIndRef (global idr) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
   let props, env = List.fold_right2 (fun prop_name cstr (pl, env) -> 
-      let prop_name = ident_of_string (Id.to_string prop_name) in
+      let prop_name = ident_of_id prop_name in
       let p, env = build_prop (env, id_spec) prop_name cstr in
       p::pl, env
     )
