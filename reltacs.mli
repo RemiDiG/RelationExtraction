@@ -25,10 +25,13 @@ open Proof_scheme
 open Pred
 open Coq_stuff
 
+(* Rocq dependencies *)
+open Names
+
 (* Proves a lemma with a simple scheme prover. *)
 val make_proof_simple : ((htyp, henv) extract_env * ident) -> Declare.Proof.t ->
                  (htyp fix_term) proof_scheme -> Declare.Proof.t
 
 (* Fixed name *)
-val fixed_name_po : string
+val fixed_name_po : Id.t
 

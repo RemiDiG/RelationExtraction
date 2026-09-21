@@ -263,7 +263,7 @@ let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by None cstr
 
 let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma)))
 
-let fixed_name_po : string = "po" (* TODO 13/04/2026 fresh name for that, using Rocq mechanisms! *)
+let fixed_name_po : Id.t = Id.of_string "po" (* TODO 13/04/2026 fresh name for that, using Rocq mechanisms! *)
 
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
@@ -354,9 +354,9 @@ let make_proof (env, id) lemma prover ps =
     let (fixfun, _) = extr_get_fixfun env id in
     let fn = string_of_ident fixfun.fixfun_name in
     let in_s = concat_list (List.map string_of_ident fixfun.fixfun_args) " " in
-    let lem = "Lemma " ^ fn ^ "_correct_printed : forall " ^ in_s ^ " " ^ fixed_name_po ^ ", " ^
-              fn ^ " " ^ in_s ^ " = " ^ fixed_name_po ^ " -> " ^ string_of_ident id ^ " " ^ in_s ^
-              " " ^ fixed_name_po ^ "." in
+    let lem = "Lemma " ^ fn ^ "_correct_printed : forall " ^ in_s ^ " " ^ Id.to_string fixed_name_po ^ ", " ^
+              fn ^ " " ^ in_s ^ " = " ^ Id.to_string fixed_name_po ^ " -> " ^ string_of_ident id ^ " " ^ in_s ^
+              " " ^ Id.to_string fixed_name_po ^ "." in
     Printf.eprintf "\n\n\n%s\nProof.\n" lem
   else ();
   let intro = prover.prov_intro (env, id) ps in
@@ -500,7 +500,7 @@ let mk_ti_ai_n tal1 tal2 = {
 (*********************************************************)
 
 let simple_pc_intro (env, id) _ =
-  let rewrite_premisse = ident_of_string fixed_name_po in
+  let rewrite_premisse = ident_of_string (Id.to_string fixed_name_po) in
   let f_name = (fst (extr_get_fixfun env id)).fixfun_name in
   let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
   Tac_list [

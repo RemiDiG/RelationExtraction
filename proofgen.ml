@@ -48,7 +48,6 @@ let build_correct_lemma env id fixfun =
   let spec = extr_get_spec env id in
   let in_names = List.map string_of_ident fixfun.fixfun_args in
   let in_types = List.map get_coq_type (get_in_types (env, id)) in
-  let out_name = fixed_name_po in
   let out_type = get_out_type true (env, id) in
   let func = find_coq_constr_i fixfun.fixfun_name in
   let mode = List.hd (extr_get_modes env id) in
@@ -76,7 +75,7 @@ let build_correct_lemma env id fixfun =
     mkApp (eq, [|out_type; mkApp (func, Array.of_list in_rels); out_term|]) in
   let concl = mkApp (pred, Array.of_list (in_rels'@out_term')) in
   let cstr = mkProd(Context.anonR, prem, concl) in
-  let cstr = mkProd (Context.nameR (Id.of_string out_name), out_type, cstr) in
+  let cstr = mkProd (Context.nameR fixed_name_po, out_type, cstr) in
   let cstr = List.fold_right2 ( fun n t c ->
     mkProd (Context.nameR (Id.of_string n), t, c)
   ) in_names in_types cstr in
