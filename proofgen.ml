@@ -44,7 +44,7 @@ let build_ind_scheme fun_name =
     make_fscheme ()
 
 
-let build_correct_lemma env id fixfun =
+let build_correct_lemma (out_name: Id.t) env id fixfun =
   let spec = extr_get_spec env id in
   let in_names = List.map string_of_ident fixfun.fixfun_args in
   let in_types = List.map get_coq_type (get_in_types (env, id)) in
@@ -75,13 +75,15 @@ let build_correct_lemma env id fixfun =
     mkApp (eq, [|out_type; mkApp (func, Array.of_list in_rels); out_term|]) in
   let concl = mkApp (pred, Array.of_list (in_rels'@out_term')) in
   let cstr = mkProd(Context.anonR, prem, concl) in
-  let cstr = mkProd (Context.nameR fixed_name_po, out_type, cstr) in
-  let cstr = List.fold_right2 ( fun n t c ->
+  let cstr = mkProd (Context.nameR out_name, out_type, cstr) in
+  let cstr = List.fold_right2 (fun n t c ->
     mkProd (Context.nameR (Id.of_string n), t, c)
   ) in_names in_types cstr in
   cstr
 
 let gen_correction_proof env id : unit =
+  let id_po : Id.t = Namegen.next_name_away (Name.mk_name (Id.of_string "po")) Id.Set.empty in (* TODO 13/04/2026 fresh name for that, using Rocq mechanisms! *)
+  let _ = Printf.eprintf "\n\n%s.\n\n" (Id.to_string id_po) in
   let (fixfun, ps) = extr_get_fixfun env id in
   let mode = List.hd (extr_get_modes env id) in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
@@ -91,14 +93,14 @@ let gen_correction_proof env id : unit =
   let pstate = build_ind_scheme (string_of_ident fixfun.fixfun_name) in
   
   (* Lemma building *)
-  let cstr = build_correct_lemma env id fixfun in
+  let cstr = build_correct_lemma id_po env id fixfun in
 
   (* Proof registering *)
   let proof_register _ ps : unit =
     let info = Declare.Info.make () in
     let cinfo = Declare.CInfo.make ~name:(Id.of_string (string_of_ident fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
     let lemma = Declare.Proof.start ~cinfo ~info (Evd.from_env (Global.env())) in
-    let lemma = make_proof_simple (env, id) lemma ps in
+    let lemma = make_proof_simple id_po (env, id) lemma ps in
     let (_ : _ list) = Declare.Proof.save_regular ~proof:lemma ~opaque:Vernacexpr.Transparent ~idopt:None in
     () in
 

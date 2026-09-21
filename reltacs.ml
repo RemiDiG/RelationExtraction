@@ -263,8 +263,6 @@ let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by None cstr
 
 let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma)))
 
-let fixed_name_po : Id.t = Id.of_string "po" (* TODO 13/04/2026 fresh name for that, using Rocq mechanisms! *)
-
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
   | INTRO id -> 
@@ -349,14 +347,14 @@ let rec build_tac_atom ta = match ta with
     Auto.default_auto
 
 (* Proves a goal, with a given scheme prover. *)
-let make_proof (env, id) lemma prover ps =
+let make_proof (id_po: Id.t) (env, id) lemma prover ps =
   if debug_print_tacs then
     let (fixfun, _) = extr_get_fixfun env id in
     let fn = string_of_ident fixfun.fixfun_name in
     let in_s = concat_list (List.map string_of_ident fixfun.fixfun_args) " " in
-    let lem = "Lemma " ^ fn ^ "_correct_printed : forall " ^ in_s ^ " " ^ Id.to_string fixed_name_po ^ ", " ^
-              fn ^ " " ^ in_s ^ " = " ^ Id.to_string fixed_name_po ^ " -> " ^ string_of_ident id ^ " " ^ in_s ^
-              " " ^ Id.to_string fixed_name_po ^ "." in
+    let lem = "Lemma " ^ fn ^ "_correct_printed : forall " ^ in_s ^ " " ^ Id.to_string id_po ^ ", " ^
+              fn ^ " " ^ in_s ^ " = " ^ Id.to_string id_po ^ " -> " ^ string_of_ident id ^ " " ^ in_s ^
+              " " ^ Id.to_string id_po ^ "." in
     Printf.eprintf "\n\n\n%s\nProof.\n" lem
   else ();
   let intro = prover.prov_intro (env, id) ps in
@@ -499,8 +497,8 @@ let mk_ti_ai_n tal1 tal2 = {
 (*   no logical connectors                               *)
 (*********************************************************)
 
-let simple_pc_intro (env, id) _ =
-  let rewrite_premisse = ident_of_string (Id.to_string fixed_name_po) in
+let simple_pc_intro (id_po: Id.t) (env, id) _ =
+  let rewrite_premisse = ident_of_string (Id.to_string id_po) in
   let f_name = (fst (extr_get_fixfun env id)).fixfun_name in
   let f_name = (ident_of_string ((string_of_ident f_name) ^ "_ind")) in (* TODO 13/04/2026 fresh instead? *)
   Tac_list [
@@ -672,14 +670,14 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
   }
 
 (* Very basic correction prover. *)
-let simple_pc : scheme_prover =
+let simple_pc (id_po: Id.t) : scheme_prover =
   let premisse = Id.of_string "H" in (* TODO 13/04/2026 fresh name for that! *)
   {
-  prov_intro = simple_pc_intro;
+  prov_intro = simple_pc_intro id_po;
   prov_branch = simple_pc_branch premisse;
   prov_concl = simple_pc_concl;
   }
 
 (* Proves a lemma with a simple scheme prover. *)
-let make_proof_simple (env, id) lemma ps =
-  make_proof (env, id) lemma simple_pc ps
+let make_proof_simple (id_po: Id.t) (env, id) lemma ps =
+  make_proof id_po (env, id) lemma (simple_pc id_po) ps
