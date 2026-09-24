@@ -288,43 +288,6 @@ let pp_ml_fun f =
   concat_list (List.map string_of_ident f.mlfun_args) " " ^ " =\n" ^
   pp_ml_term f.mlfun_body
 
-
-(*********)
-(* Trees *)
-(*********)
-
-(* Tree node content *)
-type 'htyp node_type =
-  | NTPrem of 'htyp ml_term
-  | NTConcl of 'htyp ml_term
-
-(* Tree structure *)
-type 'htyp tree_node =
-  | TreeNode of ('htyp node_type * 'htyp tree_node list * pannot * ident list) (*ajout de kv cath*)
-  | TreeOutput of ('htyp node_type * 'htyp ml_term * pannot * ident list) (*ajout de kv cath*) 
-                               (* ml_term is a conclusion *)
-
-type 'htyp tree = 'htyp tree_node list
-
-let pp_node_type nt = match nt with
-  | NTPrem mlt -> pp_ml_term mlt
-  | NTConcl mlt -> "[" ^ pp_ml_term mlt ^ "]"
-
-let rec pp_tree_node inc tn = match tn with
-  | TreeNode (nt, tnl, _, _) -> inc ^ (pp_node_type nt) ^ "\n" ^ (*cath*)
-    (concat_list (List.map (pp_tree_node (inc^"  ")) tnl) "\n")
-  | TreeOutput (nt, mlt, _, _) -> inc ^ (pp_node_type nt) ^ " -> " ^ (*cath*)
-    pp_ml_term mlt
-
-let pp_tree tree = concat_list (List.map (pp_tree_node "") tree) "\n"
-
-(* Unused (09/03/2026)
-let get_kv nt = 
-  match nt with
-  TreeNode (_, _, _, kv) -> kv 
-  | _ -> failwith "no kv in TreeOutput node" 
-*)
-
 (*****************)
 (* Fix functions *)
 (*****************)
@@ -381,6 +344,43 @@ let pp_fix_fun fixfun =
   "FixPred " ^ Id.to_string fixfun.fixfun_name ^ " " ^ 
   concat_list (List.map Id.to_string fixfun.fixfun_args) " " ^ " =\n" ^
   pp_fix_term fixfun.fixfun_body
+
+
+(*********)
+(* Trees *)
+(*********)
+
+(* Tree node content *)
+type 'htyp node_type =
+  | NTPrem of 'htyp ml_term
+  | NTConcl of 'htyp ml_term
+
+(* Tree structure *)
+type 'htyp tree_node =
+  | TreeNode of ('htyp node_type * 'htyp tree_node list * pannot * ident list) (*ajout de kv cath*)
+  | TreeOutput of ('htyp node_type * 'htyp ml_term * pannot * ident list) (*ajout de kv cath*) 
+                               (* ml_term is a conclusion *)
+
+type 'htyp tree = 'htyp tree_node list
+
+let pp_node_type nt = match nt with
+  | NTPrem mlt -> pp_ml_term mlt
+  | NTConcl mlt -> "[" ^ pp_ml_term mlt ^ "]"
+
+let rec pp_tree_node inc tn = match tn with
+  | TreeNode (nt, tnl, _, _) -> inc ^ (pp_node_type nt) ^ "\n" ^ (*cath*)
+    (concat_list (List.map (pp_tree_node (inc^"  ")) tnl) "\n")
+  | TreeOutput (nt, mlt, _, _) -> inc ^ (pp_node_type nt) ^ " -> " ^ (*cath*)
+    pp_ml_term mlt
+
+let pp_tree tree = concat_list (List.map (pp_tree_node "") tree) "\n"
+
+(* Unused (09/03/2026)
+let get_kv nt = 
+  match nt with
+  TreeNode (_, _, _, kv) -> kv 
+  | _ -> failwith "no kv in TreeOutput node" 
+*)
 
 
 (**************)
