@@ -37,8 +37,7 @@ open Nametab
 (* Predicate extraction *)
 (************************)
 
-(* TODO: order specifications (by dependency) before doing a fixpoint 
-         extraction. *)
+(* TODO: order specifications (by dependency) before doing a fixpoint extraction. *)
 
 let id_of_string_option s_opt = match s_opt with
   | None -> None
@@ -105,7 +104,7 @@ let extract_relation_common dep ord ind_ref modes =
     | RelationExtractionProp (None, s) -> CErrors.user_err
       (str ("[RelationExtraction] Extraction failed: " ^ s))
   in
- (*Printf.eprintf "%s\n" (pp_extract_env env); *)
+  (*Printf.eprintf "%s\n" (pp_extract_env env); *)
   let env = Pred.make_ml_funs env in
   (* Printf.eprintf "%s\n" *)
   env
@@ -114,9 +113,7 @@ let extract_relation_miniml ~opaque_access dep ord ind_ref modes =
   let env = extract_relation_common dep ord ind_ref modes in
   (* Before generating the MiniML code, we first extract all the dependences *)
   let _ = if dep then extract_dependencies ~opaque_access:opaque_access env.extr_henv else () in
-
   Minimlgen.gen_miniml env
-
 
 let relation_extraction_single ~opaque_access modes =
   let (_, ind_ref, _, _) = List.hd modes in
@@ -154,6 +151,5 @@ let cstr = match cst_body.Declarations.const_body with
   Def cs -> Declarations.force cs in
 constr_display cstr *)
 
- 
 let extraction_print str =
   Printf.printf "%s\n" str

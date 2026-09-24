@@ -374,10 +374,8 @@ let find_one_spec env (id_spec, _) =
     spec_props = props;
   }), env
 
-
 let find_specifications env = 
   let specs, env = List.fold_right (fun e (specs, env) ->
     let s, env = find_one_spec env e in
     s::specs, env) env.extr_extractions ([], env) in
   { env with extr_specs = specs }
-

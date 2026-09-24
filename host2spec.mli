@@ -26,4 +26,3 @@ open Coq_stuff
 
 (* Normalization of Coq specifications. *)
 val find_specifications : (htyp, henv) extract_env -> (htyp, henv) extract_env
-

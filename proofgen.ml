@@ -33,8 +33,7 @@ open Libnames
 open Util
 
 let build_ind_scheme fun_name =
-  let ref_func = 
-    qualid_of_ident (Id.of_string fun_name) in
+  let ref_func = qualid_of_ident (Id.of_string fun_name) in
   let make_fscheme () =
     Funind_plugin.Gen_principle.build_scheme
       [CAst.make (Id.of_string (fun_name ^ "_ind")), ref_func, (* TODO[21/09/2026] sensitive! should be the same as in reltacs.ml*)
@@ -90,13 +89,13 @@ let gen_correction_proof env (id: Id.t) : unit =
   let full = is_full_extraction mode in
 
   (* functional scheme *)
-  let pstate = build_ind_scheme (string_of_ident fixfun.fixfun_name) in
+  let () = build_ind_scheme (string_of_ident fixfun.fixfun_name) in
   
   (* Lemma building *)
   let cstr = build_correct_lemma id_po env id fixfun in
 
   (* Proof registering *)
-  let proof_register _ ps : unit =
+  let proof_register ps : unit =
     let info = Declare.Info.make () in
     let cinfo = Declare.CInfo.make ~name:(Id.of_string (string_of_ident fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
     let lemma = Declare.Proof.start ~cinfo ~info (Evd.from_env (Global.env())) in
@@ -105,8 +104,8 @@ let gen_correction_proof env (id: Id.t) : unit =
     () in
 
   if (not compl) && (not full) then
-    proof_register pstate ps
+    proof_register ps
   else
-    pstate
+    ()
 
 

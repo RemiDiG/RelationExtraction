@@ -59,6 +59,7 @@ let fresh_string_id =
   fun base_name () -> i := !i + 1; base_name ^ (string_of_int !i)
 let fresh_ident base_name = ident_of_string (fresh_string_id base_name ())
 
+(* Return a fresh name based on a scheme, using Rocq's implementation *)
 let fresh_id (base_name: string) : Id.t =
    Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) Id.Set.empty
 

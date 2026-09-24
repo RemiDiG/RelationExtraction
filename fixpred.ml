@@ -616,4 +616,3 @@ let build_all_fixfuns env =
     { env with extr_fixfuns = (id, 
       (fixfun, build_proof_scheme fixfun))::env.extr_fixfuns }
   ) env ids
-  
