@@ -24,6 +24,9 @@
 open Host_stuff
 open Proof_scheme
 
+(* Rocq dependencies *)
+open Names
+
 (* Extraction failure with some reason. *)
 exception RelationExtractionError of string
 
@@ -221,8 +224,8 @@ type 'htyp fix_untyped_term =
 and 'htyp fix_term = ('htyp fix_untyped_term, 'htyp) typed
 
 type 'htyp fix_fun = {
-  fixfun_name : ident;
-  fixfun_args : ident list;
+  fixfun_name : Id.t;
+  fixfun_args : Id.t list;
   fixfun_body : 'htyp fix_term;
 }
 

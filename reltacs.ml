@@ -346,8 +346,8 @@ let rec build_tac_atom ta = match ta with
 let make_proof (id_po: Id.t) (env, id) lemma prover ps =
   if debug_print_tacs then
     let (fixfun, _) = extr_get_fixfun env (ident_of_id id) in
-    let fn = string_of_ident fixfun.fixfun_name in
-    let in_s = concat_list (List.map string_of_ident fixfun.fixfun_args) " " in
+    let fn = Id.to_string fixfun.fixfun_name in
+    let in_s = concat_list (List.map Id.to_string fixfun.fixfun_args) " " in
     let lem = "Lemma " ^ fn ^ "_correct_printed : forall " ^ in_s ^ " " ^ Id.to_string id_po ^ ", " ^
               fn ^ " " ^ in_s ^ " = " ^ Id.to_string id_po ^ " -> " ^ Id.to_string id ^ " " ^ in_s ^
               " " ^ Id.to_string id_po ^ "." in
@@ -494,7 +494,7 @@ let mk_ti_ai_n tal1 tal2 = {
 (*********************************************************)
 
 let simple_pc_intro (id_po: Id.t) (env, id) _ =
-  let f_name = id_of_ident ((fst (extr_get_fixfun env (ident_of_id id))).fixfun_name) in (* TODO[21/09/2026] fresh *)
+  let f_name = (fst (extr_get_fixfun env (ident_of_id id))).fixfun_name in (* TODO[21/09/2026] fresh? or fixfun already created fresh? *)
   let f_name = id_of_ident (ident_of_string ((Id.to_string f_name) ^ "_ind")) in (* TODO[21/09/2026] fresh instead? but this is sensitive! should be the same as in proofgen.ml *)
   Tac_list [
     (* intros predicate arguments *)
@@ -532,7 +532,7 @@ let get_init_prem_order (env, id) prop_name =
   
 
 let simple_pc_branch premisse (env, id) branch sigma goal =
-  let fun_name = string_of_ident (fst (extr_get_fixfun env (ident_of_id id))).fixfun_name in
+  let fun_name = Id.to_string (fst (extr_get_fixfun env (ident_of_id id))).fixfun_name in
   let prop_name = match branch.psb_prop_name with Some n -> n 
     | _ -> assert false in
   let (hname_index, til, _, _, recvars) = 

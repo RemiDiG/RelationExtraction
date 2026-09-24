@@ -70,8 +70,8 @@ let _extract_type_from_option ctyp = match Constr.kind ctyp with
   | _ -> assert false
 
 (* Generates a Coq Constr. *)
-let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
-  | FixVar i -> mkRel (Minimlgen.get_rel i bind)
+let rec gen_constr (env, id) (fn: Id.t) (bind: Id.t list) (fterm,_) = match fterm with
+  | FixVar i -> mkRel (Minimlgen.get_rel i (List.map ident_of_id bind))
   | FixConstr (i, [t,(ty,Some cty)]) when string_of_ident i = "Some" -> 
     let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
     let args = Array.of_list 
@@ -88,7 +88,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
     mkApp (c, args)
   | FixConst i -> List.assoc i (env.extr_henv.cstrs)
   | FixFun (i, tl) -> 
-    let c = if i = fn then mkRel (List.length bind + 1)
+    let c = if i = ident_of_id fn then mkRel (List.length bind + 1)
             else try List.assoc i (env.extr_henv.cstrs) with Not_found -> 
       let gr = Nametab.global
         (qualid_of_ident (id_of_ident i)) in
@@ -110,10 +110,8 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
     let cstrs_arg_types = find_args_types sty in
     let ty = mkLambda (Context.anonR, sty, (get_out_type true (env,id))) in
     let ta = Array.of_list (List.map2 (fun (il, t, _) tyl ->
-      let nbind = (List.rev il) @ bind in
-      List.fold_right2 (fun i ty t -> 
-        mkLambda (Context.nameR (id_of_ident i), ty, t)
-      ) il tyl (gen_constr (env,id) fn nbind t)  
+      let nbind = (List.rev (List.map id_of_ident il)) @ bind in
+      List.fold_right2 (fun i ty t -> mkLambda (Context.nameR i, ty, t)) (List.map id_of_ident il) tyl (gen_constr (env,id) fn nbind t)  
     ) iltl cstrs_arg_types) in
     mkCase (Inductive.contract_case (Global.env ()) (case_inf, (ty, Sorts.Relevant), NoInvert, (gen_constr (env,id) fn bind t), ta))
   | FixCase _ -> CErrors.anomaly ~label:"RelationExtraction"
@@ -132,7 +130,7 @@ let rec gen_constr (env, id) fn bind (fterm,_) = match fterm with
   | FixLetin (i, (l,(ty, Some sty)), t, _) ->
     mkLetIn (Context.nameR (id_of_ident i),
       (gen_constr (env,id) fn bind (l,(ty, Some sty))), sty,
-      (gen_constr (env,id) fn (i::bind) t))
+      (gen_constr (env,id) fn (id_of_ident i::bind) t))
   | FixLetin _ -> CErrors.anomaly ~label:"RelationExtraction"
     (str "Missing type information in let in")
   | _ -> assert false (* ?? *)
@@ -153,16 +151,16 @@ let gen_fixpoint env =
     let typs = get_in_types (env, i) in
     let c = List.fold_right2 ( fun a t c -> 
       mkLambda (Context.nameR (Id.of_string a), get_coq_type t, c) )
-      (List.map string_of_ident args) typs c in
-    let ty = gen_fix_type (env,i) (List.map string_of_ident args) in
+      (List.map Id.to_string args) typs c in
+    let ty = gen_fix_type (env,i) (List.map Id.to_string args) in
     let recdec = 
-      ([|(Context.nameR (id_of_ident fn))|], [|ty|], [|c|]) in
+      ([|(Context.nameR fn)|], [|ty|], [|c|]) in
     let fi = match fix_get_recursion_style env i with
       | StructRec i -> ([|i-1|], 0)
       | _ -> ([|0|], 0) in
     let f = mkFix (fi,recdec) in
     (*let univs = Entries.Monomorphic_entry in (* ?? *)*)
-    let name = id_of_ident fn in
+    let name = fn in
     let scope = Locality.(Global ImportDefaultBehavior) in
     let kind = Decls.(IsDefinition Fixpoint) in
     let entry = Declare.definition_entry ~opaque:false ~types:ty (*~univs*) f in

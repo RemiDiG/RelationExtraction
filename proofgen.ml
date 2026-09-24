@@ -46,13 +46,13 @@ let build_ind_scheme fun_name =
 let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
   let id = ident_of_id id in
   let spec = extr_get_spec env id in
-  let in_names = List.map string_of_ident fixfun.fixfun_args in
+  let in_names = List.map Id.to_string fixfun.fixfun_args in
   let in_types = List.map get_coq_type (get_in_types (env, id)) in
   let out_type = get_out_type true (env, id) in
-  let func = find_coq_constr_i fixfun.fixfun_name in
+  let func = find_coq_constr_i (ident_of_id fixfun.fixfun_name) in
   let mode = List.hd (extr_get_modes env id) in
   let full = is_full_extraction mode in
-  let compl = fix_get_completion_status env fixfun.fixfun_name in
+  let compl = fix_get_completion_status env (ident_of_id fixfun.fixfun_name) in
   let tru = find_coq_constr_s "Corelib.Init.Datatypes.true" in
   let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
   
@@ -85,11 +85,11 @@ let gen_correction_proof env (id: Id.t) : unit =
   let id_po : Id.t = fresh_id "po" in
   let (fixfun, ps) = extr_get_fixfun env (ident_of_id id) in
   let mode = List.hd (extr_get_modes env (ident_of_id id)) in
-  let compl = fix_get_completion_status env fixfun.fixfun_name in
+  let compl = fix_get_completion_status env (ident_of_id fixfun.fixfun_name) in
   let full = is_full_extraction mode in
 
   (* functional scheme *)
-  let () = build_ind_scheme (string_of_ident fixfun.fixfun_name) in
+  let () = build_ind_scheme (Id.to_string fixfun.fixfun_name) in
   
   (* Lemma building *)
   let cstr = build_correct_lemma id_po env id fixfun in
@@ -97,7 +97,7 @@ let gen_correction_proof env (id: Id.t) : unit =
   (* Proof registering *)
   let proof_register ps : unit =
     let info = Declare.Info.make () in
-    let cinfo = Declare.CInfo.make ~name:(Id.of_string (string_of_ident fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
+    let cinfo = Declare.CInfo.make ~name:(Id.of_string (Id.to_string fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
     let lemma = Declare.Proof.start ~cinfo ~info (Evd.from_env (Global.env())) in
     let lemma = make_proof_simple id_po (env, id) lemma ps in
     let (_ : _ list) = Declare.Proof.save_regular ~proof:lemma ~opaque:Vernacexpr.Transparent ~idopt:None in

@@ -346,8 +346,8 @@ type 'htyp fix_untyped_term =
 and 'htyp fix_term = ('htyp fix_untyped_term, 'htyp) typed
 
 type 'htyp fix_fun = {
-  fixfun_name : ident;
-  fixfun_args : ident list;
+  fixfun_name : Id.t;
+  fixfun_args : Id.t list;
   fixfun_body : 'htyp fix_term;
 }
 
@@ -378,8 +378,8 @@ and pp_fix_term_aux inc (t, ty) = pp_fix_untyped_term inc t ^ "{" ^
 and pp_fix_term t = pp_fix_term_aux "" t
 
 let pp_fix_fun fixfun =
-  "FixPred " ^ string_of_ident fixfun.fixfun_name ^ " " ^ 
-  concat_list (List.map string_of_ident fixfun.fixfun_args) " " ^ " =\n" ^
+  "FixPred " ^ Id.to_string fixfun.fixfun_name ^ " " ^ 
+  concat_list (List.map Id.to_string fixfun.fixfun_args) " " ^ " =\n" ^
   pp_fix_term fixfun.fixfun_body
 
 
