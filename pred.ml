@@ -278,14 +278,14 @@ let pp_spec spec = "Specification " ^ string_of_ident spec.spec_name ^ ": " ^
 (****************)
 
 type 'htyp ml_fun = {
-  mlfun_name : ident;
-  mlfun_args : ident list;
+  mlfun_name : Id.t;
+  mlfun_args : Id.t list;
   mlfun_body : 'htyp ml_term;
 }
 
 let pp_ml_fun f =
-  "let rec " ^ string_of_ident f.mlfun_name ^ " " ^
-  concat_list (List.map string_of_ident f.mlfun_args) " " ^ " =\n" ^
+  "let rec " ^ Id.to_string f.mlfun_name ^ " " ^
+  concat_list (List.map Id.to_string f.mlfun_args) " " ^ " =\n" ^
   pp_ml_term f.mlfun_body
 
 (*****************)
@@ -448,7 +448,7 @@ let get_spec_id_from_fname env fn =
 let get_user_recursion_style env id =
   try let (_, _, rs) = List.assoc id env.extr_extractions in rs
   with Not_found -> try let (_, _, rs) = 
-    List.assoc (get_spec_id_from_fname env id) env.extr_extractions in rs
+    List.assoc (get_spec_id_from_fname env (id_of_ident id)) env.extr_extractions in rs
   with Not_found -> None
 
 let is_rec_style_count env id = match fix_get_recursion_style env id with
@@ -1081,12 +1081,12 @@ let code_from_tree env id_tree tree =
   let spec = extr_get_spec env id_tree in
   let pred_args_types = spec.spec_args_types in
   let args_types = select_args_types pred_args_types mode in
-  let fun_ident = get_pred_name env id_tree mode in
+  let fun_ident = id_of_ident (ident_of_string get_pred_name env id_tree mode) in (* TODO[24/09/2026] check if a fresh id here does not break anything *)
   let pats = List.map (gen_pat env id_tree) tree in
   let an = flatmap (fun p -> mk_an p.prop_name None) spec.spec_props in
   {
     mlfun_name = fun_ident;
-    mlfun_args = args;
+    mlfun_args = List.map Id.of_string args;
     mlfun_body = fake_type env (MLTMatch (gen_tuple env 
       (List.map2 (fun a t -> MLTVar a, t) args args_types),
         an, pats@(default_case env)));

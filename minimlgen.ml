@@ -230,15 +230,15 @@ let gen_miniml_func env (id, f) =
   else
     MLexn "" in
   let args = List.rev f.mlfun_args in
-  let code = gen_term (env, id) default args f.mlfun_body in
-  let mla = gen_func args code in
+  let code = gen_term (env, id) default (List.map ident_of_id args) f.mlfun_body in
+  let mla = gen_func (List.map ident_of_id args) code in
   (* We can't generate a new reference each time because there must be
      only one reference of each id ... else it makes bugs. 
      TODO: verfiy that we really have one ref by id and find a good way
      to declare new ones (verify there existence in the extract env before
      generating references with mk_dummy_glb ?). *)
   let glb,_ = (*mk_dummy_glb (env, id) f.mlfun_name in*)
-            Constr.destRef (get_cstr (env, id) f.mlfun_name) in
+            Constr.destRef (get_cstr (env, id) (ident_of_id f.mlfun_name)) in
   (glb, mla, mlt)
 
 let rec list_split3 l = match l with
@@ -261,7 +261,7 @@ let gen_miniml env =
   let _ = miniml_init () in
   let funs = env.extr_mlfuns in
   let env = List.fold_right (fun (id, f) env -> add_fake_cstr_to_env (env, id)
-              f.mlfun_name) funs env in
+              (ident_of_id f.mlfun_name)) funs env in
   let mlfuncs = List.map (gen_miniml_func env) funs in
   let glbs, mlas, mlts = list_split3 mlfuncs in
   let mld =

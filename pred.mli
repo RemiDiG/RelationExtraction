@@ -175,25 +175,13 @@ val find_prem_term_by_name : 'htyp spec -> ident -> 'htyp ml_term *)
 
 (* A function in the ML-like intermediate language. *)
 type 'htyp ml_fun = {
-  mlfun_name : ident;
-  mlfun_args : ident list;
+  mlfun_name : Id.t;
+  mlfun_args : Id.t list;
   mlfun_body : 'htyp ml_term;
 }
 
 (* Pretty printer *)
 val pp_ml_fun : 'htyp ml_fun -> string
-
-
-(*********)
-(* Trees *)
-(*********)
-
-(* Predicate tree. Used to represent an inductive predicate before the code
-   generation. *)
-type 'htyp tree
-
-(* Pretty printer *)
-val pp_tree : 'htyp tree -> string
 
 
 (*****************)
@@ -231,6 +219,18 @@ type 'htyp fix_fun = {
 
 val pp_fix_term : 'htyp fix_term -> string
 val pp_fix_fun : 'htyp fix_fun -> string
+
+
+(*********)
+(* Trees *)
+(*********)
+
+(* Predicate tree. Used to represent an inductive predicate before the code
+   generation. *)
+type 'htyp tree
+
+(* Pretty printer *)
+val pp_tree : 'htyp tree -> string
 
 
 (**************)

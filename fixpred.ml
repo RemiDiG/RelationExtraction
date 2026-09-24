@@ -400,7 +400,7 @@ let complete_fun_with_option env f =
   let rec cfwo_rec (lterm, ty) = match lterm with
     | MLTVar _ | MLTTuple _ | MLTRecord _ | MLTConstr _ | MLTConst _ | MLTFun _ 
     | MLTFunNot _ | MLTATrue | MLTAFalse | MLTASome _ | MLTANone -> 
-      if fix_get_completion_status env f.mlfun_name then
+      if fix_get_completion_status env (ident_of_id f.mlfun_name) then
         let opt = find_coq_constr_s "Corelib.Init.Datatypes.option" in
         match ty with
         | _, Some ctyp ->
@@ -460,7 +460,7 @@ let add_ml_counter env f =
       MLTMatch (mt', an, ptal'), typ
     | MLTASome t -> MLTASome (adapt_func_calls t), typ
     | _ -> mlt, typ in
-  let mlt', args' = match fix_get_recursion_style env fname with 
+  let mlt', args' = match fix_get_recursion_style env (ident_of_id fname) with 
     | FixCount -> let ptal = [
         ((MLPConstr (ident_of_string "O", []), nat_typ), 
                 (MLTConstr (ident_of_string "None", []), typ), []);
@@ -468,7 +468,7 @@ let add_ml_counter env f =
                 (adapt_func_calls (mlt, typ)), [])
       ] in
       (MLTMatch (fcount, [], ptal), typ), 
-        (ident_of_string "fcounter")::f.mlfun_args
+        id_of_ident (ident_of_string "fcounter")::f.mlfun_args
     | _ -> adapt_func_calls (mlt, typ), f.mlfun_args in
   { mlfun_name = fname;
     mlfun_body = mlt';
@@ -480,12 +480,12 @@ let build_fix_fun (env, id_fun) f =
   let build_f comp f =
     let mlt = transform_constrs f.mlfun_body in
     let fterm = build_fix_term comp (env, id_fun) [] mlt in
-    { fixfun_name = id_of_ident f.mlfun_name;
-      fixfun_args = List.map id_of_ident f.mlfun_args;
+    { fixfun_name = f.mlfun_name;
+      fixfun_args = f.mlfun_args;
       fixfun_body = fterm; } in
   let f = complete_fun_with_option env f in
   let f = add_ml_counter env f in
-  build_f (fix_get_completion_status env f.mlfun_name) f
+  build_f (fix_get_completion_status env (ident_of_id f.mlfun_name)) f
 
 (* Generates one fix function. *)
 let gen_fix_fun env id =
@@ -498,13 +498,12 @@ let gen_fix_fun env id =
 let build_initial_fix_env env = 
   (* Fake env to avoid the Not_found exception while generating fix funs *)
   let fake_fix_env = List.map (fun (spec_id, _) -> 
-      (spec_id, (extr_get_mlfun env spec_id).mlfun_name),
-      (false, StructRec 0)
+      (spec_id, ident_of_id (extr_get_mlfun env spec_id).mlfun_name), (false, StructRec 0)
     ) env.extr_mlfuns in
   let env = {env with extr_fix_env = fake_fix_env} in
   let spec_ids = List.map fst env.extr_mlfuns in
   List.fold_left (fun fix_env spec_id -> 
-    let fn = (extr_get_mlfun env spec_id).mlfun_name in
+    let fn = ident_of_id (extr_get_mlfun env spec_id).mlfun_name in
     let rs = match get_user_recursion_style env spec_id with
       | Some rs -> rs
       | None -> StructRec 1 in
@@ -538,14 +537,14 @@ let propag_one_func env (spec_id, mlf) =
     | _ -> (false, false) in
   let fn = mlf.mlfun_name in
   let dep_compl, dep_count = browse_func mlf.mlfun_body in
-  let compl = fix_get_completion_status env fn in
+  let compl = fix_get_completion_status env (ident_of_id fn) in
   let full = is_full_extraction (List.hd (extr_get_modes env spec_id)) in
   let env = if full then
-    fix_set_completion_status env fn (dep_compl || compl) 
+    fix_set_completion_status env (ident_of_id fn) (dep_compl || compl) 
   else env in
   if dep_count then
-    let env = fix_set_recursion_style env fn FixCount in
-    fix_set_completion_status env fn true
+    let env = fix_set_recursion_style env (ident_of_id fn) FixCount in
+    fix_set_completion_status env (ident_of_id fn) true
   else env
 
 let build_fix_env env =

@@ -156,7 +156,7 @@ let get_in_types (env, id) =
 
 let get_out_type opt (env, id) =
   let fun_name = (extr_get_mlfun env id).mlfun_name in 
-  let comp = fix_get_completion_status env fun_name in
+  let comp = fix_get_completion_status env (ident_of_id fun_name) in
   let rec get_out_rec args mode = match (args, mode) with
     | (a::tl_args, MOutput::tl_mode) -> a::(get_out_rec tl_args tl_mode)
     | (_::tl_args, MInput::tl_mode) -> get_out_rec tl_args tl_mode
