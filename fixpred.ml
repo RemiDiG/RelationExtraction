@@ -225,17 +225,16 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
       | p::_ -> (match p with | MLPConstr _, _ -> true | _ -> false)
       | _ -> assert false) pltl in
     let nmt, lams, npltl = if is_variables then 
-        let nvar = fresh_ident "fix_" in
-        (* if there is at least one variable: we create a variable for 
-                                                                    the letin *)
+        let nvar = id_of_ident (fresh_ident "fix_") in (* TODO[24/09/2026] using fresh_id here breaks everything! To solve *)
+        (* if there is at least one variable: we create a variable for the letin *)
         let npltl = List.map ( fun (pl, t, an) -> match pl with
           | (MLPVar v, vty)::pl_tail -> 
-                (MLPWild, vty)::pl_tail, rename_var_term v nvar t, an
+                (MLPWild, vty)::pl_tail, rename_var_term v (ident_of_id nvar) t, an
           (* then we replace each occurence of the variables by the 
              letin variable; v is no longer needed -> replaced by MLPWild *)
           | _ -> pl, t, an
         ) pltl in
-        ( build_fix_term comp (env, id_fun) binded_vars (MLTVar nvar, mt_ty),
+        ( build_fix_term comp (env, id_fun) binded_vars (MLTVar (ident_of_id nvar), mt_ty),
           (* The pattern matching is done on the letin var to avoid 
                                                             multiple calculi. *)
           [nvar, build_fix_term comp (env, id_fun) binded_vars (mt, mt_ty)],
@@ -284,6 +283,8 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
           | _ -> []
         ) npltl in
 
+        let pat_vars = List.map id_of_ident pat_vars in
+        
         if List.length next_pats = 0 then
           (* TODO: if full extraction => false *)
           if is_full_extraction (List.hd (extr_get_modes env id_fun)) then
@@ -315,15 +316,15 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
 (* Builds a fix_term, destructuring complex pattern matchings. *)
 and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
 (* TODO: check if there are renaming matches, if not, add the Some constr. *)
-  | MLTVar i -> FixVar i, ty
+  | MLTVar i -> FixVar (id_of_ident i), ty
   | MLTTuple _ -> raise RelExtNoFixTuple
   | MLTConstr (i, tl) -> 
-    FixConstr (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
-  | MLTConst i -> FixConst i, ty
+    FixConstr ((id_of_ident i), List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
+  | MLTConst i -> FixConst (id_of_ident i), ty
   | MLTFun (i, tl, _) -> 
-    FixFun (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
+    FixFun ((id_of_ident i), List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
   | MLTFunNot (i, tl, _) -> 
-    FixFunNot (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
+    FixFunNot ((id_of_ident i), List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
   | MLTMatch (t, _, ptl) ->
     let tl, pltl = normalize_pltl 
       [t] (List.map (fun (p, t, an) -> [p], t, an) ptl) in
@@ -581,9 +582,9 @@ let build_proof_scheme fixfun =
             | None -> false, None) anmatch in
         if b then
           p, (CaseConstr (t, cstr, List.map 
-            (fun i -> mk_pa_var (string_of_ident i) None) il, mk_po pm_n), None)::al
+            (fun i -> mk_pa_var (string_of_ident i) None) (List.map ident_of_id il), mk_po pm_n), None)::al
         else p, (CaseDum (t, cstr, List.map 
-               (fun i -> mk_pa_var (string_of_ident i) None) il), None)::al) pall
+               (fun i -> mk_pa_var (string_of_ident i) None) (List.map ident_of_id il)), None)::al) pall
       ) iltl cstr_list)
     | FixLetin (i, t, next_t, anlet) -> let pall = rec_ps next_t an in
       List.map (fun (p, al) -> let b, pm_n = list_exists_assoc (fun a -> 
@@ -591,8 +592,8 @@ let build_proof_scheme fixfun =
           | Some pn -> a.pa_prop_name = pn, Some a.pa_prem_name
           | None -> false, None) anlet in
         if b then
-        p, (LetVar (mk_pa_var (string_of_ident i) None, t, mk_po pm_n), None)::al
-      else p, (LetDum (mk_pa_var (string_of_ident i) None, t), None)::al) pall
+        p, (LetVar (mk_pa_var (Id.to_string i) None, t, mk_po pm_n), None)::al
+      else p, (LetDum (mk_pa_var (Id.to_string i) None, t), None)::al) pall
     | _ -> begin match an with 
       | [] -> [None, [OutputTerm None, None]]
       | ({pa_prop_name = pn; pa_renamings = _})::_ -> 

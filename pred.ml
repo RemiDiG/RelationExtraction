@@ -330,15 +330,15 @@ let get_kv nt =
 (*****************)
 
 type 'htyp fix_untyped_term =
-  | FixVar of ident
+  | FixVar of Id.t
 (*  | FixRecord of ident list * fix_term list*)
-  | FixConstr of ident * 'htyp fix_term list
-  | FixConst of ident
-  | FixFun of ident * 'htyp fix_term list
-  | FixFunNot of ident * 'htyp fix_term list
+  | FixConstr of Id.t * 'htyp fix_term list
+  | FixConst of Id.t
+  | FixFun of Id.t * 'htyp fix_term list
+  | FixFunNot of Id.t * 'htyp fix_term list
   | FixCase of 'htyp fix_term * pannot * 
-      (ident list * 'htyp fix_term * pannot) list
-  | FixLetin of ident * 'htyp fix_term * 'htyp fix_term * pannot
+      (Id.t list * 'htyp fix_term * pannot) list
+  | FixLetin of Id.t * 'htyp fix_term * 'htyp fix_term * pannot
   | FixSome of 'htyp fix_term
   | FixNone
   | FixTrue 
@@ -352,26 +352,26 @@ type 'htyp fix_fun = {
 }
 
 let rec pp_fix_untyped_term inc t = match t with
-  | FixVar i -> string_of_ident i
-  | FixConstr (i, []) -> string_of_ident i
-  | FixConstr (i, tl) -> string_of_ident i ^ 
+  | FixVar i -> Id.to_string i
+  | FixConstr (i, []) -> Id.to_string i
+  | FixConstr (i, tl) -> Id.to_string i ^ 
         "(" ^ (concat_list (List.map (pp_fix_term_aux inc) tl) ", ") ^ ")"
-  | FixConst i -> string_of_ident i
-  | FixFun (i, tl) -> string_of_ident i ^ " " ^
+  | FixConst i -> Id.to_string i
+  | FixFun (i, tl) -> Id.to_string i ^ " " ^
     (concat_list (List.map (fun t -> "(" ^ pp_fix_term_aux inc t ^ ")") tl) " ")
   | FixFunNot (i, tl) -> 
             "not (" ^ pp_fix_untyped_term inc (FixFun (i, tl)) ^ ")"
   | FixCase (t, an, iltl) -> let inc' = inc ^ "  " in
     pp_pannot an ^ "Case " ^ (pp_fix_term_aux inc t) ^ "\n" ^ concat_list
     (List.map (fun (il, t, an) -> inc' ^ pp_pannot an ^ "| " ^
-      concat_list (List.map string_of_ident il) " " ^ " -> " ^ 
+      concat_list (List.map Id.to_string il) " " ^ " -> " ^ 
       pp_fix_term_aux inc' t) iltl) "\n"
   | FixSome t -> "Some " ^ pp_fix_term_aux inc t
   | FixNone -> "None"
   | FixTrue -> "True"
   | FixFalse -> "False"
   | FixLetin (i, l, t, an) -> pp_pannot an ^ "let " ^ 
-    string_of_ident i ^ " = " ^ 
+    Id.to_string i ^ " = " ^ 
     pp_fix_term_aux inc l ^ " in " ^ pp_fix_term_aux inc t
 and pp_fix_term_aux inc (t, ty) = pp_fix_untyped_term inc t ^ "{" ^ 
                                  (pp_term_type ty) ^ "}"

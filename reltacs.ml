@@ -542,14 +542,14 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       let n = po.po_prem_name in if n = "" then None, pmn else
         begin match pmn with | None ->
          begin match t with
-           | FixFun(f, _) -> let f = string_of_ident f in
+           | FixFun(f, _) -> let f = Id.to_string f in
              if f = fun_name then None, Some n
              else Some f, Some n
            | _ -> None, Some n
          end
         | Some pmn when n <> pmn -> 
          begin match t with
-           | FixFun(f, _) -> let f = string_of_ident f in
+           | FixFun(f, _) -> let f = Id.to_string f in
              if f = fun_name then None, Some n
              else Some f, Some n
            | _ -> None, Some n

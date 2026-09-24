@@ -71,27 +71,27 @@ let _extract_type_from_option ctyp = match Constr.kind ctyp with
 
 (* Generates a Coq Constr. *)
 let rec gen_constr (env, id) (fn: Id.t) (bind: Id.t list) (fterm,_) = match fterm with
-  | FixVar i -> mkRel (Minimlgen.get_rel i (List.map ident_of_id bind))
-  | FixConstr (i, [t,(ty,Some cty)]) when string_of_ident i = "Some" -> 
+  | FixVar i -> mkRel (Minimlgen.get_rel i bind)
+  | FixConstr (i, [t,(ty,Some cty)]) when Id.to_string i = "Some" -> 
     let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
     let args = Array.of_list 
       [cty ; (gen_constr (env, id) fn bind (t,(ty,Some cty)))] in
     mkApp (some, args)
-  | FixConstr (i, []) when string_of_ident i = "None" -> 
+  | FixConstr (i, []) when Id.to_string i = "None" -> 
     let none = find_coq_constr_s "Corelib.Init.Datatypes.None" in
     let args = Array.of_list 
       [(* debug TODO: not always out_type ?*) get_out_type false (env, id)] in
     mkApp (none, args)
   | FixConstr (i, tl) -> 
-    let c = List.assoc i (env.extr_henv.cstrs) in
+    let c = List.assoc i (List.map (fun (i, c) -> id_of_ident i, c) env.extr_henv.cstrs) in
     let args = Array.of_list (List.map (gen_constr (env,id) fn bind) tl) in
     mkApp (c, args)
-  | FixConst i -> List.assoc i (env.extr_henv.cstrs)
+  | FixConst i -> List.assoc i (List.map (fun (i, c) -> id_of_ident i, c) env.extr_henv.cstrs)
   | FixFun (i, tl) -> 
-    let c = if i = ident_of_id fn then mkRel (List.length bind + 1)
-            else try List.assoc i (env.extr_henv.cstrs) with Not_found -> 
+    let c = if i = fn then mkRel (List.length bind + 1)
+            else try List.assoc i (List.map (fun (i, c) -> id_of_ident i, c) env.extr_henv.cstrs) with Not_found -> 
       let gr = Nametab.global
-        (qualid_of_ident (id_of_ident i)) in
+        (qualid_of_ident i) in
       if Global.is_polymorphic gr then CErrors.user_err (str "Polymorphic references not supported.");
       (* to support polymorphic constant, one would need to pass an evar_map *)
       UnivGen.constr_of_monomorphic_global (Global.env ()) gr in
@@ -110,8 +110,8 @@ let rec gen_constr (env, id) (fn: Id.t) (bind: Id.t list) (fterm,_) = match fter
     let cstrs_arg_types = find_args_types sty in
     let ty = mkLambda (Context.anonR, sty, (get_out_type true (env,id))) in
     let ta = Array.of_list (List.map2 (fun (il, t, _) tyl ->
-      let nbind = (List.rev (List.map id_of_ident il)) @ bind in
-      List.fold_right2 (fun i ty t -> mkLambda (Context.nameR i, ty, t)) (List.map id_of_ident il) tyl (gen_constr (env,id) fn nbind t)  
+      let nbind = (List.rev il) @ bind in
+      List.fold_right2 (fun i ty t -> mkLambda (Context.nameR i, ty, t)) il tyl (gen_constr (env,id) fn nbind t)  
     ) iltl cstrs_arg_types) in
     mkCase (Inductive.contract_case (Global.env ()) (case_inf, (ty, Sorts.Relevant), NoInvert, (gen_constr (env,id) fn bind t), ta))
   | FixCase _ -> CErrors.anomaly ~label:"RelationExtraction"
@@ -128,9 +128,9 @@ let rec gen_constr (env, id) (fn: Id.t) (bind: Id.t list) (fterm,_) = match fter
   | FixTrue -> find_coq_constr_s "Corelib.Init.Datatypes.true"
   | FixFalse -> find_coq_constr_s "Corelib.Init.Datatypes.false"
   | FixLetin (i, (l,(ty, Some sty)), t, _) ->
-    mkLetIn (Context.nameR (id_of_ident i),
+    mkLetIn (Context.nameR i,
       (gen_constr (env,id) fn bind (l,(ty, Some sty))), sty,
-      (gen_constr (env,id) fn (id_of_ident i::bind) t))
+      (gen_constr (env,id) fn (i::bind) t))
   | FixLetin _ -> CErrors.anomaly ~label:"RelationExtraction"
     (str "Missing type information in let in")
   | _ -> assert false (* ?? *)

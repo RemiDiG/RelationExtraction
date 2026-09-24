@@ -202,15 +202,15 @@ val pp_tree : 'htyp tree -> string
 
 type 'htyp fix_untyped_term =
 (* Standard constructions. *)
-  | FixVar of ident
+  | FixVar of Id.t
 (*  | FixRecord of ident list * fix_term list*)
-  | FixConstr of ident * 'htyp fix_term list
-  | FixConst of ident
-  | FixFun of ident * 'htyp fix_term list
-  | FixFunNot of ident * 'htyp fix_term list
+  | FixConstr of Id.t * 'htyp fix_term list
+  | FixConst of Id.t
+  | FixFun of Id.t * 'htyp fix_term list
+  | FixFunNot of Id.t * 'htyp fix_term list
   | FixCase of 'htyp fix_term * pannot * 
-               (ident list * 'htyp fix_term * pannot) list
-  | FixLetin of ident * 'htyp fix_term * 'htyp fix_term * pannot
+               (Id.t list * 'htyp fix_term * pannot) list
+  | FixLetin of Id.t * 'htyp fix_term * 'htyp fix_term * pannot
 (* In letin, pannot contains props concerned by the letin,
    in match it contains props concerned by the pattern matching,
    in patterns, it contains the list of active props (props that can still
