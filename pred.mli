@@ -38,21 +38,21 @@ exception RelationExtractionError of string
 type ident
 val string_of_ident : ident -> string
 val ident_of_string : string -> ident
-val ident_of_id : Names.Id.t -> ident
-val id_of_ident : ident -> Names.Id.t
+val ident_of_id : Id.t -> ident
+val id_of_ident : ident -> Id.t
 val fresh_ident : string -> ident
 val fresh_string_id : string -> unit -> string
 
-val fresh_id : string -> Names.Id.t
+val fresh_id : string -> Id.t
 
 (*************************)
 (* Annotation for proofs *)
 (*************************)
 
 type annot_atom = {
-  pa_prop_name : ident;
-  pa_prem_name : ident;
-  pa_renamings : (ident * ident) list; (* new & old variable name *)
+  pa_prop_name : Name.t;
+  pa_prem_name : Name.t;
+  pa_renamings : (Name.t * Name.t) list; (* new & old variable name *)
 }
 
 (* An annot_atom for each constructor (of the Inductive). *)
