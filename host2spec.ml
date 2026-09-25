@@ -82,10 +82,10 @@ let find_types_of_constr constr = match Constr.kind constr with
     List.map (fun (_, c) -> match Constr.kind c with
       | Ind (ind, _) ->
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some c
+        CTSum (Array.to_list oib.mind_consnames), Some c
       | Rel _ -> let ty = mkIndU (to_puniverses ind) in
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some ty
+        CTSum (Array.to_list oib.mind_consnames), Some ty
       | _ -> CTNone, Some c
     ) (List.rev n)
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Constructor type not found")
@@ -100,10 +100,10 @@ let find_types_of_ind ind =
     List.map (fun (_, c) -> match Constr.kind c with
       | Ind (ind, _) ->
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some c
+        CTSum (Array.to_list oib.mind_consnames), Some c
       | Rel _ -> let ty = mkIndU (to_puniverses ind) in
         let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-        CTSum (List.map ident_of_id (Array.to_list oib.mind_consnames)), Some ty
+        CTSum (Array.to_list oib.mind_consnames), Some ty
       | _ -> CTNone, Some c
     ) (List.rev n)
 
@@ -267,7 +267,7 @@ let rec build_premisse (env, id_spec) named_prod term =
         (fake_type env prem_term) with
         | [_, ty] -> ty
         | [] ->
-          (CTSum [ident_of_string "true";ident_of_string "false"], 
+          (CTSum [Id.of_string "true"; Id.of_string "false"], 
             Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
         | _ -> unknown_type env in
       (PMTerm ((prem_term, prem_term_type), Some (fresh_ident "Pm_")))::pred_terms, env

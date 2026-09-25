@@ -149,7 +149,7 @@ let get_in_types (env, id) =
       (* When a function is extracted with a counter, we have to add
          an argument (at first position) of type nat. *)
       let coq_nat = Some (find_coq_constr_s "Corelib.Init.Datatypes.nat") in
-      let nat_typ = CTSum [ident_of_string "O"; ident_of_string "S"], coq_nat in
+      let nat_typ = CTSum [Names.Id.of_string "O"; Names.Id.of_string "S"], coq_nat in
       MInput::mode, nat_typ::args_types
     | _ -> mode, args_types in
   get_in_rec args_types mode

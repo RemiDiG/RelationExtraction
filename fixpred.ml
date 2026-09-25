@@ -128,14 +128,10 @@ let rec make_wild_pats env n =
 let typ_from_named env ind (_,c) = match Constr.kind c with
   | Ind (ind, _) ->
     let _,idc = Inductive.lookup_mind_specif (Global.env ()) ind in
-    CTSum (List.map (fun cstr_id  -> 
-      (ident_of_string (Id.to_string cstr_id))
-    ) (Array.to_list idc.mind_consnames)), Some c (* c is the type of idc *)
+    CTSum (Array.to_list idc.mind_consnames), Some c (* c is the type of idc *)
   | Rel _ -> let ty = mkIndU (to_puniverses ind) in
     let _,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    CTSum (List.map (fun cstr_id  -> 
-      (ident_of_string (Id.to_string cstr_id))
-    ) (Array.to_list oib.mind_consnames)), Some ty
+    CTSum (Array.to_list oib.mind_consnames), Some ty
   | _ -> unknown_type env
 
 (* Filters l2 with p applied on l1. *)
@@ -166,10 +162,8 @@ let coq_type_explorer env cstr = match Constr.kind cstr with
 (* Finds the list of constructors of a coq inductive type. *)
 let _clear_type_from_coq typ = match Constr.kind typ with
   | Ind (ind, _) ->
-    let _,oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    let cstrs_names = List.map (fun n -> ident_of_string (Id.to_string n))
-      (Array.to_list oib.mind_consnames) in
-    CTSum cstrs_names
+    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
+    CTSum (Array.to_list oib.mind_consnames)
   | _ -> assert false (* ?? *)
 
 (* Gets the arity and types of the arguments of a constructor by searching it 
@@ -256,6 +250,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
 
     let nterm = if is_constrs then
       let pats = List.map (fun cstr -> (* one pattern for each constr *)
+        let cstr = ident_of_id cstr in
         let cstr_arity, args_types = get_cstr_arity_and_types env cstr npltl in
         let wild_pats = make_wild_pats env cstr_arity in
         (* pat_vars will be used as arguments in the pattern. *)
@@ -348,10 +343,10 @@ let rec transform_pat_constrs (lpat, ty) = match lpat with
   | MLPRecord (il, pl) -> MLPRecord (il, transform_pat_constrs_list pl), ty
   | MLPConstr (i, pl) -> MLPConstr (i, transform_pat_constrs_list pl), ty
   | MLPATrue -> MLPConstr (ident_of_string "true", []), 
-    (CTSum [ident_of_string "true";ident_of_string "false"], 
+    (CTSum [Id.of_string "true"; Id.of_string "false"], 
      Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLPAFalse -> MLPConstr (ident_of_string "false", []), 
-    (CTSum [ident_of_string "true";ident_of_string "false"], 
+    (CTSum [Id.of_string "true"; Id.of_string "false"], 
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLPASome p -> 
     MLPConstr (ident_of_string "Some", [transform_pat_constrs p]), ty
@@ -371,10 +366,10 @@ let rec transform_constrs (lterm, ty) = match lterm with
     List.map (fun (p, t, an) -> 
       transform_pat_constrs p, transform_constrs t, an) ptl), ty
   | MLTATrue -> MLTConstr (ident_of_string "true", []), 
-    (CTSum [ident_of_string "true";ident_of_string "false"], 
+    (CTSum [Id.of_string "true"; Id.of_string "false"],
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLTAFalse -> MLTConstr (ident_of_string "false", []), 
-    (CTSum [ident_of_string "true";ident_of_string "false"], 
+    (CTSum [Id.of_string "true"; Id.of_string "false"], 
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLTASome t -> MLTConstr (ident_of_string "Some", [transform_constrs t]), ty
   | MLTANone -> MLTConstr (ident_of_string "None", []), ty
@@ -405,7 +400,7 @@ let complete_fun_with_option env f =
         match ty with
         | _, Some ctyp ->
           let ctyp = Some (mkApp (opt, [|ctyp|])) in
-          let typ = (CTSum [ident_of_string "Some";ident_of_string "None"], 
+          let typ = (CTSum [Id.of_string "Some"; Id.of_string "None"], 
             ctyp) in
           MLTASome (lterm, ty), typ
         | _ -> assert false
@@ -415,7 +410,7 @@ let complete_fun_with_option env f =
 
      let opt = find_coq_constr_s "Corelib.Init.Datatypes.option" in
      let ctyp = Some (mkApp (opt, [|ctyp|])) in
-     let typ = (CTSum [ident_of_string "Some";ident_of_string "None"], ctyp) in
+     let typ = (CTSum [Id.of_string "Some"; Id.of_string "None"], ctyp) in
      MLTMatch ((MLTFun(i,args,m), typ), an,
        List.map (fun (p, t, an) -> match p with
          | MLPWild, _ -> p, cfwo_rec t, an
@@ -440,7 +435,7 @@ let add_ml_counter env f =
   let fname = f.mlfun_name in
   let (mlt, typ) = f.mlfun_body in
   let coq_nat = Some (find_coq_constr_s "Corelib.Init.Datatypes.nat") in
-  let nat_typ = CTSum [ident_of_string "O"; ident_of_string "S"], coq_nat in
+  let nat_typ = CTSum [Id.of_string "O"; Id.of_string "S"], coq_nat in
   let fcount = MLTVar (ident_of_string "fcounter"), nat_typ in
   let fcount_pat = MLPVar (ident_of_string "fcounter"), nat_typ in
   let rec adapt_func_calls (mlt, typ) = match mlt with
@@ -570,7 +565,7 @@ let mk_po pm_n_opt = match pm_n_opt with
 let build_proof_scheme fixfun = 
   let rec rec_ps (ft, (ty, cty)) an = match ft with
     | FixCase (t, anmatch, iltl) -> let cstr_list = match t with
-        | (_, (CTSum cl, _)) -> List.map string_of_ident cl
+        | (_, (CTSum cl, _)) -> List.map Id.to_string cl
         | _ -> CErrors.anomaly ~label:"RelationExtraction"
                  (str "Missing type information") in
       List.flatten (List.map2 (fun (il, next_t, anpat) cstr ->

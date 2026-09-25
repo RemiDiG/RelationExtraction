@@ -107,14 +107,14 @@ let an_add_prop an prop_name prem_name = (mk_an prop_name prem_name)@an
 
 type clear_type = 
   | CTTuple of clear_type list
-  | CTSum of ident list
+  | CTSum of Id.t list
   | CTNone
 type 'htyp term_type = (clear_type * 'htyp host_term_type)
 type ('t, 'htyp) typed = ('t * 'htyp term_type)
 
 let rec pp_clear_type t = match t with
   | CTTuple ctl -> "(" ^ concat_list (List.map pp_clear_type ctl) ", " ^ ")"
-  | CTSum il -> concat_list (List.map string_of_ident il) "|"
+  | CTSum il -> concat_list (List.map Id.to_string il) "|"
   | CTNone -> "%notype%"
 
 let pp_term_type (ct, _) = pp_clear_type ct
@@ -1034,7 +1034,7 @@ let gen_match_term env nt = match nt with
       let fn = get_pred_name env pn m in
       let ty = if List.for_all ((!=) MOutput) m then 
         let cl, t = env.extr_hf.h_get_bool_type () in
-        (CTSum (List.map ident_of_string cl), t)
+        (CTSum (List.map Id.of_string cl), t)
       else ty in
       (MLTFun (fn, in_terms, None), ty)
 (*      let spec = extr_get_spec env pn in

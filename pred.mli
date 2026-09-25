@@ -66,7 +66,7 @@ type pannot = annot_atom list
 (* Generic type of a term *)
 type clear_type = 
   | CTTuple of clear_type list (* Types of tuple's elements. *)
-  | CTSum of ident list (* List of constructors of a sum type. *)
+  | CTSum of Id.t list (* List of constructors of a sum type. *)
   | CTNone (* No type information. *)
 type 'htyp term_type = (clear_type * 'htyp host_term_type)
 type ('t, 'htyp) typed = ('t * 'htyp term_type)
