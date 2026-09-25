@@ -125,11 +125,11 @@ let pp_term_type (ct, _) = pp_clear_type ct
 (************)
 
 type 'htyp untyped_ml_pat =
-  | MLPVar of ident
+  | MLPVar of Id.t
   | MLPTuple of 'htyp ml_pat list
-  | MLPRecord of ident list * 'htyp ml_pat list
-  | MLPConstr of ident * 'htyp ml_pat list
-  | MLPConst of ident
+  | MLPRecord of Id.t list * 'htyp ml_pat list
+  | MLPConstr of Id.t * 'htyp ml_pat list
+  | MLPConst of Id.t
   | MLPWild
   | MLPATrue | MLPAFalse
   | MLPASome of 'htyp ml_pat | MLPANone
@@ -159,13 +159,13 @@ let string_of_mode_full mode =
   rec_som mode 1
 
 type 'htyp untyped_ml_term =
-  | MLTVar of ident
+  | MLTVar of Id.t
   | MLTTuple of 'htyp ml_term list
-  | MLTRecord of ident list * 'htyp ml_term list
-  | MLTConstr of ident * 'htyp ml_term list
-  | MLTConst of ident
-  | MLTFun of ident * 'htyp ml_term list * mode option
-  | MLTFunNot of ident * 'htyp ml_term list * mode option
+  | MLTRecord of Id.t list * 'htyp ml_term list
+  | MLTConstr of Id.t * 'htyp ml_term list
+  | MLTConst of Id.t
+  | MLTFun of Id.t * 'htyp ml_term list * mode option
+  | MLTFunNot of Id.t * 'htyp ml_term list * mode option
   | MLTMatch of 'htyp ml_term * pannot * 
     ('htyp ml_pat * 'htyp ml_term * pannot) list
   | MLTALin of ('htyp ml_term * 'htyp ml_term) list
@@ -179,16 +179,16 @@ let rec concat_list l sep = match l with
   | [a] -> a
   | a::tl -> a ^ sep ^ (concat_list tl sep)
 
-let rec pp_untyped_ml_pat pat = match pat with
-  | MLPVar i -> string_of_ident i
+let rec pp_untyped_ml_pat pat : string = match pat with
+  | MLPVar i -> Id.to_string i
   | MLPTuple pl -> "(" ^ (concat_list (List.map pp_ml_pat pl) ", ") ^ ")"
   | MLPRecord (il, pl) -> "{" ^ 
-      (concat_list (List.map2 (fun i t -> string_of_ident i ^ " = " ^
+      (concat_list (List.map2 (fun i t -> Id.to_string i ^ " = " ^
         (pp_ml_pat t)) il pl) "; ") ^ "}"
-  | MLPConstr (i, []) -> string_of_ident i
+  | MLPConstr (i, []) -> Id.to_string i
   | MLPConstr (i, pl) -> 
-     string_of_ident i ^ " (" ^ (concat_list (List.map pp_ml_pat pl) ", ") ^ ")"
-  | MLPConst i -> i
+     Id.to_string i ^ " (" ^ (concat_list (List.map pp_ml_pat pl) ", ") ^ ")"
+  | MLPConst i -> Id.to_string i
   | MLPWild -> "_"
   | MLPATrue -> "true"
   | MLPAFalse -> "false"
@@ -197,19 +197,19 @@ let rec pp_untyped_ml_pat pat = match pat with
 and pp_ml_pat (pat, ty) = pp_untyped_ml_pat pat ^ match ty with (CTSum _, _) -> "*" | _ -> ""
 
 let rec pp_ml_untyped_term inc term = match term with
-  | MLTVar i -> "@" ^ string_of_ident i
+  | MLTVar i -> "@" ^ Id.to_string i
   | MLTTuple tl -> 
         "(" ^ (concat_list (List.map (pp_ml_term_aux inc) tl) ", ") ^ ")"
   | MLTRecord (il, tl) -> "{" ^ (concat_list 
-      (List.map2 (fun i t -> string_of_ident i ^ " = " ^
+      (List.map2 (fun i t -> Id.to_string i ^ " = " ^
         (pp_ml_term_aux inc t)) il tl) "; ") ^ "}"
-  | MLTConstr (i, []) -> string_of_ident i
-  | MLTConstr (i, tl) -> string_of_ident i ^ 
+  | MLTConstr (i, []) -> Id.to_string i
+  | MLTConstr (i, tl) -> Id.to_string i ^ 
         "(" ^ (concat_list (List.map (pp_ml_term_aux inc) tl) ", ") ^ ")"
-  | MLTConst i -> string_of_ident i
-  | MLTFun (i, tl, Some m) -> string_of_ident i ^ string_of_mode m ^ " " ^
+  | MLTConst i -> Id.to_string i
+  | MLTFun (i, tl, Some m) -> Id.to_string i ^ string_of_mode m ^ " " ^
     (concat_list (List.map (fun t -> "(" ^ pp_ml_term_aux inc t ^ ")") tl) " ")
-  | MLTFun (i, tl, _) -> string_of_ident i ^ " " ^
+  | MLTFun (i, tl, _) -> Id.to_string i ^ " " ^
     (concat_list (List.map (fun t -> "(" ^ pp_ml_term_aux inc t ^ ")") tl) " ")
   | MLTFunNot (i, tl, _) -> "~ (" ^ 
     pp_ml_untyped_term inc (MLTFun (i, tl, None)) ^ ")"
@@ -811,6 +811,7 @@ then
   try let (nt, prop) = match tnl with (* rename inputs (matching term) *)
     | tn::_ -> rename_inputs_if_possible env nt tn prop
     | [] -> (nt, prop) in
+  let kv = List.map ident_of_id kv in
   let tn = TreeOutput (nt, prop.prop_concl, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv) in (*cath*)
   let rec io_rec tnl = match tnl with (* try to insert tn in the right place *)
     | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv)]] (*cath*)
@@ -840,6 +841,7 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
     match tnl_acc with
       | [] -> (* no matching nt, insert alone *)
         let kv' = mca_add_vars env kv nt in
+        let kv = List.map ident_of_id kv in
         List.map (fun nchild -> [TreeNode (nt, nchild, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv)]) (*cath*)
           (choose_prop_prem env id_spec prem_selector kv' prop [])
       | (TreeNode (nti, child, ani, _) as tni)::acc_tail -> (*cath*)
@@ -853,12 +855,14 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
         if List.for_all test_tail tnl_acc then
           (* nt can be inserted alone, before tni *)
           let kv' = mca_add_vars env kv nt in
+          let kv = List.map ident_of_id kv in
           List.map ( fun nchild -> 
               (TreeNode (nt, nchild, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv))::tnl_acc ) (*cath*)
             (choose_prop_prem env id_spec prem_selector kv' prop [])
         else (* try to insert nt into tni *)
         ( try let rnt, rprop = rename_outputs_if_possible env nt tni prop in
           let kv' = mca_add_vars env kv rnt in
+          let kv = List.map ident_of_id kv in
           List.map ( fun nchild -> 
               (TreeNode (nti, nchild, an_add_prop ani ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv)):: (*cath*)
                 acc_tail )
@@ -991,7 +995,7 @@ let gen_tuple_pat env terms_list = match terms_list with
 let lin_pat_new pat vars i kv lins =  
 let rec lin_pat pat vars i lins = match pat with
   | MLPVar v, ty -> if included [v] vars || List.mem v kv then
-    let nv = v ^ "_" ^ (string_of_int i) in
+    let nv = Id.of_string (Id.to_string v ^ "_" ^ (string_of_int i)) in
       ((MLPVar nv, ty), vars, i+1, ((MLTVar v, ty), (MLTVar nv, ty))::lins)
     else ((MLPVar v, ty), v::vars, i, lins)
   | MLPTuple pl, ty -> let (npatl, nvars, ni, nlins) =
@@ -1028,10 +1032,10 @@ let gen_match_term env nt = match nt with
   | NTConcl (MLTFun (pn, _, Some m), ty) 
   | NTPrem (MLTFun (pn, _, Some m), ty) ->
     let in_terms = get_in_terms env nt in
-    if string_of_ident pn = "eq" && List.exists ((=) MOutput) m then
+    if Id.to_string pn = "eq" && List.exists ((=) MOutput) m then
       List.hd in_terms
     else
-      let fn = get_pred_name env pn m in
+      let fn = Id.of_string (get_pred_name env (ident_of_id pn) m) in
       let ty = if List.for_all ((!=) MOutput) m then 
         let cl, t = env.extr_hf.h_get_bool_type () in
         (CTSum (List.map Id.of_string cl), t)
@@ -1064,9 +1068,9 @@ let (nt, kv) = nt_kv in  (*cath*)
 let default_case env = [(fake_type env MLPWild, fake_type env MLTADefault, [])]
 
 let rec gen_pat env id_extr tn = match tn with
-  | TreeNode (nt, tnl, an, kv) -> gen_pat_term env (nt,kv) (gen_match env id_extr tnl) an (*cath*)
+  | TreeNode (nt, tnl, an, kv) -> gen_pat_term env (nt, (List.map id_of_ident kv)) (gen_match env id_extr tnl) an (*cath*)
   | TreeOutput (nt, mlt, an, kv) -> 
-    gen_pat_term env (nt, kv) (gen_tuple env (get_out_terms_func env mlt)) an (*cath*)
+    gen_pat_term env (nt, (List.map id_of_ident kv)) (gen_tuple env (get_out_terms_func env mlt)) an (*cath*)
 
 and gen_match env id_extr tree = match List.hd tree with
   | TreeNode (nt, _, _, _) | TreeOutput (nt, _, _, _) -> (*cath*)
@@ -1084,7 +1088,7 @@ let rec select_args_types types mode = match types, mode with
 
 let code_from_tree env id_tree tree = 
   let mode = List.hd (extr_get_modes env id_tree) in
-  let args = gen_args mode in
+  let args = List.map Id.of_string (gen_args mode) in
   let spec = extr_get_spec env id_tree in
   let pred_args_types = spec.spec_args_types in
   let args_types = select_args_types pred_args_types mode in
@@ -1093,7 +1097,7 @@ let code_from_tree env id_tree tree =
   let an = flatmap (fun p -> mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) p.prop_name) None) spec.spec_props in
   {
     mlfun_name = fun_ident;
-    mlfun_args = List.map Id.of_string args;
+    mlfun_args = args;
     mlfun_body = fake_type env (MLTMatch (gen_tuple env 
       (List.map2 (fun a t -> MLTVar a, t) args args_types),
         an, pats@(default_case env)));

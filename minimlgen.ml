@@ -76,8 +76,8 @@ let get_pfalse () =
 let get_ptrue () =
   Pcons (glob_to_global (locate (qualid_of_string "Corelib.Init.Datatypes.true")), [])
 
-(* Gets an MiniML id from a ident. *)
-let ml_id_of_ident id = Id (Id.of_string (string_of_ident id))
+(* Gets an MiniML id from a Names id. *)
+let ml_id_of_id id = Id id
 
 (* Finds the rel of an id in a list of binders, if it exists. *)
 let find_rel bind id = 
@@ -104,7 +104,7 @@ let rec gen_pat (env, id_spec) bind nbind (p,_) = match p with
       ([], nbind) pl in
       ((Ptuple pats), nbind)
   | MLPConstr (id, pl) -> 
-      let glb,_ = Constr.destRef (get_cstr (env, id_spec) id) in
+      let glb,_ = Constr.destRef (get_cstr (env, id_spec) (ident_of_id id)) in
       let pats, nbind = List.fold_left 
       (fun (pats, nbind) p -> 
         let (pat, nbind) = gen_pat (env, id_spec) bind nbind p in
@@ -126,26 +126,26 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
   | MLTVar id -> MLrel (get_rel id bind)
   | MLTTuple tl -> MLtuple (List.map (gen_term (env, id_spec) default bind) tl)
   | MLTConstr (id, tl) -> 
-    let cstr = get_cstr (env, id_spec) id in
+    let cstr = get_cstr (env, id_spec) (ident_of_id id) in
     let ref,_ = Constr.destRef cstr in
     let ref = glob_to_global ref in
     MLcons (Tglob (ref, []), ref,
       List.map (gen_term (env, id_spec) default bind) tl)
-  | MLTConst id -> let s = string_of_ident id in
+  | MLTConst id -> let s = Id.to_string id in
     let ref,_ = try let i = String.rindex s '#' in
         let n_name = String.sub s (i+1) (String.length s - i - 1) in
         mk_dummy_glb (env, id_spec) (ident_of_string n_name)
       with Not_found | Invalid_argument _ ->
-        let cstr = get_cstr (env, id_spec) id in
+        let cstr = get_cstr (env, id_spec) (ident_of_id id) in
         Constr.destRef cstr
     in 
     MLglob (glob_to_global ref)
   | MLTFun (i, tl, _) | MLTFunNot (i, tl, _) -> (* TODO: the *not* case *)
     let glb = 
-      if string_of_ident i = "eq_full" then
+      if Id.to_string i = "eq_full" then
         generic_eq_bool ()
       else
-        fst (Constr.destRef (get_cstr (env, id_spec) i)) in
+        fst (Constr.destRef (get_cstr (env, id_spec) (ident_of_id i))) in
     MLapp (MLglob (glob_to_global glb), List.map (gen_term (env, id_spec) default bind) tl)
   | MLTATrue -> get_true ()
   | MLTAFalse -> get_false ()
@@ -154,7 +154,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
   let pats = List.map (fun (p, t, _) ->
     let pat, nbind = gen_pat (env, id_spec) bind [] p in
     let term = gen_term (env, id_spec) default ((List.rev nbind)@bind) t in
-    (List.map ml_id_of_ident nbind, pat, term)) ptl in
+    (List.map ml_id_of_id nbind, pat, term)) ptl in
   MLcase (Tunknown, t, Array.of_list pats)
   | MLTALin cl -> 
     let cli = List.map (function ((MLTVar v1, _), (MLTVar v2, _)) -> v1, v2
@@ -195,7 +195,7 @@ let rec gen_type mode prod concl = match mode, prod with
 
 (* Generates a function. *)
 let gen_func args code = List.fold_left (fun code a -> MLlam (a, code))
-  code (List.map ml_id_of_ident args)
+  code (List.map ml_id_of_id args)
 
 (* Initializes the MiniML code generation. *)
 let miniml_init =
@@ -230,8 +230,8 @@ let gen_miniml_func env (id, f) =
   else
     MLexn "" in
   let args = List.rev f.mlfun_args in
-  let code = gen_term (env, id) default (List.map ident_of_id args) f.mlfun_body in
-  let mla = gen_func (List.map ident_of_id args) code in
+  let code = gen_term (env, id) default args f.mlfun_body in
+  let mla = gen_func args code in
   (* We can't generate a new reference each time because there must be
      only one reference of each id ... else it makes bugs. 
      TODO: verfiy that we really have one ref by id and find a good way

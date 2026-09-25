@@ -179,7 +179,7 @@ let rec get_cstr_arity_and_types env cstr pltl = match pltl with
       (str ("Cannot find the '" ^ string_of_ident cstr ^ 
             "' constructor in the extraction environment")) in
     coq_type_explorer env cstr
-  | ((MLPConstr (c, args), _)::_, _, _)::_ when c = cstr ->
+  | ((MLPConstr (c, args), _)::_, _, _)::_ when c = id_of_ident cstr ->
     (List.length args, List.map snd args)
   | _::pltl_tail -> get_cstr_arity_and_types env cstr pltl_tail
 
@@ -223,12 +223,12 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
         (* if there is at least one variable: we create a variable for the letin *)
         let npltl = List.map ( fun (pl, t, an) -> match pl with
           | (MLPVar v, vty)::pl_tail -> 
-                (MLPWild, vty)::pl_tail, rename_var_term v (ident_of_id nvar) t, an
+                (MLPWild, vty)::pl_tail, rename_var_term v nvar t, an
           (* then we replace each occurence of the variables by the 
              letin variable; v is no longer needed -> replaced by MLPWild *)
           | _ -> pl, t, an
         ) pltl in
-        ( build_fix_term comp (env, id_fun) binded_vars (MLTVar (ident_of_id nvar), mt_ty),
+        ( build_fix_term comp (env, id_fun) binded_vars (MLTVar nvar, mt_ty),
           (* The pattern matching is done on the letin var to avoid 
                                                             multiple calculi. *)
           [nvar, build_fix_term comp (env, id_fun) binded_vars (mt, mt_ty)],
@@ -254,10 +254,10 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
         let cstr_arity, args_types = get_cstr_arity_and_types env cstr npltl in
         let wild_pats = make_wild_pats env cstr_arity in
         (* pat_vars will be used as arguments in the pattern. *)
-        let pat_vars = make_cstr_pat_vars cstr_arity in
+        let pat_vars = List.map id_of_ident (make_cstr_pat_vars cstr_arity) in
         (* next_pats will be added to the patterns matrix. *)
         let next_pats = flatmap (fun (pl, t, an) -> match pl with
-          | (MLPConstr (c, args), _)::pl_tail when c = cstr ->
+          | (MLPConstr (c, args), _)::pl_tail when c = id_of_ident cstr ->
             (* when an argument is a var, it is replaced by the pat_var;
                when it is a contr, it is left untouched. *)
             [List.fold_right2 (fun (a, ty) pv (pl, t, an) -> match a with
@@ -274,11 +274,9 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
 
         (* filter annotations, the cstr wust be in the pattern *)
         let ancstr = flatmap (fun (pl, _, an) -> match pl with
-          | (MLPConstr (c, _), _)::_ when c = cstr -> an
+          | (MLPConstr (c, _), _)::_ when c = id_of_ident cstr -> an
           | _ -> []
         ) npltl in
-
-        let pat_vars = List.map id_of_ident pat_vars in
         
         if List.length next_pats = 0 then
           (* TODO: if full extraction => false *)
@@ -311,15 +309,15 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
 (* Builds a fix_term, destructuring complex pattern matchings. *)
 and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
 (* TODO: check if there are renaming matches, if not, add the Some constr. *)
-  | MLTVar i -> FixVar (id_of_ident i), ty
+  | MLTVar i -> FixVar i, ty
   | MLTTuple _ -> raise RelExtNoFixTuple
   | MLTConstr (i, tl) -> 
-    FixConstr ((id_of_ident i), List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
-  | MLTConst i -> FixConst (id_of_ident i), ty
+    FixConstr (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
+  | MLTConst i -> FixConst i, ty
   | MLTFun (i, tl, _) -> 
-    FixFun ((id_of_ident i), List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
+    FixFun (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
   | MLTFunNot (i, tl, _) -> 
-    FixFunNot ((id_of_ident i), List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
+    FixFunNot (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
   | MLTMatch (t, _, ptl) ->
     let tl, pltl = normalize_pltl 
       [t] (List.map (fun (p, t, an) -> [p], t, an) ptl) in
@@ -342,15 +340,15 @@ let rec transform_pat_constrs (lpat, ty) = match lpat with
   | MLPTuple pl -> MLPTuple (transform_pat_constrs_list pl), ty
   | MLPRecord (il, pl) -> MLPRecord (il, transform_pat_constrs_list pl), ty
   | MLPConstr (i, pl) -> MLPConstr (i, transform_pat_constrs_list pl), ty
-  | MLPATrue -> MLPConstr (ident_of_string "true", []), 
+  | MLPATrue -> MLPConstr (Id.of_string "true", []), 
     (CTSum [Id.of_string "true"; Id.of_string "false"], 
      Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-  | MLPAFalse -> MLPConstr (ident_of_string "false", []), 
+  | MLPAFalse -> MLPConstr (Id.of_string "false", []), 
     (CTSum [Id.of_string "true"; Id.of_string "false"], 
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLPASome p -> 
-    MLPConstr (ident_of_string "Some", [transform_pat_constrs p]), ty
-  | MLPANone -> MLPConstr (ident_of_string "None", []), ty
+    MLPConstr (Id.of_string "Some", [transform_pat_constrs p]), ty
+  | MLPANone -> MLPConstr (Id.of_string "None", []), ty
   | _ -> lpat, ty
 and transform_pat_constrs_list lpat_list =
   List.map transform_pat_constrs lpat_list
@@ -365,14 +363,14 @@ let rec transform_constrs (lterm, ty) = match lterm with
   | MLTMatch (t, an, ptl) -> MLTMatch (transform_constrs t, an,
     List.map (fun (p, t, an) -> 
       transform_pat_constrs p, transform_constrs t, an) ptl), ty
-  | MLTATrue -> MLTConstr (ident_of_string "true", []), 
+  | MLTATrue -> MLTConstr (Id.of_string "true", []), 
     (CTSum [Id.of_string "true"; Id.of_string "false"],
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-  | MLTAFalse -> MLTConstr (ident_of_string "false", []), 
+  | MLTAFalse -> MLTConstr (Id.of_string "false", []), 
     (CTSum [Id.of_string "true"; Id.of_string "false"], 
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-  | MLTASome t -> MLTConstr (ident_of_string "Some", [transform_constrs t]), ty
-  | MLTANone -> MLTConstr (ident_of_string "None", []), ty
+  | MLTASome t -> MLTConstr (Id.of_string "Some", [transform_constrs t]), ty
+  | MLTANone -> MLTConstr (Id.of_string "None", []), ty
   | _ -> lterm, ty
 and transform_constrs_list lterm_list =
   List.map transform_constrs lterm_list
@@ -406,7 +404,7 @@ let complete_fun_with_option env f =
         | _ -> assert false
       else lterm, ty
     | MLTMatch ((MLTFun(i,args,m), (_,Some ctyp)), an, ptl) 
-    when fix_get_completion_status env i -> 
+    when fix_get_completion_status env (ident_of_id i) -> 
 
      let opt = find_coq_constr_s "Corelib.Init.Datatypes.option" in
      let ctyp = Some (mkApp (opt, [|ctyp|])) in
@@ -436,17 +434,17 @@ let add_ml_counter env f =
   let (mlt, typ) = f.mlfun_body in
   let coq_nat = Some (find_coq_constr_s "Corelib.Init.Datatypes.nat") in
   let nat_typ = CTSum [Id.of_string "O"; Id.of_string "S"], coq_nat in
-  let fcount = MLTVar (ident_of_string "fcounter"), nat_typ in
-  let fcount_pat = MLPVar (ident_of_string "fcounter"), nat_typ in
+  let fcount = MLTVar (Id.of_string "fcounter"), nat_typ in
+  let fcount_pat = MLPVar (Id.of_string "fcounter"), nat_typ in
   let rec adapt_func_calls (mlt, typ) = match mlt with
     | MLTTuple tl -> MLTTuple (List.map adapt_func_calls tl), typ
     | MLTRecord (il, tl) -> MLTRecord (il, List.map adapt_func_calls tl), typ
     | MLTConstr (i, tl) -> MLTConstr (i, List.map adapt_func_calls tl), typ
-    | MLTFun (i, tl, mo) -> begin match fix_get_recursion_style env i with
+    | MLTFun (i, tl, mo) -> begin match fix_get_recursion_style env (ident_of_id i) with
         | FixCount -> MLTFun (i, fcount::tl, mo), typ         
         | _ -> mlt, typ
       end
-    | MLTFunNot (i, tl, mo) -> begin match fix_get_recursion_style env i with
+    | MLTFunNot (i, tl, mo) -> begin match fix_get_recursion_style env (ident_of_id i) with
         | FixCount -> MLTFunNot (i, fcount::tl, mo), typ         
         | _ -> mlt, typ
       end
@@ -457,9 +455,9 @@ let add_ml_counter env f =
     | _ -> mlt, typ in
   let mlt', args' = match fix_get_recursion_style env (ident_of_id fname) with 
     | FixCount -> let ptal = [
-        ((MLPConstr (ident_of_string "O", []), nat_typ), 
-                (MLTConstr (ident_of_string "None", []), typ), []);
-        ((MLPConstr (ident_of_string "S", [fcount_pat]), nat_typ), 
+        ((MLPConstr (Id.of_string "O", []), nat_typ), 
+                (MLTConstr (Id.of_string "None", []), typ), []);
+        ((MLPConstr (Id.of_string "S", [fcount_pat]), nat_typ), 
                 (adapt_func_calls (mlt, typ)), [])
       ] in
       (MLTMatch (fcount, [], ptal), typ), 
@@ -521,8 +519,8 @@ let propag_one_func env (spec_id, mlf) =
     | MLTRecord (_, tl) -> list_exists_tuple browse_func tl
     | MLTConstr (_, tl) -> list_exists_tuple browse_func tl
     | MLTFun (i, _, _) | MLTFunNot (i, _, _) -> 
-      let dep_compl = fix_get_completion_status env i in
-      let dep_count = match fix_get_recursion_style env i with
+      let dep_compl = fix_get_completion_status env (ident_of_id i) in
+      let dep_count = match fix_get_recursion_style env (ident_of_id i) with
         | FixCount -> true
         | _ -> false in
       (dep_compl, dep_count)

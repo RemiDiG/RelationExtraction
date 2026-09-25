@@ -1,18 +1,20 @@
 Require Import RelationExtraction.
-(* Set Mangle Names. *) (* TODO uncompatible with mangle names *)
+(* Set Mangle Names. *) (* TODO uncompatible with mangle names -> FunInd *)
 
 Inductive n : Set := | Zero : n | Succ : n -> n.
 
-Inductive add : n -> n -> n -> Prop :=
+Inductive add : n -> n -> n -> Prop := (* casse si s'appelle H *)
 | addZero : forall o, add o Zero o
-| addSucc : forall o m p, add o m p -> add o (Succ m) (Succ p).
+| addSucc : forall o m H, add o m H -> add o (Succ m) (Succ H).
+
+(* Axiom (add12 : Prop). *) (* TODO bug if name H already there! *)
 
 Extraction Relation (add [1 2]).
 Extraction Relation Single Relaxed (add [2 3]).
 Extraction Relation Single (add [1 2 3]).
 Extraction Relation Single Relaxed (add [3 2]).
 
-(* Axiom (H: Prop). *) (* TODO bug if name H already there! *)
+(* Axiom (H: Prop). *)  (* TODO bug if name H already there! *)
 Axiom (po : Prop). (* no bug if po already used *)
 Extraction Relation Fixpoint (add [1 2] Struct 2).
 (*
@@ -30,3 +32,6 @@ Eval compute in (add23 (Succ Zero) (Succ (Succ Zero))).
 Extraction Relation Fixpoint Relaxed (add [1 2 3]).
 *)
 Fail Extraction Relation Relaxed (add [1 3]).
+
+Set Printing Depth 1000000.
+Print add12_correct.

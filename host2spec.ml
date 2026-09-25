@@ -148,11 +148,10 @@ let filter_impargs_cstr h args typs =
 (* Parses a simple Coq term. *)
 let rec build_untyped_term (env, id_spec) prod term = 
 match Constr.kind term with
-  | Const (c,_) -> let i = ident_of_string (Constant.to_string c) in
-    let env = add_cstr_to_env env i term in
+  | Const (c,_) -> let i = Id.of_string (Constant.to_string c) in
+    let env = add_cstr_to_env env (ident_of_id i) term in
     MLTConst i, env
-  | Rel i -> let n = 
-    ident_of_id (get_name (List.nth prod (i-1))) in
+  | Rel i -> let n = get_name (List.nth prod (i-1)) in
     MLTVar n, env
   | App (h, args) when isConstruct h ->
     let typs = find_types_of_constr h in
@@ -164,7 +163,7 @@ match Constr.kind term with
       let a, env = build_term (env, id_spec) prod (Some t) a in
       a::args, env) typs (Array.to_list args) ([], env) in 
     let env = add_cstr_to_env env constr h in
-    MLTConstr (constr, args), env
+    MLTConstr (id_of_ident constr, args), env
   | Construct _ ->
     let (ind, i), _ = destConstruct term in
     let it_constrs = find_it_constrs term in
@@ -175,7 +174,7 @@ match Constr.kind term with
       (add_cstr_to_env env constr construct, i+1)
     ) (env, 1) it_constrs in
 (*    let env = add_cstr_to_env env constr term in*)
-    MLTConstr (constr, []), env
+    MLTConstr (id_of_ident constr, []), env
   | App (h, args) -> 
     let args, _ = filter_impargs_cstr h args (Array.to_list args) in
     let c, _ = destConst h in
@@ -185,7 +184,7 @@ match Constr.kind term with
       let a, env = build_term (env, id_spec) prod None a in
       a::args, env) (Array.to_list args) ([], env) in (* TODO possibly to not use env here? *)
     let env = add_cstr_to_env env s h in
-    MLTFun (s, args, None), env
+    MLTFun (id_of_ident s, args, None), env
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Unknown Coq construction")
 and build_term (env, id_spec) prod typ term = 
   let (t, env) = build_untyped_term (env, id_spec) prod term in
@@ -212,7 +211,7 @@ let build_concl (env, id_spec) named_prod term = match Constr.kind term with
       let a, env = build_term (env, id_spec) named_prod (Some t) a in
       a::args, env
     ) args typs ([], env) in
-    fake_type env (MLTFun (id_spec, args, Some mode)), env
+    fake_type env (MLTFun (id_of_ident id_spec, args, Some mode)), env
   | _ -> CErrors.anomaly ~label:"RelationExtraction"
                         (str "Cannot find a constructor's conclusion")
 
@@ -248,8 +247,8 @@ let rec build_premisse (env, id_spec) named_prod term =
   let build_predicate ind args = 
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     let ind_gref = locate (qualid_of_ident oib.mind_typename) in
-    let id = ident_of_id oib.mind_typename in
-    let modes = begin match extr_get_modes env id with
+    let id = oib.mind_typename in
+    let modes = begin match extr_get_modes env (ident_of_id id) with
       | [] -> [make_mode ind_gref None]
       | modes -> modes end in
     let typs = find_types_of_ind ind in
@@ -272,7 +271,7 @@ let rec build_premisse (env, id_spec) named_prod term =
         | _ -> unknown_type env in
       (PMTerm ((prem_term, prem_term_type), Some (fresh_ident "Pm_")))::pred_terms, env
     ) modes ([], env) in
-    let env = add_indgref_to_env env id ind_gref in
+    let env = add_indgref_to_env env (ident_of_id id) ind_gref in
     begin match pred_terms with
       | [] -> CErrors.anomaly ~label:"RelationExtraction" (str "Bad premisse form")
       | [pred_term] -> pred_term, env

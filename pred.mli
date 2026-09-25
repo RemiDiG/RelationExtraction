@@ -85,11 +85,11 @@ type mode = mode_option list
 
 type 'htyp untyped_ml_pat =
 (* Standard constructions *)
-  | MLPVar of ident
+  | MLPVar of Id.t
   | MLPTuple of 'htyp ml_pat list
-  | MLPRecord of ident list * 'htyp ml_pat list
-  | MLPConstr of ident * 'htyp ml_pat list
-  | MLPConst of ident
+  | MLPRecord of Id.t list * 'htyp ml_pat list
+  | MLPConstr of Id.t * 'htyp ml_pat list
+  | MLPConst of Id.t
   | MLPWild
 
 (* Additionnal stuff *)
@@ -101,13 +101,13 @@ and 'htyp ml_pat = ('htyp untyped_ml_pat, 'htyp) typed
 
 type 'htyp untyped_ml_term =
 (* -- Begin: used by the specification -- *)
-  | MLTVar of ident
+  | MLTVar of Id.t
   | MLTTuple of 'htyp ml_term list
-  | MLTRecord of ident list * 'htyp ml_term list
-  | MLTConstr of ident * 'htyp ml_term list
-  | MLTConst of ident
-  | MLTFun of ident * 'htyp ml_term list * mode option
-  | MLTFunNot of ident * 'htyp ml_term list * mode option
+  | MLTRecord of Id.t list * 'htyp ml_term list
+  | MLTConstr of Id.t * 'htyp ml_term list
+  | MLTConst of Id.t
+  | MLTFun of Id.t * 'htyp ml_term list * mode option
+  | MLTFunNot of Id.t * 'htyp ml_term list * mode option
     (* MLTFun can be used to store function or inductive relations
        The "mode option" must be None for function and Some (...) for 
        predicates. *)
