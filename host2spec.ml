@@ -61,7 +61,7 @@ let get_name (binder,_) = match Context.binder_name binder with
 let find_it_constrs constr = 
   let (ind, _), _ = destConstruct constr in
   let _, idc = Inductive.lookup_mind_specif (Global.env ()) ind in
-  List.map ident_of_id (Array.to_list idc.mind_consnames)
+  Array.to_list idc.mind_consnames
 
 (* Gets type of one inductive body. *)
 (*
@@ -158,7 +158,7 @@ match Constr.kind term with
     let args, typs = filter_impargs_cstr h args typs in
     let (_, i), _ = destConstruct h in
     let it_constrs = find_it_constrs h in
-    let constr = id_of_ident (List.nth it_constrs (i-1)) in
+    let constr = List.nth it_constrs (i-1) in
     let args, env = List.fold_right2 (fun t a (args, env) ->
       let a, env = build_term (env, id_spec) prod (Some t) a in
       a::args, env) typs (Array.to_list args) ([], env) in 
@@ -166,7 +166,7 @@ match Constr.kind term with
     MLTConstr (constr, args), env
   | Construct _ ->
     let (ind, i), _ = destConstruct term in
-    let it_constrs = List.map id_of_ident (find_it_constrs term) in
+    let it_constrs = find_it_constrs term in
     let constr = List.nth it_constrs (i-1) in
     (* Add all the constructors to env. *)
     let env, _ = List.fold_left (fun (env, i) constr ->
