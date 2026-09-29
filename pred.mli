@@ -312,6 +312,4 @@ val make_trees : ('t, 'h) extract_env -> ('t, 'h) extract_env
 
 val make_ml_funs : ('t, 'h) extract_env -> ('t, 'h) extract_env
 
-
-val get_in_terms_func : ('t, 'h) extract_env -> 't ml_term -> 't ml_term list
 val get_out_terms_func : ('t, 'h) extract_env -> 't ml_term -> 't ml_term list

@@ -172,5 +172,3 @@ let gen_fixpoint env =
 
   (* Proofs generation *)
   List.iter (fun (id, _) -> gen_correction_proof env id) env.extr_fixfuns
-
-

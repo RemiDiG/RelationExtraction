@@ -37,14 +37,14 @@ let build_ind_scheme fun_name =
   let name = Namegen.next_ident_away_in_goal (Global.env ()) (Id.of_string "H") (Id.Set.empty) in
   if false then Printf.printf "\n%s\n%!" (Id.to_string name) else (); (* TODO[29/09/2026] debugging *)
   let ref_func = qualid_of_ident (Id.of_string fun_name) in
+  let ih_ind = CAst.make (Id.of_string (fun_name ^ "_ind")) in
   let make_fscheme () =
     Funind_plugin.Gen_principle.build_scheme
-      [CAst.make (Id.of_string (fun_name ^ "_ind")), ref_func, (* TODO[21/09/2026] sensitive! should be the same as in reltacs.ml*)
-       UnivGen.QualityOrSet.Qual (Sorts.Quality.QConstant Sorts.Quality.QProp)] in
+      [ih_ind, ref_func, UnivGen.QualityOrSet.Qual (Sorts.Quality.QConstant Sorts.Quality.QProp)] in
   begin
-  try make_fscheme () with Funind_plugin.Gen_principle.No_graph_found ->
-    let () = Funind_plugin.Gen_principle.make_graph (Nametab.global ref_func) in
-    make_fscheme ()
+    try make_fscheme () with Funind_plugin.Gen_principle.No_graph_found ->
+      let () = Funind_plugin.Gen_principle.make_graph (Nametab.global ref_func) in
+      make_fscheme ()
   end
   ;
   name

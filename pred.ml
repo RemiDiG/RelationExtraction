@@ -52,11 +52,19 @@ let fresh_id (base_name: string) : Id.t =
   Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) Id.Set.empty
 
 (* Return a name fresh only *internally*, should not be used anymore *)
+(* When we want to introduce several times a same name, add a number to it *)
 let fresh_string_id =
   let i = ref 0 in
   fun base_name () -> i := !i + 1; base_name ^ (string_of_int !i)
 let bad_fresh_id (base_name: string) : Id.t =
-  Id.of_string (fresh_string_id base_name ())
+  fresh_id (fresh_string_id base_name ())
+
+(* TODO[25/09/2026] internally None is the empty string, that is not valid as as identifier.
+   We use Name to patch it quickly, to improve. *)
+let name_to_string (n : Name.t) : string =
+  match n with
+  | Anonymous -> ""
+  | Name id -> Id.to_string id
 
 (* TODO[29/09/2026] Use Name instead of option?? *)
 let name_to_option_id (n : Name.t) : Id.t option =
@@ -74,13 +82,6 @@ type annot_atom = {
   pa_prem_name : Name.t;
   pa_renamings : (Name.t * Name.t) list;
 }
-
-(* TODO[25/09/2026] internally None is the empty string, that is not valid as as identifier.
-   We use Name to patch it quickly, to improve. *)
-let name_to_string (n : Name.t) : string =
-  match n with
-  | Anonymous -> ""
-  | Name id -> Id.to_string id
 
 type pannot = annot_atom list
 
