@@ -34,13 +34,7 @@ exception RelationExtractionError of string
 (* Identifiers *)
 (***************)
 
-(* Identifier for everything. *)
-type ident
-val string_of_ident : ident -> string
-val ident_of_string : string -> ident
-val ident_of_id : Id.t -> ident
-val id_of_ident : ident -> Id.t
-
+(* Fresh id. *)
 val fresh_id : string -> Id.t
 val bad_fresh_id : string -> Id.t
 val name_to_string : Name.t -> string

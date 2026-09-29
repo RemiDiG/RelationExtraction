@@ -47,14 +47,6 @@ let flatmap f l = List.flatten ((List.map f) l)
 (* Identifiers *)
 (***************)
 
-type ident = string
-let string_of_ident i = i
-let ident_of_string i = i
-let ident_of_id (id : Id.t) : ident =
-  ident_of_string (Id.to_string id)
-let id_of_ident (id : ident) : Id.t =
-  Id.of_string (string_of_ident id)
-
 (* Return a fresh name based on a scheme, using Rocq's implementation *)
 let fresh_id (base_name: string) : Id.t =
   Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) Id.Set.empty
@@ -317,7 +309,7 @@ let pp_ml_fun f =
 
 type 'htyp fix_untyped_term =
   | FixVar of Id.t
-(*  | FixRecord of ident list * fix_term list*)
+(*  | FixRecord of Id.t list * fix_term list*)
   | FixConstr of Id.t * 'htyp fix_term list
   | FixConst of Id.t
   | FixFun of Id.t * 'htyp fix_term list
@@ -1103,11 +1095,11 @@ let code_from_tree env id_tree tree =
   let spec = extr_get_spec env id_tree in
   let pred_args_types = spec.spec_args_types in
   let args_types = select_args_types pred_args_types mode in
-  let fun_ident = get_pred_name env id_tree mode in (* TODO[24/09/2026] check if a fresh id here does not break anything *)
+  let fun_id = get_pred_name env id_tree mode in (* TODO[24/09/2026] check if a fresh id here does not break anything *)
   let pats = List.map (gen_pat env id_tree) tree in
   let an = flatmap (fun p -> mk_an (name_to_option_id p.prop_name) None) spec.spec_props in
   {
-    mlfun_name = fun_ident;
+    mlfun_name = fun_id;
     mlfun_args = args;
     mlfun_body = fake_type env (MLTMatch (gen_tuple env 
       (List.map2 (fun a t -> MLTVar a, t) args args_types),
