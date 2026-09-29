@@ -314,7 +314,7 @@ val fake_type : ('htyp, 'henv) extract_env -> 't -> ('t, 'htyp) typed
 
 (* Extraction aborted because it's impossible to insert the property 
    in the tree. The string is the reason. *)
-exception RelationExtractionProp of ident option * string
+exception RelationExtractionProp of Id.t option * string
 val make_trees : ('t, 'h) extract_env -> ('t, 'h) extract_env
 
 val make_ml_funs : ('t, 'h) extract_env -> ('t, 'h) extract_env

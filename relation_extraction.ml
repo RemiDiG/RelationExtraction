@@ -100,7 +100,7 @@ let extract_relation_common dep ord ind_ref modes =
   (*Printf.eprintf "%s\n" (pp_extract_env env);*)
   let env = try Pred.make_trees env with
     | RelationExtractionProp (Some p_id, s) -> CErrors.user_err
-      (str ("[RelationExtraction] Extraction failed at " ^ string_of_ident p_id ^ ": " ^ s))
+      (str ("[RelationExtraction] Extraction failed at " ^ Names.Id.to_string p_id ^ ": " ^ s))
     | RelationExtractionProp (None, s) -> CErrors.user_err
       (str ("[RelationExtraction] Extraction failed: " ^ s))
   in

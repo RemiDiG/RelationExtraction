@@ -491,7 +491,7 @@ let pp_extract_env env =
 let unknown_type env = CTNone, env.extr_hf.h_get_fake_type ()
 let fake_type env t = t, unknown_type env
 
-exception RelationExtractionProp of ident option * string
+exception RelationExtractionProp of Id.t option * string
 
 (************************)
 (* Extraction algorithm *)
@@ -943,12 +943,12 @@ let tree_from_spec env prem_selector id_spec =
   let trees = List.fold_left (fun tree_list prop -> 
     match tree_list with
     | [] -> begin match insert_prop_concl env id_spec prem_selector prop [] with
-              | [] -> raise (RelationExtractionProp (((fun i -> match i with | Some i -> Some (ident_of_id i) | None -> None) (name_to_option_id prop.prop_name)), ""))
+              | [] -> raise (RelationExtractionProp (name_to_option_id prop.prop_name, ""))
               | l -> l
             end
     | _ -> begin match flatmap 
            (insert_prop_concl env id_spec prem_selector prop) tree_list with
-        | [] -> raise (RelationExtractionProp (((fun i -> match i with | Some i -> Some (ident_of_id i) | None -> None) (name_to_option_id prop.prop_name)), ""))
+        | [] -> raise (RelationExtractionProp (name_to_option_id prop.prop_name, ""))
         | l -> l
       end
   ) [] spec.spec_props in
