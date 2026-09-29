@@ -34,7 +34,7 @@ open Util
 
 let build_ind_scheme fun_name =
   let name = Id.to_string ( Namegen.next_ident_away_in_goal (Global.env ()) (Id.of_string "H") (Id.Set.empty)) in
-  Printf.printf "\n%s\n%!" (name);
+  (*Printf.printf "\n%s\n%!" (name);*)
   let ref_func = qualid_of_ident (Id.of_string fun_name) in
   let make_fscheme () =
     Funind_plugin.Gen_principle.build_scheme
@@ -45,7 +45,7 @@ let build_ind_scheme fun_name =
     make_fscheme ()
     ;
     let name =  Id.to_string (Namegen.next_ident_away_in_goal (Global.env ()) (Id.of_string "H") (Id.Set.empty)) in
-  Printf.printf "\n%s\n%!" (name)
+    (*Printf.printf "\n%s\n%!" (name)*)()
 
 
 let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =

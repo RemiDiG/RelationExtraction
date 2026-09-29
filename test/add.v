@@ -32,6 +32,3 @@ Eval compute in (add23 (Succ Zero) (Succ (Succ Zero))).
 Extraction Relation Fixpoint Relaxed (add [1 2 3]).
 *)
 Fail Extraction Relation Relaxed (add [1 3]).
-
-Set Printing Depth 1000000.
-Print add12_correct.
