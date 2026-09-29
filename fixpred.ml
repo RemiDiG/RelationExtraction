@@ -592,10 +592,9 @@ let build_proof_scheme fixfun =
         [Some pn, [OutputTerm (Some (ft, (ty, cty))), None]]
     end in
   let pall = rec_ps fixfun.fixfun_body [] in
-  let pall = List.map (fun (id, l) -> ((fun o -> match o with | Some o -> Some (match o with | Name o -> ident_of_id o | _ -> ident_of_string "") | None -> None) id), l) pall in
   let branches = List.map (fun (p, al) -> let p = match p with
       | None -> None
-      | Some p -> Some (string_of_ident p) in
+      | Some p -> Some (name_to_string p) in
     {psb_prop_name = p; psb_branch = al}) pall in
   { scheme_branches = branches; }
 
