@@ -49,7 +49,7 @@ let glob_to_global glb =
 let mk_dummy_cst (env, id_spec) id =
   let pred_glb = get_indgref env id_spec in
   let mod_path = Extraction_plugin.Table.modpath_of_r (glob_to_global pred_glb) in
-  let lbl = Obj.magic (string_of_ident id) in
+  let lbl = Obj.magic (Id.to_string id) in
   (* Dummy universes... *)
   Constr.mkConstU (to_puniverses (Constant.make2 mod_path lbl))
 
@@ -59,7 +59,7 @@ let mk_dummy_glb (env, id_spec) id =
 (* Gets a constr from the extract env. *)
 let get_cstr (env, id_spec) id =
   try List.assoc id env.extr_henv.cstrs with _ -> 
-  mk_dummy_cst (env, id_spec) (ident_of_id id)
+  mk_dummy_cst (env, id_spec) id
 
 
 (* References on Coq types. *)
@@ -134,7 +134,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
   | MLTConst id -> let s = Id.to_string id in
     let ref,_ = try let i = String.rindex s '#' in
         let n_name = String.sub s (i+1) (String.length s - i - 1) in
-        mk_dummy_glb (env, id_spec) (ident_of_string n_name)
+        mk_dummy_glb (env, id_spec) (Id.of_string n_name)
       with Not_found | Invalid_argument _ ->
         let cstr = get_cstr (env, id_spec) id in
         Constr.destRef cstr
@@ -165,7 +165,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
         [MLrel (get_rel c1 bind); MLrel (get_rel c2 bind)])) cli in
     List.fold_left
       (fun t c -> MLapp (MLglob (glob_to_global (fst (mk_dummy_glb (env, id_spec)
-        (ident_of_string "(&&)")))), [t; c]))
+        (Id.of_string "(&&)")))), [t; c]))
       (List.hd cl') (List.tl cl')
   | MLTADefault -> default
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Unknown term in MiniML")
@@ -253,15 +253,14 @@ let add_cstr_to_env env id cstr =
 
 let add_fake_cstr_to_env (env, id_spec) id =
   let fake_gref = mk_dummy_cst (env, id_spec) id in
-  add_cstr_to_env env (id_of_ident id) fake_gref
+  add_cstr_to_env env id fake_gref
 
 
 (* MiniML code generation. *)
 let gen_miniml env = 
   let _ = miniml_init () in
   let funs = env.extr_mlfuns in
-  let env = List.fold_right (fun (id, f) env -> add_fake_cstr_to_env (env, id)
-              (ident_of_id f.mlfun_name)) funs env in
+  let env = List.fold_right (fun (id, f) env -> add_fake_cstr_to_env (env, id) f.mlfun_name) funs env in
   let mlfuncs = List.map (gen_miniml_func env) funs in
   let glbs, mlas, mlts = list_split3 mlfuncs in
   let mld =
