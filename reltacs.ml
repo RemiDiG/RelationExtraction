@@ -559,22 +559,21 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       | _ -> None, pmn in
     if dep_pred <> None then 
       let dep_pred = match dep_pred with Some n -> n | _ -> assert false in
-      let hrec = fresh_ident "HREC_" in (* TODO 04/09/2026 fresh rocq name for that! *)
+      let hrec = id_of_ident (fresh_ident "HREC_") in (* TODO 04/09/2026 fresh rocq name for that! *)
       let i, tacs, hn, rv = match at with
         | LetVar (pi, (_, (_, Some t)), _) -> 
           let v = pi.pi_func_name in
-          let i, _ = goal_iterator premisse false true false 
-                          (find_let_in_cstr v) sigma goal (last_i+1) in
-          let hn = (*fresh_string_id "HLREC_" () in *) ident_of_string v in
-          i, [ASSERTEQUAL (id_of_ident hrec, Id.of_string v, LocInHyp (id_of_ident hn, hyp_def), EConstr.of_constr t); AUTO; (* TODO[21/09/2026] fresh names *)
-              SYMMETRY (id_of_ident hrec)], hn, [v,hrec]
+          let i, _ = goal_iterator premisse false true false (find_let_in_cstr v) sigma goal (last_i+1) in
+          let hn = (*fresh_string_id "HLREC_" () in *) Id.of_string v in
+          i, [ASSERTEQUAL (hrec, Id.of_string v, LocInHyp (hn, hyp_def), EConstr.of_constr t); AUTO; (* TODO[21/09/2026] fresh names *)
+              SYMMETRY hrec], hn, [v,hrec]
         | CaseConstr (_, _, _, _) ->
           let i, (_, _) = goal_iterator premisse false false true 
                               find_eq_get_sides sigma goal (last_i+1) in
           i, [], hrec, []
         | _ -> assert false (* TODO? *) in
 
-      let ti = mk_ti_n (tacs@[APPLYPROPIN (Id.of_string (dep_pred ^ "_correct"), id_of_ident hrec)]) in (* TODO[21/09/2026] fresh names *)
+      let ti = mk_ti_n (tacs@[APPLYPROPIN (Id.of_string (dep_pred ^ "_correct"), hrec)]) in (* TODO[21/09/2026] fresh names *)
       ((i, hn)::hname_index, ti::til, pmn, i, recvars@rv)
     else match at with
       | LetVar (pi, (_, (_, Some t)), _) 
@@ -582,23 +581,22 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
         let v = pi.pi_func_name in
         let i, _ = goal_iterator premisse false true false 
                           (find_let_in_cstr v) sigma goal (last_i+1) in
-        let hname = (*fresh_string_id "HLV_" ()*) ident_of_string v in
-        let eqhname = ident_of_string (string_of_ident hname ^ "EQ") in
+        let hname = (*fresh_string_id "HLV_" ()*) Id.of_string v in
+        let eqhname = Id.of_string (Id.to_string hname ^ "EQ") in
         let ti = mk_ti_ai_n 
-                  [ASSERTEQUAL (id_of_ident eqhname, id_of_ident (ident_of_string v), LocInHyp (id_of_ident hname, hyp_def), EConstr.of_constr t); AUTO]
-                  [CHANGEV (id_of_ident eqhname, id_of_ident (ident_of_string v), LocInHyp (id_of_ident eqhname, hyp_eq_right))] in
+                  [ASSERTEQUAL (eqhname, id_of_ident (ident_of_string v), LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
+                  [CHANGEV (eqhname, id_of_ident (ident_of_string v), LocInHyp (eqhname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
       | CaseConstr (_, _, _, _) -> 
         let i, (_, _) = goal_iterator premisse false false true 
                                         find_eq_get_sides sigma goal (last_i+1) in
-        let hname = fresh_ident "HCC_" in
-        let ti = mk_ti_n [CHANGEC (id_of_ident hname, LocInHyp (id_of_ident hname, hyp_eq_left), 
-                                   LocInHyp (id_of_ident hname, hyp_eq_right))] in
+        let hname = id_of_ident (fresh_ident "HCC_") in
+        let ti = mk_ti_n [CHANGEC (hname, LocInHyp (hname, hyp_eq_left), LocInHyp (hname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
       | CaseDum _ -> 
         let i, _ = goal_iterator premisse false false true 
                                         find_eq_get_sides sigma goal (last_i+1) in
-        let hname = fresh_ident "HCD_" in
+        let hname = id_of_ident (fresh_ident "HCD_") in
         ((i, hname)::hname_index, til, pmn, i, recvars)
 (* old code for LetDums, they are now processed as LetVars... *)
 (*      | LetDum (pi, _) -> 
@@ -617,15 +615,15 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
             goal_iterator premisse true false false find_fa_name sigma goal nb_h in
 (*old*)(*          if i = nb_h then n, p_h*)
 (* modified for proof printing. TODO: find a solution to keep real names? *)
-(*new*)          if i = nb_h then fresh_ident "na_", p_h
+(*new*)          if i = nb_h then id_of_ident (fresh_ident "na_"), p_h
           else raise Not_found
-        with Not_found -> let n = fresh_ident "HREC_" in n, n::p_h in
+        with Not_found -> let n = id_of_ident (fresh_ident "HREC_") in n, n::p_h in
     (mk_hnames (hn::hnames) p_h (nb_h-1)) in mk_hnames [] [] nb_h in
     (* new p_h version *)
     let p_h = List.filter (fun hn -> try String.sub hn 0 5 = "HREC_" || 
-                           List.mem_assoc hn recvars with _ -> false) (List.map string_of_ident hnames) in
+                           List.mem_assoc hn recvars with _ -> false) (List.map Id.to_string hnames) in
     let p_h = List.map (fun hn -> if List.mem_assoc hn recvars then 
-                                     List.assoc hn recvars else ident_of_string hn) p_h in
+                                     List.assoc hn recvars else Id.of_string hn) p_h in
     let get_branch_prem_order atl = List.fold_right (fun (at, _) (pml, ono) -> 
         let hno = match at with
           | LetVar (_, _, po) -> let n = po.po_prem_name in 
@@ -655,12 +653,12 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
     (* Use REVERT only if list of size non-zero *)
     let til' =
       if List.length p_h > 0 then
-    	let ti_revert_rec = mk_ti_n [REVERT (List.rev (List.map id_of_ident p_h))] in
+    	let ti_revert_rec = mk_ti_n [REVERT (List.rev p_h)] in
     	til@[ti_revert_rec]
       else
         til
     in
-  { pres_intros = List.map id_of_ident hnames;
+  { pres_intros = hnames;
     pres_tacts = Prop_tacs (til', prop_name);
   }
 
