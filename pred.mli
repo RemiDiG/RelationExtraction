@@ -40,10 +40,9 @@ val string_of_ident : ident -> string
 val ident_of_string : string -> ident
 val ident_of_id : Id.t -> ident
 val id_of_ident : ident -> Id.t
-val fresh_ident : string -> ident
-val fresh_string_id : string -> unit -> string
 
 val fresh_id : string -> Id.t
+val bad_fresh_id : string -> Id.t
 val name_to_string : Name.t -> string
 
 (*************************)

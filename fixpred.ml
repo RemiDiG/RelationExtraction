@@ -117,8 +117,7 @@ let gen_default_case env mode =
 (* Makes a list of n fresh variables. *)
 let rec make_cstr_pat_vars n =
   if n = 0 then [] 
-  else (id_of_ident (fresh_ident "fix_")) :: 
-    (make_cstr_pat_vars (n-1))
+  else (bad_fresh_id "fix_") :: (make_cstr_pat_vars (n-1))
 
 (* Makes a list of n wild patterns. *)
 let rec make_wild_pats env n =
@@ -219,7 +218,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
       | p::_ -> (match p with | MLPConstr _, _ -> true | _ -> false)
       | _ -> assert false) pltl in
     let nmt, lams, npltl = if is_variables then 
-        let nvar = id_of_ident (fresh_ident "fix_") in (* TODO[24/09/2026] using fresh_id here breaks everything! To solve *)
+        let nvar = bad_fresh_id "fix_" in (* TODO[24/09/2026] using fresh_id here breaks everything! To solve *)
         (* if there is at least one variable: we create a variable for the letin *)
         let npltl = List.map ( fun (pl, t, an) -> match pl with
           | (MLPVar v, vty)::pl_tail -> 
