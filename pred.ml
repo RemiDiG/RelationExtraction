@@ -58,13 +58,6 @@ let fresh_string_id =
 let bad_fresh_id (base_name: string) : Id.t =
   Id.of_string (fresh_string_id base_name ())
 
-(* We translate Anonymous to the empty string *)
-(* TODO[29/09/2026] check if "_" is not better... *)
-let name_to_string (n: Name.t) : string =
-  match n with
-  | Name i -> Id.to_string i
-  | Anonymous -> ""
-
 (* TODO[29/09/2026] Use Name instead of option?? *)
 let name_to_option_id (n : Name.t) : Id.t option =
   match n with
