@@ -44,6 +44,7 @@ val fresh_ident : string -> ident
 val fresh_string_id : string -> unit -> string
 
 val fresh_id : string -> Id.t
+val name_to_string : Name.t -> string
 
 (*************************)
 (* Annotation for proofs *)
@@ -139,24 +140,24 @@ val pp_ml_untyped_term : string -> 'htyp untyped_ml_term -> string
 
 (* A premisse in a property (or constructor) of a specification. *)
 type 'htyp premisse =
-  | PMTerm of 'htyp ml_term * ident option
-  | PMNot of 'htyp premisse * ident option
-  | PMOr of 'htyp premisse list * ident option
-  | PMAnd of 'htyp premisse list * ident option
-  | PMChoice of 'htyp premisse list * ident option
+  | PMTerm of 'htyp ml_term * Id.t option
+  | PMNot of 'htyp premisse * Id.t option
+  | PMOr of 'htyp premisse list * Id.t option
+  | PMAnd of 'htyp premisse list * Id.t option
+  | PMChoice of 'htyp premisse list * Id.t option
 (* The ident is used to tag premisses and follow them. *)
 
 (* A property (or constructor) of a specification. *)
 type 'htyp property = {
-  prop_name : ident option;
-  prop_vars : ident list;
+  prop_name : Name.t;
+  prop_vars : Name.t list;
   prop_prems : 'htyp premisse list;
   prop_concl : 'htyp ml_term;
 }
 
 (* Type of a specification. *)
 type 'htyp spec = {
-  spec_name : ident;
+  spec_name : Id.t;
   spec_args_types : 'htyp term_type list;
   spec_props : 'htyp property list;
 } 

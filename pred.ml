@@ -61,7 +61,20 @@ let fresh_ident base_name = ident_of_string (fresh_string_id base_name ())
 
 (* Return a fresh name based on a scheme, using Rocq's implementation *)
 let fresh_id (base_name: string) : Id.t =
-   Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) Id.Set.empty
+  Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) Id.Set.empty
+
+(* We translate Anonymous to the empty string *)
+(* TODO[29/09/2026] check if "_" is not better... *)
+let name_to_string (n: Name.t) : string =
+  match n with
+  | Name i -> Id.to_string i
+  | Anonymous -> ""
+
+(* TODO[29/09/2026] Use Name instead of option?? *)
+let name_to_option_id (n : Name.t) : Id.t option =
+  match n with
+  | Anonymous -> None
+  | Name i -> Some i
 
 
 (*************************)
@@ -236,21 +249,21 @@ let pp_ml_term t = pp_ml_term_aux "" t
 (******************)
 
 type 'htyp premisse =
-  | PMTerm of 'htyp ml_term * ident option
-  | PMNot of 'htyp premisse * ident option
-  | PMOr of 'htyp premisse list * ident option
-  | PMAnd of 'htyp premisse list * ident option
-  | PMChoice of 'htyp premisse list * ident option
+  | PMTerm of 'htyp ml_term * Id.t option
+  | PMNot of 'htyp premisse * Id.t option
+  | PMOr of 'htyp premisse list * Id.t option
+  | PMAnd of 'htyp premisse list * Id.t option
+  | PMChoice of 'htyp premisse list * Id.t option
 
 type 'htyp property = {
-  prop_name : ident option;
-  prop_vars : ident list;
+  prop_name : Name.t;
+  prop_vars : Name.t list;
   prop_prems : 'htyp premisse list;
   prop_concl : 'htyp ml_term;
 }
 
 type 'htyp spec = {
-  spec_name : ident;
+  spec_name : Id.t;
   spec_args_types : 'htyp term_type list;
   spec_props : 'htyp property list;
 } 
@@ -263,11 +276,11 @@ let rec pp_premisse prem = match prem with
   | PMChoice (pml, _) -> "(" ^ concat_list (List.map pp_premisse pml) " | " ^ ")"
 
 let pp_property prop = begin match prop.prop_name with
-    | None -> ""
-    | Some i -> string_of_ident i ^ ": " end ^ 
+    | Anonymous -> ""
+    | Name i -> Id.to_string i ^ ": " end ^ 
   begin match prop.prop_vars with 
     | [] -> ""
-    | _ -> "\\-∕ " ^ concat_list (List.map string_of_ident prop.prop_vars) " " ^ 
+    | _ -> "\\-∕ " ^ concat_list (List.map name_to_string prop.prop_vars) " " ^ 
       ": " end ^
   begin match prop.prop_prems with
     | [] -> ""
@@ -275,7 +288,7 @@ let pp_property prop = begin match prop.prop_name with
       " -> " end ^
   pp_ml_term prop.prop_concl
 
-let pp_spec spec = "Specification " ^ string_of_ident spec.spec_name ^ ": " ^
+let pp_spec spec = "Specification " ^ Id.to_string spec.spec_name ^ ": " ^
   concat_list (List.map pp_term_type spec.spec_args_types) " -> " ^ " :=\n" ^
   concat_list (List.map pp_property spec.spec_props) "\n"
 
@@ -812,9 +825,9 @@ then
     | tn::_ -> rename_inputs_if_possible env nt tn prop
     | [] -> (nt, prop) in
   let kv = List.map ident_of_id kv in
-  let tn = TreeOutput (nt, prop.prop_concl, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv) in (*cath*)
+  let tn = TreeOutput (nt, prop.prop_concl, mk_an (name_to_option_id prop.prop_name) pm_n, kv) in (*cath*)
   let rec io_rec tnl = match tnl with (* try to insert tn in the right place *)
-    | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv)]] (*cath*)
+    | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an (name_to_option_id prop.prop_name) pm_n, kv)]] (*cath*)
       (* we can always insert at the end because 
                                         all the tests have been done before *)
     | ((TreeOutput (nti, _, _, _) | (TreeNode (nti, _, _, _))) as tni)::tntl -> (*cath*)
@@ -842,7 +855,7 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
       | [] -> (* no matching nt, insert alone *)
         let kv' = mca_add_vars env kv nt in
         let kv = List.map ident_of_id kv in
-        List.map (fun nchild -> [TreeNode (nt, nchild, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv)]) (*cath*)
+        List.map (fun nchild -> [TreeNode (nt, nchild, mk_an (name_to_option_id prop.prop_name) pm_n, kv)]) (*cath*)
           (choose_prop_prem env id_spec prem_selector kv' prop [])
       | (TreeNode (nti, child, ani, _) as tni)::acc_tail -> (*cath*)
         if nt_partial_ordering env id_spec nti nt then
@@ -857,14 +870,14 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
           let kv' = mca_add_vars env kv nt in
           let kv = List.map ident_of_id kv in
           List.map ( fun nchild -> 
-              (TreeNode (nt, nchild, mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv))::tnl_acc ) (*cath*)
+              (TreeNode (nt, nchild, mk_an (name_to_option_id prop.prop_name) pm_n, kv))::tnl_acc ) (*cath*)
             (choose_prop_prem env id_spec prem_selector kv' prop [])
         else (* try to insert nt into tni *)
         ( try let rnt, rprop = rename_outputs_if_possible env nt tni prop in
           let kv' = mca_add_vars env kv rnt in
           let kv = List.map ident_of_id kv in
           List.map ( fun nchild -> 
-              (TreeNode (nti, nchild, an_add_prop ani ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) prop.prop_name) pm_n, kv)):: (*cath*)
+              (TreeNode (nti, nchild, an_add_prop ani (name_to_option_id prop.prop_name) pm_n, kv)):: (*cath*)
                 acc_tail )
             (choose_prop_prem env id_spec prem_selector kv' rprop child)
          with Impossible -> [])
@@ -895,8 +908,8 @@ and not_full_mode m args =
 and insert_prem env id_spec prem_selector kv prem prop tnl = match prem with
   | PMTerm ((MLTFunNot (_, args, Some m), _), _) when not_full_mode m args -> []
   | PMTerm (pmt, pm_n) -> let nt = NTPrem pmt in
-    if prop.prop_prems = [] then insert_last_prem_term env id_spec ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) pm_n) kv nt prop tnl
-    else insert_prem_term env id_spec prem_selector ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) pm_n) kv nt prop tnl
+    if prop.prop_prems = [] then insert_last_prem_term env id_spec pm_n kv nt prop tnl
+    else insert_prem_term env id_spec prem_selector pm_n kv nt prop tnl
   | PMAnd (pl, _) -> flatmap (fun prem ->
       let other_prems = List.filter (fun a -> a <> prem) pl in
       let nprop = { prop with prop_prems = other_prems@prop.prop_prems } in
@@ -934,12 +947,12 @@ let tree_from_spec env prem_selector id_spec =
   let trees = List.fold_left (fun tree_list prop -> 
     match tree_list with
     | [] -> begin match insert_prop_concl env id_spec prem_selector prop [] with
-              | [] -> raise (RelationExtractionProp (prop.prop_name, ""))
+              | [] -> raise (RelationExtractionProp (((fun i -> match i with | Some i -> Some (ident_of_id i) | None -> None) (name_to_option_id prop.prop_name)), ""))
               | l -> l
             end
     | _ -> begin match flatmap 
            (insert_prop_concl env id_spec prem_selector prop) tree_list with
-        | [] -> raise (RelationExtractionProp (prop.prop_name, ""))
+        | [] -> raise (RelationExtractionProp (((fun i -> match i with | Some i -> Some (ident_of_id i) | None -> None) (name_to_option_id prop.prop_name)), ""))
         | l -> l
       end
   ) [] spec.spec_props in
@@ -1094,7 +1107,7 @@ let code_from_tree env id_tree tree =
   let args_types = select_args_types pred_args_types mode in
   let fun_ident = id_of_ident (ident_of_string get_pred_name env id_tree mode) in (* TODO[24/09/2026] check if a fresh id here does not break anything *)
   let pats = List.map (gen_pat env id_tree) tree in
-  let an = flatmap (fun p -> mk_an ((fun o -> match o with | Some o -> Some (id_of_ident o) | None -> None) p.prop_name) None) spec.spec_props in
+  let an = flatmap (fun p -> mk_an (name_to_option_id p.prop_name) None) spec.spec_props in
   {
     mlfun_name = fun_ident;
     mlfun_args = args;

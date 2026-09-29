@@ -269,29 +269,29 @@ let rec build_premisse (env, id_spec) named_prod term =
           (CTSum [Id.of_string "true"; Id.of_string "false"], 
             Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
         | _ -> unknown_type env in
-      (PMTerm ((prem_term, prem_term_type), Some (fresh_ident "Pm_")))::pred_terms, env
+      (PMTerm ((prem_term, prem_term_type), Some (id_of_ident (fresh_ident "Pm_"))))::pred_terms, env (* TODO[29/09/2026] fresh_id breaks! *)
     ) modes ([], env) in
     let env = add_indgref_to_env env (ident_of_id id) ind_gref in
     begin match pred_terms with
       | [] -> CErrors.anomaly ~label:"RelationExtraction" (str "Bad premisse form")
       | [pred_term] -> pred_term, env
-      | _ -> PMChoice (pred_terms, Some (fresh_ident "Pm_")), env 
+      | _ -> PMChoice (pred_terms, Some (id_of_ident (fresh_ident "Pm_"))), env
     end in
   begin match Constr.kind term with
     | App (h, [|arg|]) when isNot h ->
       let pm, env = build_premisse (env, id_spec) named_prod arg in
-      (PMNot (pm, Some (fresh_ident "Pm_")), env)
+      (PMNot (pm, Some (id_of_ident (fresh_ident "Pm_"))), env)
     | App (h, args) when isOr h ->
       let pms, env = build_premisse_list (env, id_spec) 
         named_prod (Array.to_list args) in
-      (PMOr (pms, Some (fresh_ident "Pm_")), env)
+      (PMOr (pms, Some (id_of_ident (fresh_ident "Pm_"))), env)
     | App (h, args) when isAnd h ->
       let pms, env = build_premisse_list (env, id_spec) 
         named_prod (Array.to_list args) in
-      (PMAnd (pms, Some (fresh_ident "Pm_")), env)
+      (PMAnd (pms, Some (id_of_ident (fresh_ident "Pm_"))), env)
     | App (h, _) when isConst h -> let t, env = build_term (env, id_spec) 
         named_prod None term in
-      PMTerm (t, Some (fresh_ident "Pm_")), env
+      PMTerm (t, Some (id_of_ident (fresh_ident "Pm_"))), env
     | App (h, args) when isInd h -> let ind, _ = destInd h in
       build_predicate ind args
     | App (h, args) when isRel h ->
@@ -344,10 +344,10 @@ let build_prop (env, id_spec) prop_name prop_type =
   let prems = List.map snd named_prems in
   let prems, env = build_prems (env, id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 
-    | Name id -> true, ident_of_id id
-    | Anonymous -> false, ident_of_string "") named_prod in
+    | Name id -> true, Name id
+    | Anonymous -> false, Anonymous) named_prod in (* TODO[29/09/2026] anonymous previously was "" *)
   {
-    prop_name = Some prop_name;
+    prop_name = Name prop_name;
     prop_vars = vars;
     prop_prems = prems;
     prop_concl = concl
@@ -360,7 +360,6 @@ let find_one_spec env (id_spec, _) =
   let ind = Globnames.destIndRef (global idr) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
   let props, env = List.fold_right2 (fun prop_name cstr (pl, env) -> 
-      let prop_name = ident_of_id prop_name in
       let p, env = build_prop (env, id_spec) prop_name cstr in
       p::pl, env
     )
@@ -368,7 +367,7 @@ let find_one_spec env (id_spec, _) =
     (Array.to_list oib.mind_user_lc) ([], env) in
   let args_types = find_types_of_ind ind in
   (id_spec, {
-    spec_name = id_spec;
+    spec_name = id_of_ident id_spec;
     spec_args_types = args_types;
     spec_props = props;
   }), env

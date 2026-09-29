@@ -526,8 +526,8 @@ let rec get_pmterm_name_order pm = match pm with
 let get_init_prem_order (env, id) prop_name = 
   let spec = extr_get_spec env id in
   let prop = List.find (fun prop -> match prop.prop_name with 
-    | Some pn -> pn = prop_name 
-    | None -> false) spec.spec_props in
+    | Name pn -> pn = prop_name 
+    | Anonymous -> false) spec.spec_props in
   List.flatten (List.map get_pmterm_name_order prop.prop_prems)
   
 
@@ -641,8 +641,8 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       let prop_name = 
         match branch.psb_prop_name with Some n -> n | _ -> assert false in
       let init_order = 
-        get_init_prem_order (env, ident_of_id id) (ident_of_string prop_name) in
-      let init_order = List.map string_of_ident init_order in
+        get_init_prem_order (env, ident_of_id id) (Id.of_string prop_name) in
+      let init_order = List.map Id.to_string init_order in
       let branch_order, _ = get_branch_prem_order branch.psb_branch in
       let rec order_prem pml init branch = match init with 
         | [] -> []
