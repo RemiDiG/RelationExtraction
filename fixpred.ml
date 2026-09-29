@@ -575,7 +575,7 @@ let build_proof_scheme fixfun =
           p, (CaseConstr (t, cstr, List.map 
             (fun i -> mk_pa_var (Id.to_string i) None) il, mk_po pm_n), None)::al
         else p, (CaseDum (t, cstr, List.map 
-               (fun i -> mk_pa_var (string_of_ident i) None) (List.map ident_of_id il)), None)::al) pall
+               (fun i -> mk_pa_var (Id.to_string i) None) il), None)::al) pall
       ) iltl cstr_list)
     | FixLetin (i, t, next_t, anlet) -> let pall = rec_ps next_t an in
       List.map (fun (p, al) -> let b, pm_n = list_exists_assoc (fun a -> 
