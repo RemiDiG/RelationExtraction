@@ -200,7 +200,7 @@ let get_goal =
   let goal = ref (EConstr.mkRel 1) in
   let tac = Proofview.Goal.enter (fun goal_s ->
     goal := Proofview.Goal.concl goal_s; Tacticals.tclIDTAC) in
-  fun pstate -> (ignore (Declare.Proof.by tac pstate); !goal)
+  fun pstate -> (ignore (Declare.Proof.by (Global.env ()) tac pstate); !goal)
 
 (* return type : named_declaration list = 
                    (identifier * constr option * types) list *)
@@ -220,7 +220,7 @@ let get_evarmap_in f =
 let get_evarmap =
   let evm = ref Evd.empty in
   let tac = get_evarmap_in (fun sigma -> evm := sigma; Tacticals.tclIDTAC) in
-  fun pstate -> (ignore (Declare.Proof.by tac pstate); !evm)
+  fun pstate -> (ignore (Declare.Proof.by (Global.env ()) tac pstate); !evm)
 
 (* Unused (09/03/2026)
 let pat_from_constr pstate constr =
@@ -363,7 +363,7 @@ let make_proof (id_po: Id.t) (env, id) lemma prover ps =
         begin Printf.printf "\n\n%s\n\n" (pp_tac_atom t); 
         print_subgoals lemma end
       else () end;
-      let lemma = let proof, _ = Declare.Proof.by (build_tac_atom t) lemma in proof in
+      let lemma = let proof, _ = Declare.Proof.by (Global.env ()) (build_tac_atom t) lemma in proof in
       apply_tacs lemma (Tac_list tl)
     | Tac_list [] -> lemma in
   let lemma = apply_tacs lemma intro in
