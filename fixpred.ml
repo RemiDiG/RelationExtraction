@@ -557,7 +557,7 @@ let rec list_exists_assoc f l = match l with
 
 let mk_po pm_n_opt = match pm_n_opt with
   | None -> assert false (* TODO: error message ? *)
-  | Some pm_n -> { po_prem_name = string_of_ident pm_n }
+  | Some pm_n -> { po_prem_name = name_to_string pm_n }
 
 let build_proof_scheme fixfun = 
   let rec rec_ps (ft, (ty, cty)) an = match ft with
@@ -573,7 +573,7 @@ let build_proof_scheme fixfun =
             | None -> false, None) anmatch in
         if b then
           p, (CaseConstr (t, cstr, List.map 
-            (fun i -> mk_pa_var (string_of_ident i) None) (List.map ident_of_id il), mk_po ((fun o -> match o with | Some o -> Some (match o with | Name o -> ident_of_id o | _ -> ident_of_string "") | None -> None) pm_n)), None)::al
+            (fun i -> mk_pa_var (Id.to_string i) None) il, mk_po pm_n), None)::al
         else p, (CaseDum (t, cstr, List.map 
                (fun i -> mk_pa_var (string_of_ident i) None) (List.map ident_of_id il)), None)::al) pall
       ) iltl cstr_list)
@@ -583,7 +583,7 @@ let build_proof_scheme fixfun =
           | Some pn -> a.pa_prop_name = pn, Some a.pa_prem_name
           | None -> false, None) anlet in
         if b then
-        p, (LetVar (mk_pa_var (Id.to_string i) None, t, mk_po ((fun o -> match o with | Some o -> Some (match o with | Name o -> ident_of_id o | _ -> ident_of_string "") | None -> None) pm_n)), None)::al
+        p, (LetVar (mk_pa_var (Id.to_string i) None, t, mk_po pm_n), None)::al
       else p, (LetDum (mk_pa_var (Id.to_string i) None, t), None)::al) pall
     | _ -> begin match an with 
       | [] -> [None, [OutputTerm None, None]]
