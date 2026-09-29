@@ -91,7 +91,7 @@ type coq_constr_loc =
 
 (* A coq tactic. *)
 type tac_atom =
-  | INTRO of Id.t
+(*  | INTRO of Id.t *) (* we use the more general intros instead *)
   | INTROS of Id.t list
   | INTROSUNTILZERO (* intros * *)
   | REVERT of Id.t list
@@ -122,7 +122,7 @@ let pp_coq_constr_loc ccl = match ccl with
   | LocInHyp (h, _) -> "[in hyp: " ^ Id.to_string h ^ "]"
 
 let pp_tac_atom ta = match ta with
-  | INTRO s -> "INTRO " ^ Id.to_string s
+(*  | INTRO s -> "INTRO " ^ Id.to_string s *)
   | INTROS sl -> "INTROS " ^ concat_list (List.map Id.to_string sl) " "
   | INTROSUNTILZERO -> "INTROS *"
   | REVERT sl -> "REVERT " ^ concat_list (List.map Id.to_string sl) " "
@@ -262,10 +262,10 @@ let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_
 
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
-  | INTRO id -> 
+(*  | INTRO id -> 
     if debug_print_tacs then Printf.eprintf "intro %s.\n" (Id.to_string id)
     else ();
-    Tactics.intro_using id
+    Tactics.intro_using id *)
   | INTROS idl -> 
     if debug_print_tacs then Printf.eprintf "intros %s.\n" (concat_list (List.map Id.to_string idl) " ")
     else ();
@@ -500,7 +500,7 @@ let simple_pc_intro (id_po: Id.t) (env, id) _ =
     (* intros predicate arguments *)
     INTROSUNTILZERO;
     (* intro H *)
-    INTRO (fresh_id "to_subst");
+    INTROS [fresh_id "po_eq"];
     (* rewrite H (or subst H or change right with left) *)
     SUBST id_po;
     (* apply ind scheme *)
