@@ -117,7 +117,7 @@ let gen_default_case env mode =
 (* Makes a list of n fresh variables. *)
 let rec make_cstr_pat_vars n =
   if n = 0 then [] 
-  else (fresh_ident "fix_") :: 
+  else (id_of_ident (fresh_ident "fix_")) :: 
     (make_cstr_pat_vars (n-1))
 
 (* Makes a list of n wild patterns. *)
@@ -253,7 +253,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
         let cstr_arity, args_types = get_cstr_arity_and_types env cstr npltl in
         let wild_pats = make_wild_pats env cstr_arity in
         (* pat_vars will be used as arguments in the pattern. *)
-        let pat_vars = List.map id_of_ident (make_cstr_pat_vars cstr_arity) in
+        let pat_vars = make_cstr_pat_vars cstr_arity in
         (* next_pats will be added to the patterns matrix. *)
         let next_pats = flatmap (fun (pl, t, an) -> match pl with
           | (MLPConstr (c, args), _)::pl_tail when c = cstr ->

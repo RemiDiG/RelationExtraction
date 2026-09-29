@@ -20,3 +20,5 @@
 *.ml4.d
 # plugin
 META.relation_extraction
+# merlin
+.merlin
