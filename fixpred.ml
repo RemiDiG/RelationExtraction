@@ -495,7 +495,7 @@ let build_initial_fix_env env =
   let env = {env with extr_fix_env = fake_fix_env} in
   let spec_ids = List.map fst env.extr_mlfuns in
   List.fold_left (fun fix_env spec_id -> 
-    let fn = ident_of_id (extr_get_mlfun env spec_id).mlfun_name in
+    let fn = (extr_get_mlfun env spec_id).mlfun_name in
     let rs = match get_user_recursion_style env spec_id with
       | Some rs -> rs
       | None -> StructRec 1 in
@@ -544,8 +544,7 @@ let build_fix_env env =
     let nenv = List.fold_left propag_one_func env env.extr_mlfuns in
     if nenv.extr_fix_env = env.extr_fix_env then env
     else build_until_the_end nenv in
-  let bife = List.map (fun ((i, p), a) -> ((i, id_of_ident p), a)) (build_initial_fix_env env) in
-  build_until_the_end {env with extr_fix_env = bife}
+  build_until_the_end {env with extr_fix_env = build_initial_fix_env env}
 
 let mk_pa_var fn sn = {
   pi_func_name = fn;
