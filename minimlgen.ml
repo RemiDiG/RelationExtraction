@@ -59,7 +59,7 @@ let mk_dummy_glb (env, id_spec) id =
 (* Gets a constr from the extract env. *)
 let get_cstr (env, id_spec) id =
   try List.assoc id env.extr_henv.cstrs with _ -> 
-  mk_dummy_cst (env, id_spec) id
+  mk_dummy_cst (env, id_spec) (ident_of_id id)
 
 
 (* References on Coq types. *)
@@ -104,7 +104,7 @@ let rec gen_pat (env, id_spec) bind nbind (p,_) = match p with
       ([], nbind) pl in
       ((Ptuple pats), nbind)
   | MLPConstr (id, pl) -> 
-      let glb,_ = Constr.destRef (get_cstr (env, id_spec) (ident_of_id id)) in
+      let glb,_ = Constr.destRef (get_cstr (env, id_spec) id) in
       let pats, nbind = List.fold_left 
       (fun (pats, nbind) p -> 
         let (pat, nbind) = gen_pat (env, id_spec) bind nbind p in
@@ -126,7 +126,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
   | MLTVar id -> MLrel (get_rel id bind)
   | MLTTuple tl -> MLtuple (List.map (gen_term (env, id_spec) default bind) tl)
   | MLTConstr (id, tl) -> 
-    let cstr = get_cstr (env, id_spec) (ident_of_id id) in
+    let cstr = get_cstr (env, id_spec) id in
     let ref,_ = Constr.destRef cstr in
     let ref = glob_to_global ref in
     MLcons (Tglob (ref, []), ref,
@@ -136,7 +136,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
         let n_name = String.sub s (i+1) (String.length s - i - 1) in
         mk_dummy_glb (env, id_spec) (ident_of_string n_name)
       with Not_found | Invalid_argument _ ->
-        let cstr = get_cstr (env, id_spec) (ident_of_id id) in
+        let cstr = get_cstr (env, id_spec) id in
         Constr.destRef cstr
     in 
     MLglob (glob_to_global ref)
@@ -145,7 +145,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
       if Id.to_string i = "eq_full" then
         generic_eq_bool ()
       else
-        fst (Constr.destRef (get_cstr (env, id_spec) (ident_of_id i))) in
+        fst (Constr.destRef (get_cstr (env, id_spec) i)) in
     MLapp (MLglob (glob_to_global glb), List.map (gen_term (env, id_spec) default bind) tl)
   | MLTATrue -> get_true ()
   | MLTAFalse -> get_false ()
@@ -219,7 +219,7 @@ let is_full_extraction mode = List.for_all ((<>) MOutput) mode
 (* Generates one MiniML function (ready to be printed). *)
 let gen_miniml_func env (id, f) =
   let mode = List.hd (extr_get_modes env id) in
-  let glb = get_indgref env (ident_of_id id) in
+  let glb = get_indgref env id in
   let typ,_ = Typeops.type_of_global_in_context (Global.env()) glb in
   let (prod, _) = decompose_prod typ in
   let nprod = List.rev prod in
@@ -230,7 +230,7 @@ let gen_miniml_func env (id, f) =
   else
     MLexn "" in
   let args = List.rev f.mlfun_args in
-  let code = gen_term (env, ident_of_id id) default args f.mlfun_body in
+  let code = gen_term (env, id) default args f.mlfun_body in
   let mla = gen_func args code in
   (* We can't generate a new reference each time because there must be
      only one reference of each id ... else it makes bugs. 
@@ -238,7 +238,7 @@ let gen_miniml_func env (id, f) =
      to declare new ones (verify there existence in the extract env before
      generating references with mk_dummy_glb ?). *)
   let glb,_ = (*mk_dummy_glb (env, id) f.mlfun_name in*)
-            Constr.destRef (get_cstr (env, ident_of_id id) (ident_of_id f.mlfun_name)) in
+            Constr.destRef (get_cstr (env, id) f.mlfun_name) in
   (glb, mla, mlt)
 
 let rec list_split3 l = match l with
@@ -253,14 +253,14 @@ let add_cstr_to_env env id cstr =
 
 let add_fake_cstr_to_env (env, id_spec) id =
   let fake_gref = mk_dummy_cst (env, id_spec) id in
-  add_cstr_to_env env id fake_gref
+  add_cstr_to_env env (id_of_ident id) fake_gref
 
 
 (* MiniML code generation. *)
 let gen_miniml env = 
   let _ = miniml_init () in
   let funs = env.extr_mlfuns in
-  let env = List.fold_right (fun (id, f) env -> add_fake_cstr_to_env (env, ident_of_id id)
+  let env = List.fold_right (fun (id, f) env -> add_fake_cstr_to_env (env, id)
               (ident_of_id f.mlfun_name)) funs env in
   let mlfuncs = List.map (gen_miniml_func env) funs in
   let glbs, mlas, mlts = list_split3 mlfuncs in
@@ -268,7 +268,7 @@ let gen_miniml env =
     Dfix (Array.of_list (List.map glob_to_global glbs), Array.of_list mlas, Array.of_list mlts) in
   let fn = Id.to_string (fst (List.hd funs)) in
   let id = fst (List.hd funs) in
-  let glb = get_indgref env (ident_of_id id) in
+  let glb = get_indgref env id in
   let lbl = Label.make fn in
   let mpt = Extraction_plugin.Table.modpath_of_r (glob_to_global glb) in
   let mls = [mpt, [lbl, SEdecl mld]] in 

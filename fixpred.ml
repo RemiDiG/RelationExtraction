@@ -173,13 +173,13 @@ let _clear_type_from_coq typ = match Constr.kind typ with
 (* TODO: better handle for the case : (0, []), done ?*)
 let rec get_cstr_arity_and_types env cstr pltl = match pltl with
   | [] -> let cstr = try List.assoc cstr env.extr_henv.cstrs with Not_found -> 
-      try find_coq_constr_i cstr with Not_found -> (*TODO:this line is a 
+      try find_coq_constr_i (ident_of_id cstr) with Not_found -> (*TODO:this line is a 
                                          temporary fix for bst in full mode *)
       CErrors.anomaly ~label:"RelationExtraction"
-      (str ("Cannot find the '" ^ string_of_ident cstr ^ 
+      (str ("Cannot find the '" ^ Id.to_string cstr ^ 
             "' constructor in the extraction environment")) in
     coq_type_explorer env cstr
-  | ((MLPConstr (c, args), _)::_, _, _)::_ when c = id_of_ident cstr ->
+  | ((MLPConstr (c, args), _)::_, _, _)::_ when c = cstr ->
     (List.length args, List.map snd args)
   | _::pltl_tail -> get_cstr_arity_and_types env cstr pltl_tail
 
@@ -250,14 +250,13 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
 
     let nterm = if is_constrs then
       let pats = List.map (fun cstr -> (* one pattern for each constr *)
-        let cstr = ident_of_id cstr in
         let cstr_arity, args_types = get_cstr_arity_and_types env cstr npltl in
         let wild_pats = make_wild_pats env cstr_arity in
         (* pat_vars will be used as arguments in the pattern. *)
         let pat_vars = List.map id_of_ident (make_cstr_pat_vars cstr_arity) in
         (* next_pats will be added to the patterns matrix. *)
         let next_pats = flatmap (fun (pl, t, an) -> match pl with
-          | (MLPConstr (c, args), _)::pl_tail when c = id_of_ident cstr ->
+          | (MLPConstr (c, args), _)::pl_tail when c = cstr ->
             (* when an argument is a var, it is replaced by the pat_var;
                when it is a contr, it is left untouched. *)
             [List.fold_right2 (fun (a, ty) pv (pl, t, an) -> match a with
@@ -274,7 +273,7 @@ let rec compile_fix_match comp (env, id_fun) binded_vars tl pltl = match tl with
 
         (* filter annotations, the cstr wust be in the pattern *)
         let ancstr = flatmap (fun (pl, _, an) -> match pl with
-          | (MLPConstr (c, _), _)::_ when c = id_of_ident cstr -> an
+          | (MLPConstr (c, _), _)::_ when c = cstr -> an
           | _ -> []
         ) npltl in
         
@@ -383,8 +382,8 @@ let add_standard_constr_to_spec env =
   and none_cstr = find_coq_constr_s "Corelib.Init.Datatypes.None"
   in 
 let henv = { env.extr_henv with cstrs =
-    (ident_of_string "true", true_cstr)::(ident_of_string "false", false_cstr)::
-    (ident_of_string "None", none_cstr)::(ident_of_string "Some", some_cstr)::
+    (Id.of_string "true", true_cstr)::(Id.of_string "false", false_cstr)::
+    (Id.of_string "None", none_cstr)::(Id.of_string "Some", some_cstr)::
     env.extr_henv.cstrs } in
   { env with extr_henv = henv }
 

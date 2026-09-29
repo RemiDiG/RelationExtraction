@@ -25,6 +25,7 @@ open Host_stuff
 open Pred
 
 (* Rocq dependencies *)
+open Names
 open Libnames
 open Nametab
 open Util
@@ -34,9 +35,9 @@ open Context.Rel.Declaration
 type htyp = Constr.types option
 
 type henv = {
-  ind_refs : (ident * Libnames.qualid) list;
-  ind_grefs : (ident * Names.GlobRef.t) list;
-  cstrs : (ident * Constr.constr) list;
+  ind_refs : (Id.t * Libnames.qualid) list;
+  ind_grefs : (Id.t * Names.GlobRef.t) list;
+  cstrs : (Id.t * Constr.constr) list;
 }
 
 let find_coq_constr_s (s : string) =

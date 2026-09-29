@@ -149,7 +149,7 @@ let filter_impargs_cstr h args typs =
 let rec build_untyped_term (env, id_spec) prod term = 
 match Constr.kind term with
   | Const (c,_) -> let i = Id.of_string (Constant.to_string c) in
-    let env = add_cstr_to_env env (ident_of_id i) term in
+    let env = add_cstr_to_env env i term in
     MLTConst i, env
   | Rel i -> let n = get_name (List.nth prod (i-1)) in
     MLTVar n, env
@@ -158,15 +158,15 @@ match Constr.kind term with
     let args, typs = filter_impargs_cstr h args typs in
     let (_, i), _ = destConstruct h in
     let it_constrs = find_it_constrs h in
-    let constr = List.nth it_constrs (i-1) in
+    let constr = id_of_ident (List.nth it_constrs (i-1)) in
     let args, env = List.fold_right2 (fun t a (args, env) ->
       let a, env = build_term (env, id_spec) prod (Some t) a in
       a::args, env) typs (Array.to_list args) ([], env) in 
     let env = add_cstr_to_env env constr h in
-    MLTConstr (id_of_ident constr, args), env
+    MLTConstr (constr, args), env
   | Construct _ ->
     let (ind, i), _ = destConstruct term in
-    let it_constrs = find_it_constrs term in
+    let it_constrs = List.map id_of_ident (find_it_constrs term) in
     let constr = List.nth it_constrs (i-1) in
     (* Add all the constructors to env. *)
     let env, _ = List.fold_left (fun (env, i) constr ->
@@ -174,17 +174,17 @@ match Constr.kind term with
       (add_cstr_to_env env constr construct, i+1)
     ) (env, 1) it_constrs in
 (*    let env = add_cstr_to_env env constr term in*)
-    MLTConstr (id_of_ident constr, []), env
+    MLTConstr (constr, []), env
   | App (h, args) -> 
     let args, _ = filter_impargs_cstr h args (Array.to_list args) in
     let c, _ = destConst h in
     let n = Constant.label c in
-    let s = ident_of_string (Label.to_string n) in
+    let s = Id.of_string (Label.to_string n) in
     let args, _ = List.fold_right (fun a (args, env) ->
       let a, env = build_term (env, id_spec) prod None a in
       a::args, env) (Array.to_list args) ([], env) in (* TODO possibly to not use env here? *)
     let env = add_cstr_to_env env s h in
-    MLTFun (id_of_ident s, args, None), env
+    MLTFun (s, args, None), env
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Unknown Coq construction")
 and build_term (env, id_spec) prod typ term = 
   let (t, env) = build_untyped_term (env, id_spec) prod term in
@@ -202,8 +202,7 @@ let rec filter_mode_skip mode args = match (mode, args) with
 (* Parses the conclusion of a predicate's constructor (or property). *)
 let build_concl (env, id_spec) named_prod term = match Constr.kind term with
   | App (_, args) -> let mode = List.hd (extr_get_modes env id_spec) in
-    let list_refs = List.map (fun (i, a) -> (id_of_ident i, a)) env.extr_henv.ind_refs in
-    let ind_ref = List.assoc id_spec list_refs in
+    let ind_ref = List.assoc id_spec env.extr_henv.ind_refs in
     let ind = Globnames.destIndRef (global ind_ref) in
     let typs = find_types_of_ind ind in
     let args = filter_mode_skip mode (Array.to_list args) in
@@ -272,7 +271,7 @@ let rec build_premisse (env, id_spec) named_prod term =
         | _ -> unknown_type env in
       (PMTerm ((prem_term, prem_term_type), Some (id_of_ident (fresh_ident "Pm_"))))::pred_terms, env (* TODO[29/09/2026] fresh_id breaks! *)
     ) modes ([], env) in
-    let env = add_indgref_to_env env (ident_of_id id) ind_gref in
+    let env = add_indgref_to_env env id ind_gref in
     begin match pred_terms with
       | [] -> CErrors.anomaly ~label:"RelationExtraction" (str "Bad premisse form")
       | [pred_term] -> pred_term, env
@@ -343,7 +342,7 @@ let build_prop (env, id_spec) prop_name prop_type =
   let named_prems = List.filter (fun (x, _) -> Context.binder_name x = Anonymous) named_prod in
   (* TODO nécessite forme prenex, un warning ici serait adapté *)
   let prems = List.map snd named_prems in
-  let prems, env = build_prems (env, ident_of_id id_spec) named_prod prems in
+  let prems, env = build_prems (env, id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 
     | Name id -> true, Name id
     | Anonymous -> false, Anonymous) named_prod in (* TODO[29/09/2026] anonymous previously was "" *)
@@ -361,20 +360,20 @@ let find_one_spec env (id_spec, _) =
   let ind = Globnames.destIndRef (global idr) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
   let props, env = List.fold_right2 (fun prop_name cstr (pl, env) -> 
-      let p, env = build_prop (env, id_of_ident id_spec) prop_name cstr in
+      let p, env = build_prop (env, id_spec) prop_name cstr in
       p::pl, env
     )
     (Array.to_list oib.mind_consnames)
     (Array.to_list oib.mind_user_lc) ([], env) in
   let args_types = find_types_of_ind ind in
   (id_spec, {
-    spec_name = id_of_ident id_spec;
+    spec_name = id_spec;
     spec_args_types = args_types;
     spec_props = props;
   }), env
 
 let find_specifications env = 
   let specs, env = List.fold_right (fun e (specs, env) ->
-    let s, env = find_one_spec env ((fun (i, j) -> ident_of_id i, j) e) in
-    ((fun (i, j) -> id_of_ident i, j) s)::specs, env) env.extr_extractions ([], env) in
+    let s, env = find_one_spec env e in
+    s::specs, env) env.extr_extractions ([], env) in
   { env with extr_specs = specs }

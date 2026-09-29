@@ -32,9 +32,9 @@ type htyp = Constr.types option
 
 (* Coq environment. *)
 type henv = {
-  ind_refs : (ident * Libnames.qualid) list;
-  ind_grefs : (ident * Names.GlobRef.t) list;
-  cstrs : (ident * Constr.constr) list;
+  ind_refs : (Id.t * Libnames.qualid) list;
+  ind_grefs : (Id.t * Names.GlobRef.t) list;
+  cstrs : (Id.t * Constr.constr) list;
 }
 
 (* Functions to manipulate Coq data. *)

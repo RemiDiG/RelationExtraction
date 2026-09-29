@@ -55,7 +55,7 @@ let extract_relation_common dep ord ind_ref modes =
   let ind_refs, ind_grefs = List.split (List.map (fun (_, ind_ref, _, _) ->
     let ind = Globnames.destIndRef (global ind_ref) in
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    let id = ident_of_id oib.mind_typename in
+    let id = oib.mind_typename in
     (id, ind_ref), (id, global ind_ref)) modes) in
   let henv = { ind_refs = ind_refs; ind_grefs = ind_grefs; cstrs = [] } in
   

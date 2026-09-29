@@ -83,13 +83,13 @@ let rec gen_constr (env, id) (fn: Id.t) (bind: Id.t list) (fterm,_) = match fter
       [(* debug TODO: not always out_type ?*) get_out_type false (env, id)] in
     mkApp (none, args)
   | FixConstr (i, tl) -> 
-    let c = List.assoc i (List.map (fun (i, c) -> id_of_ident i, c) env.extr_henv.cstrs) in
+    let c = List.assoc i env.extr_henv.cstrs in
     let args = Array.of_list (List.map (gen_constr (env,id) fn bind) tl) in
     mkApp (c, args)
-  | FixConst i -> List.assoc i (List.map (fun (i, c) -> id_of_ident i, c) env.extr_henv.cstrs)
+  | FixConst i -> List.assoc i env.extr_henv.cstrs
   | FixFun (i, tl) -> 
     let c = if i = fn then mkRel (List.length bind + 1)
-            else try List.assoc i (List.map (fun (i, c) -> id_of_ident i, c) env.extr_henv.cstrs) with Not_found -> 
+            else try List.assoc i env.extr_henv.cstrs with Not_found -> 
       let gr = Nametab.global
         (qualid_of_ident i) in
       if Global.is_polymorphic gr then CErrors.user_err (str "Polymorphic references not supported.");
