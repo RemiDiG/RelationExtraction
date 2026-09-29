@@ -14,7 +14,7 @@ Extraction Relation Single Relaxed (add [2 3]).
 Extraction Relation Single (add [1 2 3]).
 Extraction Relation Single Relaxed (add [3 2]).
 
-(* Axiom (H: Prop). *)  (* TODO bug if name H already there! *)
+Axiom (H: Prop).  (* no bug if name H already there! *)
 Axiom (po : Prop). (* no bug if po already used *)
 Extraction Relation Fixpoint (add [1 2] Struct 2).
 (*

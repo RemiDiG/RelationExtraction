@@ -665,14 +665,13 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
   }
 
 (* Very basic correction prover. *)
-let simple_pc (id_po: Id.t) : scheme_prover =
-  let premisse = Id.of_string "H" in (* TODO 13/04/2026 fresh name for that! used by FunInd??!! *)
+let simple_pc (id_po: Id.t) (id_rec: Id.t) : scheme_prover =
   {
   prov_intro = simple_pc_intro id_po;
-  prov_branch = simple_pc_branch premisse;
+  prov_branch = simple_pc_branch id_rec;
   prov_concl = simple_pc_concl;
   }
 
 (* Proves a lemma with a simple scheme prover. *)
-let make_proof_simple (id_po: Id.t) (env, id) lemma ps =
-  make_proof id_po (env, id) lemma (simple_pc id_po) ps
+let make_proof_simple (id_po: Id.t) (env, id) lemma ps (id_rec: Id.t) =
+  make_proof id_po (env, id) lemma (simple_pc id_po id_rec) ps
