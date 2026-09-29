@@ -173,7 +173,7 @@ let _clear_type_from_coq typ = match Constr.kind typ with
 (* TODO: better handle for the case : (0, []), done ?*)
 let rec get_cstr_arity_and_types env cstr pltl = match pltl with
   | [] -> let cstr = try List.assoc cstr env.extr_henv.cstrs with Not_found -> 
-      try find_coq_constr_i (ident_of_id cstr) with Not_found -> (*TODO:this line is a 
+      try find_coq_constr_i cstr with Not_found -> (*TODO:this line is a 
                                          temporary fix for bst in full mode *)
       CErrors.anomaly ~label:"RelationExtraction"
       (str ("Cannot find the '" ^ Id.to_string cstr ^ 

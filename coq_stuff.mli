@@ -66,7 +66,7 @@ val get_out_type : bool -> (htyp, henv) extract_env * Id.t -> Constr.types
 val get_coq_type : htyp term_type -> Constr.types
 
 (* Find a Coq constr from its name (as an ident or a string) *)
-val find_coq_constr_i : ident -> Constr.constr
+val find_coq_constr_i : Id.t -> Constr.constr
 val find_coq_constr_s : string -> Constr.constr
 
 

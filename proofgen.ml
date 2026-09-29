@@ -54,7 +54,7 @@ let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
   let in_names = List.map Id.to_string fixfun.fixfun_args in
   let in_types = List.map get_coq_type (get_in_types (env, id)) in
   let out_type = get_out_type true (env, id) in
-  let func = find_coq_constr_i (ident_of_id fixfun.fixfun_name) in
+  let func = find_coq_constr_i fixfun.fixfun_name in
   let mode = List.hd (extr_get_modes env id) in
   let full = is_full_extraction mode in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
@@ -75,7 +75,7 @@ let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
   let out_term' = if full then [] else [mkRel 2] in
 
   let eq = find_coq_constr_s "Corelib.Init.Logic.eq" in
-  let pred = find_coq_constr_i (ident_of_id spec.spec_name) in
+  let pred = find_coq_constr_i spec.spec_name in
   let prem = 
     mkApp (eq, [|out_type; mkApp (func, Array.of_list in_rels); out_term|]) in
   let concl = mkApp (pred, Array.of_list (in_rels'@out_term')) in
