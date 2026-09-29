@@ -71,18 +71,18 @@ let extract_relation_common dep ord ind_ref modes =
   ) ind_ref in
   let extractions = List.map (fun (id, ind_ref) ->
     let (fn, rs) = find_func_name ind_ref modes in
-  ident_of_id id, ((fun o -> match o with | None -> None | Some i -> Some (ident_of_id i)) fn, ord, rs)) ids in
+  id, (fn, ord, rs)) ids in
 
   (* Modes *)
   let modes = List.map (fun (_, ind_ref, mode, _) ->
     let ind_glb = global ind_ref in
     let ind = Globnames.destIndRef ind_glb in
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    let id = ident_of_id oib.mind_typename in
+    let id = oib.mind_typename in
     (id, [make_mode ind_glb (Some (adapt_mode ind_ref mode))]) 
   ) modes in
   let eq_modes = [[MSkip;MInput;MOutput]; [MSkip;MOutput;MInput]; [MSkip;MInput;MInput]] in
-  let modes = (ident_of_string "eq", eq_modes)::modes in
+  let modes = (Names.Id.of_string "eq", eq_modes)::modes in (* TODO[29/09/2026] "eq" ... *)
 
   (* Compilation *)
   let empty_env = {

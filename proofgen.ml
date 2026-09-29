@@ -50,7 +50,6 @@ let build_ind_scheme fun_name =
   name
 
 let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
-  let id = ident_of_id id in
   let spec = extr_get_spec env id in
   let in_names = List.map Id.to_string fixfun.fixfun_args in
   let in_types = List.map get_coq_type (get_in_types (env, id)) in
@@ -58,7 +57,7 @@ let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
   let func = find_coq_constr_i (ident_of_id fixfun.fixfun_name) in
   let mode = List.hd (extr_get_modes env id) in
   let full = is_full_extraction mode in
-  let compl = fix_get_completion_status env (ident_of_id fixfun.fixfun_name) in
+  let compl = fix_get_completion_status env fixfun.fixfun_name in
   let tru = find_coq_constr_s "Corelib.Init.Datatypes.true" in
   let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
   
@@ -89,9 +88,9 @@ let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
 
 let gen_correction_proof env (id: Id.t) : unit =
   let id_po : Id.t = fresh_id "po" in
-  let (fixfun, ps) = extr_get_fixfun env (ident_of_id id) in
-  let mode = List.hd (extr_get_modes env (ident_of_id id)) in
-  let compl = fix_get_completion_status env (ident_of_id fixfun.fixfun_name) in
+  let (fixfun, ps) = extr_get_fixfun env id in
+  let mode = List.hd (extr_get_modes env id) in
+  let compl = fix_get_completion_status env fixfun.fixfun_name in
   let full = is_full_extraction mode in
 
   (* functional scheme *)

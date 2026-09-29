@@ -171,7 +171,6 @@ let gen_fixpoint env =
   if Global.is_polymorphic glb then CErrors.user_err (str "Polymorphic references not supported.");
 
   (* Proofs generation *)
-  List.iter (fun (id, _) -> gen_correction_proof env (id_of_ident id)) 
-    env.extr_fixfuns
+  List.iter (fun (id, _) -> gen_correction_proof env id) env.extr_fixfuns
 
 

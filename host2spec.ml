@@ -202,7 +202,8 @@ let rec filter_mode_skip mode args = match (mode, args) with
 (* Parses the conclusion of a predicate's constructor (or property). *)
 let build_concl (env, id_spec) named_prod term = match Constr.kind term with
   | App (_, args) -> let mode = List.hd (extr_get_modes env id_spec) in
-    let ind_ref = List.assoc id_spec env.extr_henv.ind_refs in
+    let list_refs = List.map (fun (i, a) -> (id_of_ident i, a)) env.extr_henv.ind_refs in
+    let ind_ref = List.assoc id_spec list_refs in
     let ind = Globnames.destIndRef (global ind_ref) in
     let typs = find_types_of_ind ind in
     let args = filter_mode_skip mode (Array.to_list args) in
@@ -211,7 +212,7 @@ let build_concl (env, id_spec) named_prod term = match Constr.kind term with
       let a, env = build_term (env, id_spec) named_prod (Some t) a in
       a::args, env
     ) args typs ([], env) in
-    fake_type env (MLTFun (id_of_ident id_spec, args, Some mode)), env
+    fake_type env (MLTFun (id_spec, args, Some mode)), env
   | _ -> CErrors.anomaly ~label:"RelationExtraction"
                         (str "Cannot find a constructor's conclusion")
 
@@ -248,7 +249,7 @@ let rec build_premisse (env, id_spec) named_prod term =
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
     let ind_gref = locate (qualid_of_ident oib.mind_typename) in
     let id = oib.mind_typename in
-    let modes = begin match extr_get_modes env (ident_of_id id) with
+    let modes = begin match extr_get_modes env id with
       | [] -> [make_mode ind_gref None]
       | modes -> modes end in
     let typs = find_types_of_ind ind in
@@ -342,7 +343,7 @@ let build_prop (env, id_spec) prop_name prop_type =
   let named_prems = List.filter (fun (x, _) -> Context.binder_name x = Anonymous) named_prod in
   (* TODO nécessite forme prenex, un warning ici serait adapté *)
   let prems = List.map snd named_prems in
-  let prems, env = build_prems (env, id_spec) named_prod prems in
+  let prems, env = build_prems (env, ident_of_id id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 
     | Name id -> true, Name id
     | Anonymous -> false, Anonymous) named_prod in (* TODO[29/09/2026] anonymous previously was "" *)
@@ -360,7 +361,7 @@ let find_one_spec env (id_spec, _) =
   let ind = Globnames.destIndRef (global idr) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
   let props, env = List.fold_right2 (fun prop_name cstr (pl, env) -> 
-      let p, env = build_prop (env, id_spec) prop_name cstr in
+      let p, env = build_prop (env, id_of_ident id_spec) prop_name cstr in
       p::pl, env
     )
     (Array.to_list oib.mind_consnames)
@@ -374,6 +375,6 @@ let find_one_spec env (id_spec, _) =
 
 let find_specifications env = 
   let specs, env = List.fold_right (fun e (specs, env) ->
-    let s, env = find_one_spec env e in
-    s::specs, env) env.extr_extractions ([], env) in
+    let s, env = find_one_spec env ((fun (i, j) -> ident_of_id i, j) e) in
+    ((fun (i, j) -> id_of_ident i, j) s)::specs, env) env.extr_extractions ([], env) in
   { env with extr_specs = specs }

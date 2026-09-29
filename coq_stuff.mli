@@ -24,6 +24,9 @@
 open Host_stuff
 open Pred
 
+(* Rocq dependencies *)
+open Names
+
 (* Coq types. *)
 type htyp = Constr.types option
 
@@ -53,11 +56,11 @@ val adapt_mode : Libnames.qualid -> int list -> int list
 val make_mode : Names.GlobRef.t -> (int list) option -> mode
 
 (* Get the type of the arguments of an extracted function. *)
-val get_in_types : (htyp, henv) extract_env * ident -> htyp term_type list
+val get_in_types : (htyp, henv) extract_env * Id.t -> htyp term_type list
 
 (* Gets the output type of an extracted function,
    ignoring the eventual completion with the type option when opt is false. *)
-val get_out_type : bool -> (htyp, henv) extract_env * ident -> Constr.types
+val get_out_type : bool -> (htyp, henv) extract_env * Id.t -> Constr.types
 
 (* Gets the Coq type from a term_type. *)
 val get_coq_type : htyp term_type -> Constr.types

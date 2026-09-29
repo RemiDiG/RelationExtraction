@@ -412,15 +412,15 @@ type recursion_style =
   | FixCount
 
 type ('htyp, 'henv) extract_env = {
-  extr_modes : (ident * mode list) list;
-  extr_extractions : (ident * (ident option * bool * recursion_style option)) list;
-  extr_specs : (ident * 'htyp spec) list;
-  extr_trees : (ident * 'htyp tree) list;
-  extr_mlfuns : (ident * 'htyp ml_fun) list;
-  extr_fixfuns : (ident * ('htyp fix_fun * ('htyp fix_term) proof_scheme)) list;
+  extr_modes : (Id.t * mode list) list;
+  extr_extractions : (Id.t * (Id.t option * bool * recursion_style option)) list;
+  extr_specs : (Id.t * 'htyp spec) list;
+  extr_trees : (Id.t * 'htyp tree) list;
+  extr_mlfuns : (Id.t * 'htyp ml_fun) list;
+  extr_fixfuns : (Id.t * ('htyp fix_fun * ('htyp fix_term) proof_scheme)) list;
   extr_henv : 'henv host_env;
   extr_hf : ('htyp, 'henv) host_functions;
-  extr_fix_env : ((ident * ident) * (bool * recursion_style)) list;
+  extr_fix_env : ((Id.t * Id.t) * (bool * recursion_style)) list;
 }
 
 let extr_get_modes env i =
@@ -468,7 +468,7 @@ let get_spec_id_from_fname env fn =
 let get_user_recursion_style env id =
   try let (_, _, rs) = List.assoc id env.extr_extractions in rs
   with Not_found -> try let (_, _, rs) = 
-    List.assoc (get_spec_id_from_fname env (id_of_ident id)) env.extr_extractions in rs
+    List.assoc (get_spec_id_from_fname env id) env.extr_extractions in rs
   with Not_found -> None
 
 let is_rec_style_count env id = match fix_get_recursion_style env id with
@@ -478,7 +478,7 @@ let is_rec_style_count env id = match fix_get_recursion_style env id with
 let pp_extract_env env =
   "(********* Modes *********)\n\n" ^
   concat_list (List.map (fun (i, ml) -> 
-    string_of_ident i ^ ": " ^
+    Id.to_string i ^ ": " ^
     concat_list (List.map string_of_mode_full ml) "; "
   ) env.extr_modes) "\n" ^
   "\n\n\n" ^
@@ -969,8 +969,7 @@ let make_trees env =
   {env with extr_trees = trees}
 
 let get_pred_name env id_spec m =
-  let name_from_mode m = ident_of_string
-    (string_of_ident id_spec ^ (string_of_mode m)) in
+  let name_from_mode m = Id.of_string (Id.to_string id_spec ^ (string_of_mode m)) in
   if not (List.mem_assoc id_spec env.extr_extractions) then
     name_from_mode m
   else match List.assoc id_spec env.extr_extractions with
@@ -1044,7 +1043,7 @@ let gen_match_term env nt = match nt with
     if Id.to_string pn = "eq" && List.exists ((=) MOutput) m then
       List.hd in_terms
     else
-      let fn = Id.of_string (get_pred_name env (ident_of_id pn) m) in
+      let fn = get_pred_name env pn m in
       let ty = if List.for_all ((!=) MOutput) m then 
         let cl, t = env.extr_hf.h_get_bool_type () in
         (CTSum (List.map Id.of_string cl), t)
@@ -1101,7 +1100,7 @@ let code_from_tree env id_tree tree =
   let spec = extr_get_spec env id_tree in
   let pred_args_types = spec.spec_args_types in
   let args_types = select_args_types pred_args_types mode in
-  let fun_ident = id_of_ident (ident_of_string get_pred_name env id_tree mode) in (* TODO[24/09/2026] check if a fresh id here does not break anything *)
+  let fun_ident = ident_of_string (get_pred_name env id_tree mode) in (* TODO[24/09/2026] check if a fresh id here does not break anything *)
   let pats = List.map (gen_pat env id_tree) tree in
   let an = flatmap (fun p -> mk_an (name_to_option_id p.prop_name) None) spec.spec_props in
   {
