@@ -55,7 +55,6 @@ let rec rename_var_pattern oi ni (p, ty) = match p with
 (* Renames a variable in a term. *)
 let rec rename_var_term oi ni (t, ty) = match t with
   | MLTVar vi when vi = oi -> MLTVar ni, ty
-  | MLTASome t -> MLTASome (rename_var_term oi ni t), ty
   | MLTTuple tl -> MLTTuple (List.map (rename_var_term oi ni) tl), ty
   | MLTRecord (il, tl) -> 
     MLTRecord (il, List.map (rename_var_term oi ni) tl), ty
@@ -66,7 +65,8 @@ let rec rename_var_term oi ni (t, ty) = match t with
   | MLTMatch (t, an, ptl) -> MLTMatch (rename_var_term oi ni t, an,
     List.map (fun (p,t,an) -> 
       rename_var_pattern oi ni p, rename_var_term oi ni t, an) ptl), ty
-  | MLTALin _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Not implanted yet")
+  | MLTALin _ -> CErrors.user_err (str ("[RelationExtraction] Not yet implemented (MLTALin)."))
+  | MLTASome t -> MLTASome (rename_var_term oi ni t), ty
   | _ -> t, ty
 
 (* Extracts the first column of a patterns matrix. *)
@@ -309,6 +309,7 @@ and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
 (* TODO: check if there are renaming matches, if not, add the Some constr. *)
   | MLTVar i -> FixVar i, ty
   | MLTTuple _ -> raise RelExtNoFixTuple
+  | MLTRecord _ -> CErrors.user_err (str ("[RelationExtraction] Not yet implemented (MLTRecord)."))
   | MLTConstr (i, tl) -> 
     FixConstr (i, List.map (build_fix_term c (env, id_fun) binded_vars) tl), ty
   | MLTConst i -> FixConst i, ty
@@ -320,7 +321,7 @@ and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
     let tl, pltl = normalize_pltl 
       [t] (List.map (fun (p, t, an) -> [p], t, an) ptl) in
     compile_fix_match c (env, id_fun) binded_vars tl pltl
-  | MLTALin _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Not implemented yet")
+  | MLTALin _ -> CErrors.user_err (str ("[RelationExtraction] Not yet implemented (MLTALin)."))
   | MLTATrue -> FixTrue, ty
   | MLTAFalse -> FixFalse, ty
   | MLTANone -> FixNone, ty
@@ -329,7 +330,6 @@ and build_fix_term c (env, id_fun) binded_vars (t,ty) = match t with
     if is_full_extraction (List.hd (extr_get_modes env id_fun)) then 
       fake_type env FixFalse
     else fake_type env FixNone
-  | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Not implemented yet")
 
 
 (* Transform added pattern constrs (the ones with an A) to basic pattern

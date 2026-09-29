@@ -97,8 +97,7 @@ let rec gen_constr (env, id) (fn: Id.t) (bind: Id.t list) (fterm,_) = match fter
       UnivGen.constr_of_monomorphic_global (Global.env ()) gr in
     let args = Array.of_list (List.map (gen_constr (env,id) fn bind) tl) in
     mkApp (c, args)
-  | FixFunNot _ -> 
-    CErrors.anomaly ~label:"RelationExtraction" (str "Not: Not yet implemented.")
+  | FixFunNot _ -> CErrors.user_err (str ("[RelationExtraction] Not yet implemented (FixFunNot)."))
   | FixCase ((_, (_, Some sty)) as t, _, iltl) -> 
     let ind = match Constr.kind sty with
       | App (c,_) -> (match Constr.kind c with
