@@ -269,7 +269,7 @@ let rec build_tac_atom ta = match ta with
   | INTROS idl -> 
     if debug_print_tacs then Printf.eprintf "intros %s.\n" (concat_list (List.map Id.to_string idl) " ")
     else ();
-    Tactics.intros_using idl
+    Tactics.intros_using_then idl (fun _ -> Proofview.tclUNIT ()) (* We generated fresh names *)
   | INTROSUNTILZERO -> 
     if debug_print_tacs then Printf.eprintf "intros *.\n"
     else ();
