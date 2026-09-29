@@ -287,7 +287,7 @@ let rec build_tac_atom ta = match ta with
     if debug_print_tacs then Printf.eprintf "subst %s.\n" (Id.to_string id)
     else ();
     Equality.subst [id]
-  | APPLY id -> let cstr = find_coq_constr_s (Id.to_string id) in 
+  | APPLY id -> let cstr = find_coq_constr_i id in 
     if debug_print_tacs then Printf.eprintf "apply %s.\n" (Id.to_string id)
     else ();
     Tactics.apply (EConstr.of_constr cstr)
@@ -299,12 +299,12 @@ let rec build_tac_atom ta = match ta with
     if debug_print_tacs then Printf.eprintf "eapply %s.\n" (Id.to_string id)
     else ();
     Tactics.eapply (EConstr.of_constr cstr) *) (* Unused 13/04/2026 *)
-  | APPLYPROP id -> let cstr = find_coq_constr_s (Id.to_string id) in (* TODO[21/09/2026] find_coq_constr should not be used? *) 
+  | APPLYPROP id -> let cstr = find_coq_constr_i id in
     if debug_print_tacs then Printf.eprintf "apply %s; try assumption.\n" (Id.to_string id)
     else ();
     Tacticals.tclTHEN (Tactics.apply (EConstr.of_constr cstr))
       (Tacticals.tclTRY Tactics.assumption)
-  | APPLYPROPIN (id, h) -> let cstr = find_coq_constr_s (Id.to_string id) in
+  | APPLYPROPIN (id, h) -> let cstr = find_coq_constr_i id in
     if debug_print_tacs then 
       Printf.eprintf "apply %s in %s; try assumption.\n" (Id.to_string id) (Id.to_string h)
     else ();
