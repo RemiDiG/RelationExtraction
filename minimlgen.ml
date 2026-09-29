@@ -265,11 +265,9 @@ let gen_miniml env =
   let glbs, mlas, mlts = list_split3 mlfuncs in
   let mld =
     Dfix (Array.of_list (List.map glob_to_global glbs), Array.of_list mlas, Array.of_list mlts) in
-  let fn = Id.to_string (fst (List.hd funs)) in
   let id = fst (List.hd funs) in
   let glb = get_indgref env id in
-  let lbl = Label.make fn in
   let mpt = Extraction_plugin.Table.modpath_of_r (glob_to_global glb) in
-  let mls = [mpt, [lbl, SEdecl mld]] in 
+  let mls = [mpt, [id, SEdecl mld]] in 
   Feedback.msg_info (print_one_decl (Extraction_plugin.Common.State.make ~modular:false ~library:false ~keywords:Names.Id.Set.empty ()) mls mpt mld) (* TODO modular, library and keywords??? *)
   

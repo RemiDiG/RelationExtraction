@@ -179,12 +179,11 @@ match Constr.kind term with
     let args, _ = filter_impargs_cstr h args (Array.to_list args) in
     let c, _ = destConst h in
     let n = Constant.label c in
-    let s = Id.of_string (Label.to_string n) in
     let args, _ = List.fold_right (fun a (args, env) ->
       let a, env = build_term (env, id_spec) prod None a in
       a::args, env) (Array.to_list args) ([], env) in (* TODO possibly to not use env here? *)
-    let env = add_cstr_to_env env s h in
-    MLTFun (s, args, None), env
+    let env = add_cstr_to_env env n h in
+    MLTFun (n, args, None), env
   | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Unknown Coq construction")
 and build_term (env, id_spec) prod typ term = 
   let (t, env) = build_untyped_term (env, id_spec) prod term in
