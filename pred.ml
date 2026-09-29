@@ -377,8 +377,8 @@ type 'htyp node_type =
 
 (* Tree structure *)
 type 'htyp tree_node =
-  | TreeNode of ('htyp node_type * 'htyp tree_node list * pannot * ident list) (*ajout de kv cath*)
-  | TreeOutput of ('htyp node_type * 'htyp ml_term * pannot * ident list) (*ajout de kv cath*) 
+  | TreeNode of ('htyp node_type * 'htyp tree_node list * pannot * Id.t list) (*ajout de kv cath*)
+  | TreeOutput of ('htyp node_type * 'htyp ml_term * pannot * Id.t list) (*ajout de kv cath*) 
                                (* ml_term is a conclusion *)
 
 type 'htyp tree = 'htyp tree_node list
@@ -824,7 +824,6 @@ then
   try let (nt, prop) = match tnl with (* rename inputs (matching term) *)
     | tn::_ -> rename_inputs_if_possible env nt tn prop
     | [] -> (nt, prop) in
-  let kv = List.map ident_of_id kv in
   let tn = TreeOutput (nt, prop.prop_concl, mk_an (name_to_option_id prop.prop_name) pm_n, kv) in (*cath*)
   let rec io_rec tnl = match tnl with (* try to insert tn in the right place *)
     | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an (name_to_option_id prop.prop_name) pm_n, kv)]] (*cath*)
@@ -854,7 +853,6 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
     match tnl_acc with
       | [] -> (* no matching nt, insert alone *)
         let kv' = mca_add_vars env kv nt in
-        let kv = List.map ident_of_id kv in
         List.map (fun nchild -> [TreeNode (nt, nchild, mk_an (name_to_option_id prop.prop_name) pm_n, kv)]) (*cath*)
           (choose_prop_prem env id_spec prem_selector kv' prop [])
       | (TreeNode (nti, child, ani, _) as tni)::acc_tail -> (*cath*)
@@ -868,14 +866,12 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
         if List.for_all test_tail tnl_acc then
           (* nt can be inserted alone, before tni *)
           let kv' = mca_add_vars env kv nt in
-          let kv = List.map ident_of_id kv in
           List.map ( fun nchild -> 
               (TreeNode (nt, nchild, mk_an (name_to_option_id prop.prop_name) pm_n, kv))::tnl_acc ) (*cath*)
             (choose_prop_prem env id_spec prem_selector kv' prop [])
         else (* try to insert nt into tni *)
         ( try let rnt, rprop = rename_outputs_if_possible env nt tni prop in
           let kv' = mca_add_vars env kv rnt in
-          let kv = List.map ident_of_id kv in
           List.map ( fun nchild -> 
               (TreeNode (nti, nchild, an_add_prop ani (name_to_option_id prop.prop_name) pm_n, kv)):: (*cath*)
                 acc_tail )
@@ -1081,9 +1077,9 @@ let (nt, kv) = nt_kv in  (*cath*)
 let default_case env = [(fake_type env MLPWild, fake_type env MLTADefault, [])]
 
 let rec gen_pat env id_extr tn = match tn with
-  | TreeNode (nt, tnl, an, kv) -> gen_pat_term env (nt, (List.map id_of_ident kv)) (gen_match env id_extr tnl) an (*cath*)
+  | TreeNode (nt, tnl, an, kv) -> gen_pat_term env (nt, kv) (gen_match env id_extr tnl) an (*cath*)
   | TreeOutput (nt, mlt, an, kv) -> 
-    gen_pat_term env (nt, (List.map id_of_ident kv)) (gen_tuple env (get_out_terms_func env mlt)) an (*cath*)
+    gen_pat_term env (nt, kv) (gen_tuple env (get_out_terms_func env mlt)) an (*cath*)
 
 and gen_match env id_extr tree = match List.hd tree with
   | TreeNode (nt, _, _, _) | TreeOutput (nt, _, _, _) -> (*cath*)
