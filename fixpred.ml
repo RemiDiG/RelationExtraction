@@ -459,7 +459,7 @@ let add_ml_counter env f =
                 (adapt_func_calls (mlt, typ)), [])
       ] in
       (MLTMatch (fcount, [], ptal), typ), 
-        id_of_ident (ident_of_string "fcounter")::f.mlfun_args
+        (Id.of_string "fcounter")::f.mlfun_args
     | _ -> adapt_func_calls (mlt, typ), f.mlfun_args in
   { mlfun_name = fname;
     mlfun_body = mlt';
