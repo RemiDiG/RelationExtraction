@@ -495,7 +495,7 @@ let mk_ti_ai_n tal1 tal2 = {
 
 let simple_pc_intro (id_po: Id.t) (env, id) _ =
   let f_name = (fst (extr_get_fixfun env id)).fixfun_name in (* TODO[21/09/2026] fresh? or fixfun already created fresh? *)
-  let f_name = id_of_ident (ident_of_string ((Id.to_string f_name) ^ "_ind")) in (* TODO[21/09/2026] fresh instead? but this is sensitive! should be the same as in proofgen.ml *)
+  let f_name = Id.of_string ((Id.to_string f_name) ^ "_ind") in (* TODO[21/09/2026] fresh instead? but this is sensitive! should be the same as in proofgen.ml *)
   Tac_list [
     (* intros predicate arguments *)
     INTROSUNTILZERO;
@@ -584,8 +584,8 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
         let hname = (*fresh_string_id "HLV_" ()*) Id.of_string v in
         let eqhname = Id.of_string (Id.to_string hname ^ "EQ") in
         let ti = mk_ti_ai_n 
-                  [ASSERTEQUAL (eqhname, id_of_ident (ident_of_string v), LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
-                  [CHANGEV (eqhname, id_of_ident (ident_of_string v), LocInHyp (eqhname, hyp_eq_right))] in
+                  [ASSERTEQUAL (eqhname, Id.of_string v, LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
+                  [CHANGEV (eqhname, Id.of_string v, LocInHyp (eqhname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
       | CaseConstr (_, _, _, _) -> 
         let i, (_, _) = goal_iterator premisse false false true 
