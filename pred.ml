@@ -47,17 +47,16 @@ let flatmap f l = List.flatten ((List.map f) l)
 (* Identifiers *)
 (***************)
 
-(* Return a fresh name based on a scheme, using Rocq's implementation *)
+(* Return a fresh name based on a scheme, using Rocq's implementation
+   We  keep in memory the names created but not yet given to Rocq *)
+let fresh_id_helper : string -> Id.t =
+  let to_avoid = ref Id.Set.empty in
+  fun (base_name: string) ->
+    let id = Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) !to_avoid in
+    to_avoid := Id.Set.add id !to_avoid;
+    id
 let fresh_id (base_name: string) : Id.t =
-  Namegen.next_ident_away_in_goal (Global.env()) (Id.of_string base_name) Id.Set.empty
-
-(* Return a name fresh only *internally*, should not be used anymore *)
-(* When we want to introduce several times a same name, add a number to it *)
-let fresh_string_id =
-  let i = ref 0 in
-  fun base_name () -> i := !i + 1; base_name ^ (string_of_int !i)
-let bad_fresh_id (base_name: string) : Id.t =
-  fresh_id (fresh_string_id base_name ())
+  fresh_id_helper base_name
 
 (* TODO[25/09/2026] internally None is the empty string, that is not valid as as identifier.
    We use Name to patch it quickly, to improve. *)

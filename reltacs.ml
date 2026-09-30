@@ -559,7 +559,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       | _ -> None, pmn in
     if dep_pred <> None then 
       let dep_pred = match dep_pred with Some n -> n | _ -> assert false in
-      let hrec = bad_fresh_id "HREC_" in (* TODO 04/09/2026 fresh rocq name for that! *)
+      let hrec = fresh_id "HREC" in
       let i, tacs, hn, rv = match at with
         | LetVar (pi, (_, (_, Some t)), _) -> 
           let v = pi.pi_func_name in
@@ -590,13 +590,13 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
       | CaseConstr (_, _, _, _) -> 
         let i, (_, _) = goal_iterator premisse false false true 
                                         find_eq_get_sides sigma goal (last_i+1) in
-        let hname = bad_fresh_id "HCC_" in
+        let hname = fresh_id "HCC" in
         let ti = mk_ti_n [CHANGEC (hname, LocInHyp (hname, hyp_eq_left), LocInHyp (hname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
       | CaseDum _ -> 
         let i, _ = goal_iterator premisse false false true 
                                         find_eq_get_sides sigma goal (last_i+1) in
-        let hname = bad_fresh_id "HCD_" in
+        let hname = fresh_id "HCD" in
         ((i, hname)::hname_index, til, pmn, i, recvars)
 (* old code for LetDums, they are now processed as LetVars... *)
 (*      | LetDum (pi, _) -> 
@@ -615,12 +615,12 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
             goal_iterator premisse true false false find_fa_name sigma goal nb_h in
 (*old*)(*          if i = nb_h then n, p_h*)
 (* modified for proof printing. TODO: find a solution to keep real names? *)
-(*new*)          if i = nb_h then bad_fresh_id "na_", p_h
+(*new*)          if i = nb_h then fresh_id "na", p_h
           else raise Not_found
-        with Not_found -> let n = bad_fresh_id "HREC_" in n, n::p_h in
+        with Not_found -> let n = fresh_id "HREC" in n, n::p_h in
     (mk_hnames (hn::hnames) p_h (nb_h-1)) in mk_hnames [] [] nb_h in
     (* new p_h version *)
-    let p_h = List.filter (fun hn -> try String.sub hn 0 5 = "HREC_" || 
+    let p_h = List.filter (fun hn -> try String.sub hn 0 4 = "HREC" || 
                            List.mem_assoc hn recvars with _ -> false) (List.map Id.to_string hnames) in
     let p_h = List.map (fun hn -> if List.mem_assoc hn recvars then 
                                      List.assoc hn recvars else Id.of_string hn) p_h in

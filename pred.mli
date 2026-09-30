@@ -36,7 +36,6 @@ exception RelationExtractionError of string
 
 (* Fresh id. *)
 val fresh_id : string -> Id.t
-val bad_fresh_id : string -> Id.t
 val name_to_string : Name.t -> string
 
 (*************************)
