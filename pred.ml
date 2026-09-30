@@ -929,7 +929,7 @@ let make_trees env =
   {env with extr_trees = trees}
 
 let get_pred_name env id_spec m =
-  let name_from_mode m = Id.of_string (Id.to_string id_spec ^ (string_of_mode m)) in
+  let name_from_mode m = Id.of_string (Id.to_string id_spec ^ (string_of_mode m)) in (* TODO[30/09/2026] a fresh_id here breaks the code *)
   if not (List.mem_assoc id_spec env.extr_extractions) then
     name_from_mode m
   else match List.assoc id_spec env.extr_extractions with
@@ -1060,7 +1060,7 @@ let code_from_tree env id_tree tree =
   let spec = extr_get_spec env id_tree in
   let pred_args_types = spec.spec_args_types in
   let args_types = select_args_types pred_args_types mode in
-  let fun_id = get_pred_name env id_tree mode in (* TODO[24/09/2026] check if a fresh id here does not break anything *)
+  let fun_id = get_pred_name env id_tree mode in
   let pats = List.map (gen_pat env id_tree) tree in
   let an = flatmap (fun p -> mk_an (name_to_option_id p.prop_name) None) spec.spec_props in
   {
@@ -1087,4 +1087,4 @@ type henv = {
   cstrs : (Id.t * Constr.constr) list;
 }
 
-(* TODO specialize previous types? *)
+(* TODO specialize previous types htyp and henv? *)
