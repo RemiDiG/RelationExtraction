@@ -202,8 +202,7 @@ let get_goal =
     goal := Proofview.Goal.concl goal_s; Tacticals.tclIDTAC) in
   fun pstate -> (ignore (Declare.Proof.by (Global.env ()) tac pstate); !goal)
 
-(* return type : named_declaration list = 
-                   (identifier * constr option * types) list *)
+(* return type : named_declaration list = (identifier * constr option * types) list *)
 let get_hyps_in f =
   Proofview.Goal.enter (fun goal_s -> f (EConstr.named_context (Proofview.Goal.env goal_s)))
 
@@ -228,11 +227,9 @@ let pat_from_constr pstate constr =
   Patternops.pattern_of_constr (Global.env()) evm constr
 *)
 
-let pf_fold f (pf : Declare.Proof.t) = f pf (* TODO Remove this function? *)
-
 let get_proof_from_tac (env, id) lemma prover branch =
-  let term = pf_fold get_goal lemma in
-  let sigma = pf_fold get_evarmap lemma in
+  let term = get_goal lemma in
+  let sigma = get_evarmap lemma in
   prover (env, id) branch sigma term
 
 let rec get_hyp_by_name hn hyps = match hyps with
@@ -258,7 +255,7 @@ let constr_of_constr_loc pstate cstr_loc = match cstr_loc with
 
 let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by None cstr_pat cstr (Locusops.onHyp hid) None
 
-let print_subgoals = pf_fold (fun lemma -> Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma)))
+let print_subgoals lemma = Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma))
 
 (* Makes real Coq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
