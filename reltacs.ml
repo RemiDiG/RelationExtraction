@@ -584,7 +584,7 @@ let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
         let i, _ = goal_iterator premisse false true false 
                           (find_let_in_cstr v) sigma goal (last_i+1) in
         let hname = (*fresh_string_id "HLV_" ()*) v in
-        let eqhname = Id.of_string (Id.to_string hname ^ "EQ") in
+        let eqhname = fresh_id (Id.to_string hname ^ "EQ") in
         let ti = mk_ti_ai_n 
                   [ASSERTEQUAL (eqhname, v, LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
                   [CHANGEV (eqhname, v, LocInHyp (eqhname, hyp_eq_right))] in

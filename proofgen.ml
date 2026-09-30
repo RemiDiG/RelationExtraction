@@ -54,7 +54,7 @@ let build_ind_scheme fun_name fun_ind_name =
 
 let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
   let spec = extr_get_spec env id in
-  let in_names = List.map Id.to_string fixfun.fixfun_args in
+  let in_names = fixfun.fixfun_args in
   let in_types = List.map get_coq_type (get_in_types (env, id)) in
   let out_type = get_out_type true (env, id) in
   let func = find_coq_constr_i fixfun.fixfun_name in
@@ -82,11 +82,9 @@ let build_correct_lemma (out_name: Id.t) env (id: Id.t) fixfun =
   let prem = 
     mkApp (eq, [|out_type; mkApp (func, Array.of_list in_rels); out_term|]) in
   let concl = mkApp (pred, Array.of_list (in_rels'@out_term')) in
-  let cstr = mkProd(Context.anonR, prem, concl) in
+  let cstr = mkProd (Context.anonR, prem, concl) in
   let cstr = mkProd (Context.nameR out_name, out_type, cstr) in
-  let cstr = List.fold_right2 (fun n t c ->
-    mkProd (Context.nameR (Id.of_string n), t, c)
-  ) in_names in_types cstr in
+  let cstr = List.fold_right2 (fun n t c -> mkProd (Context.nameR n, t, c)) in_names in_types cstr in
   cstr
 
 let gen_correction_proof env (id: Id.t) : unit =
