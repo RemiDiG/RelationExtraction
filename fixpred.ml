@@ -21,6 +21,7 @@
 (****************************************************************************)
 
 (* Internal dependencies *)
+open Ident
 open Proof_scheme
 open Pred
 open Coq_stuff
@@ -546,8 +547,8 @@ let build_fix_env env =
   build_until_the_end {env with extr_fix_env = build_initial_fix_env env}
 
 let mk_pa_var (fn: Id.t) (sn: Id.t option) = {
-  pi_func_name = Id.to_string fn;
-  pi_spec_name = match sn with | Some i -> Some (Id.to_string i) | None -> None;
+  pi_func_name = fn;
+  pi_spec_name = sn;
 }
 
 let rec list_exists_assoc f l = match l with
@@ -556,7 +557,7 @@ let rec list_exists_assoc f l = match l with
 
 let mk_po pm_n_opt = match pm_n_opt with
   | None -> assert false (* TODO: error message ? *)
-  | Some pm_n -> { po_prem_name = name_to_string pm_n }
+  | Some pm_n -> { po_prem_name = pm_n }
 
 let build_proof_scheme fixfun = 
   let rec rec_ps (ft, (ty, cty)) an = match ft with
@@ -571,7 +572,7 @@ let build_proof_scheme fixfun =
             | Some pn -> a.pa_prop_name = pn, Some a.pa_prem_name
             | None -> false, None) anmatch in
         if b then
-          p, (CaseConstr (t, Id.to_string cstr, List.map 
+          p, (CaseConstr (t, cstr, List.map 
             (fun i -> mk_pa_var i None) il, mk_po pm_n), None)::al
         else p, (CaseDum (t, Id.to_string cstr, List.map 
                (fun i -> mk_pa_var i None) il), None)::al) pall

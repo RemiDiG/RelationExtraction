@@ -21,6 +21,7 @@
 (****************************************************************************)
 
 (* Internal dependencies *)
+open Ident
 open Proof_scheme
 open Pred
 open Coq_stuff
@@ -414,8 +415,9 @@ let find_eq_get_sides = fun _ sigma constr -> match EConstr.kind sigma constr wi
   | App (f, [|_;c1;c2|]) when isEq sigma f -> Some (c1, c2)
   | _ -> None
 
-let find_let_in_cstr v = fun n _ cstr -> match n with
-  | Some n -> if v = Id.to_string n then Some cstr else None
+let find_let_in_cstr (v : Id.t) n _ cstr =
+  match n with
+  | Some n -> if v = n then Some cstr else None
   | None -> None
 
 let find_fa_name = fun n _ _ -> match n with
@@ -536,23 +538,29 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
     List.fold_left (fun (hname_index, til, pmn, last_i, recvars) (at, _) -> 
     let dep_pred, pmn = match at with 
       | (LetVar (_, (t, _), po) | CaseConstr ((t, _), _, _, po)) -> 
-      let n = po.po_prem_name in if n = "" then None, pmn else
-        begin match pmn with | None ->
-         begin match t with
-           | FixFun(f, _) -> let f = Id.to_string f in
-             if f = fun_name then None, Some n
-             else Some f, Some n
-           | _ -> None, Some n
-         end
-        | Some pmn when n <> pmn -> 
-         begin match t with
-           | FixFun(f, _) -> let f = Id.to_string f in
-             if f = fun_name then None, Some n
-             else Some f, Some n
-           | _ -> None, Some n
-         end
-        | _ -> None, pmn
-        end
+        let n = po.po_prem_name in
+        begin
+          match n with
+          | Anonymous -> None, pmn
+          | Name n ->
+            begin match pmn with
+              | None ->
+              begin match t with
+                | FixFun(f, _) -> let f = Id.to_string f in
+                  if f = fun_name then None, Some n
+                  else Some f, Some n
+                | _ -> None, Some n
+              end
+              | Some pmn when n <> pmn -> 
+                begin match t with
+                  | FixFun(f, _) -> let f = Id.to_string f in
+                    if f = fun_name then None, Some n
+                    else Some f, Some n
+                  | _ -> None, Some n
+                end
+              | _ -> None, pmn
+            end
+          end
       | _ -> None, pmn in
     if dep_pred <> None then 
       let dep_pred = match dep_pred with Some n -> n | _ -> assert false in
@@ -561,8 +569,8 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
         | LetVar (pi, (_, (_, Some t)), _) -> 
           let v = pi.pi_func_name in
           let i, _ = goal_iterator premisse false true false (find_let_in_cstr v) sigma goal (last_i+1) in
-          let hn = (*fresh_string_id "HLREC_" () in *) Id.of_string v in
-          i, [ASSERTEQUAL (hrec, Id.of_string v, LocInHyp (hn, hyp_def), EConstr.of_constr t); AUTO; (* TODO[21/09/2026] fresh names *)
+          let hn = (*fresh_string_id "HLREC_" () in *) v in
+          i, [ASSERTEQUAL (hrec, v, LocInHyp (hn, hyp_def), EConstr.of_constr t); AUTO; (* TODO[21/09/2026] fresh names *)
               SYMMETRY hrec], hn, [v,hrec]
         | CaseConstr (_, _, _, _) ->
           let i, (_, _) = goal_iterator premisse false false true 
@@ -578,11 +586,11 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
         let v = pi.pi_func_name in
         let i, _ = goal_iterator premisse false true false 
                           (find_let_in_cstr v) sigma goal (last_i+1) in
-        let hname = (*fresh_string_id "HLV_" ()*) Id.of_string v in
+        let hname = (*fresh_string_id "HLV_" ()*) v in
         let eqhname = Id.of_string (Id.to_string hname ^ "EQ") in
         let ti = mk_ti_ai_n 
-                  [ASSERTEQUAL (eqhname, Id.of_string v, LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
-                  [CHANGEV (eqhname, Id.of_string v, LocInHyp (eqhname, hyp_eq_right))] in
+                  [ASSERTEQUAL (eqhname, v, LocInHyp (hname, hyp_def), EConstr.of_constr t); AUTO]
+                  [CHANGEV (eqhname, v, LocInHyp (eqhname, hyp_eq_right))] in
         ((i, hname)::hname_index, til@[ti], pmn, i, recvars)
       | CaseConstr (_, _, _, _) -> 
         let i, (_, _) = goal_iterator premisse false false true 
@@ -617,27 +625,34 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
         with Not_found -> let n = fresh_id "HREC" in n, n::p_h in
     (mk_hnames (hn::hnames) p_h (nb_h-1)) in mk_hnames [] [] nb_h in
     (* new p_h version *)
-    let p_h = List.filter (fun hn -> try String.sub hn 0 4 = "HREC" || 
-                           List.mem_assoc hn recvars with _ -> false) (List.map Id.to_string hnames) in
+    let p_h = List.filter (fun hn -> try String.sub (Id.to_string hn) 0 4 = "HREC" || 
+                           List.mem_assoc hn recvars with _ -> false) hnames in
     let p_h = List.map (fun hn -> if List.mem_assoc hn recvars then 
-                                     List.assoc hn recvars else Id.of_string hn) p_h in
+                                     List.assoc hn recvars else hn) p_h in
     let get_branch_prem_order atl = List.fold_right (fun (at, _) (pml, ono) -> 
         let hno = match at with
-          | LetVar (_, _, po) -> let n = po.po_prem_name in 
-                                 if n = "" then None else Some n
-          | CaseConstr (_, _, _, po) -> let n = po.po_prem_name in 
-                                        if n = "" then None else Some n
-          | _ -> None in
-        match hno with
-          | Some hn -> if ono = hno then (pml, ono) else (hn::pml, hno)
-          | None -> (pml, ono)
+          | LetVar (_, _, po) ->
+            begin
+              match po.po_prem_name with
+              | Anonymous -> None
+              | Name n -> Some n
+            end
+          | CaseConstr (_, _, _, po) ->
+            begin
+              match po.po_prem_name with
+              | Anonymous -> None
+              | Name n -> Some n
+            end
+          | _ -> None
+        in match hno with
+        | Some hn -> if ono = hno then (pml, ono) else (hn::pml, hno)
+        | None -> (pml, ono)
     ) atl ([], None) in
     let premisse_reorder p_h =
       let prop_name = 
         match branch.psb_prop_name with Some n -> n | _ -> assert false in
       let init_order = 
         get_init_prem_order (env, id) (Id.of_string prop_name) in
-      let init_order = List.map Id.to_string init_order in
       let branch_order, _ = get_branch_prem_order branch.psb_branch in
       let rec order_prem pml init branch = match init with 
         | [] -> []

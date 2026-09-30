@@ -30,14 +30,6 @@ open Names
 (* Extraction failure with some reason. *)
 exception RelationExtractionError of string
 
-(***************)
-(* Identifiers *)
-(***************)
-
-(* Fresh id. *)
-val fresh_id : string -> Id.t
-val name_to_string : Name.t -> string
-
 (*************************)
 (* Annotation for proofs *)
 (*************************)

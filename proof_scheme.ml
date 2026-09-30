@@ -20,20 +20,30 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
+(* Internal dependencies *)
+open Ident
+
+(* Rocq dependencies *)
+open Names
+
+(*****************)
+(* Proof schemes *)
+(*****************)
+
 (* Proof scheme declaration *)
 
 type pident = {
-  pi_func_name : string;
-  pi_spec_name : string option;
+  pi_func_name : Id.t;
+  pi_spec_name : Id.t option;
 }
 
 type prem_orig = {
-  po_prem_name : string;
+  po_prem_name : Name.t;
 }
 
 type 't ps_atom =
   | LetVar of (pident * 't * prem_orig)
-  | CaseConstr of ('t * string * pident list * prem_orig)
+  | CaseConstr of ('t * Id.t * pident list * prem_orig)
   | LetDum of (pident * 't)
   | CaseDum of ('t * string * pident list)
   | OutputTerm of 't option
@@ -53,8 +63,8 @@ let rec concat_list l sep = match l with
   | a::tl -> a ^ sep ^ (concat_list tl sep)
 
 let pp_pident pi = match pi.pi_spec_name with
-  | None -> pi.pi_func_name
-  | Some s -> pi.pi_func_name ^ "{" ^ s ^ "}"
+  | None -> Id.to_string pi.pi_func_name
+  | Some s -> Id.to_string pi.pi_func_name ^ "{" ^ Id.to_string s ^ "}"
 
 let pp_proof_scheme pp_t ps = concat_list (List.map (fun b ->
     begin match b.psb_prop_name with
@@ -62,16 +72,13 @@ let pp_proof_scheme pp_t ps = concat_list (List.map (fun b ->
       | None -> "%default%" end ^ ": " ^
     concat_list (List.map (fun (a, _) -> match a with
       | LetVar (pi, t, po) -> "LetVar (" ^ pp_pident pi ^ ", " ^ pp_t t ^ ", " ^ 
-         po.po_prem_name ^ ")"
+         name_to_string po.po_prem_name ^ ")"
       | LetDum (pi, t) -> "LetDum (" ^ pp_pident pi ^ ", " ^ pp_t t ^ ")"
-      | CaseConstr (t, s, pil, po) -> "CaseConstr (" ^ pp_t t ^ ", " ^ s ^ ", (" ^ 
-         concat_list (List.map pp_pident pil) ", " ^ "), " ^ po.po_prem_name ^ ")"
+      | CaseConstr (t, s, pil, po) -> "CaseConstr (" ^ pp_t t ^ ", " ^ Id.to_string s ^ ", (" ^ 
+         concat_list (List.map pp_pident pil) ", " ^ "), " ^ name_to_string po.po_prem_name ^ ")"
       | CaseDum (t, s, pil) -> "CaseDum (" ^ pp_t t ^ ", " ^ s ^ ", (" ^ 
          concat_list (List.map pp_pident pil) ", " ^ "))"
       | OutputTerm (Some t) -> "OutputTerm (" ^ pp_t t ^ ")"
       | OutputTerm (None) -> "OutputTerm (None)"
     ) b.psb_branch) " -> "
   ) ps.scheme_branches) "\n"
-
-
-

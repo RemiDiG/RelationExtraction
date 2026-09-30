@@ -5,6 +5,8 @@ COQMF_WARN = "-w +a-4-9-27-44"
 CAMLPKGS = "-package rocq-runtime.plugins.extraction -package rocq-runtime.plugins.funind"
 
 host_stuff.mli
+ident.mli
+ident.ml
 proof_scheme.mli
 proof_scheme.ml
 pred.mli
