@@ -148,9 +148,8 @@ let gen_fixpoint env =
     let (fn, args, t) = f.fixfun_name, f.fixfun_args, f.fixfun_body in
     let c = gen_constr (env,i) fn (List.rev args) t in
     let typs = get_in_types (env, i) in
-    let c = List.fold_right2 ( fun a t c -> 
-      mkLambda (Context.nameR (Id.of_string a), get_coq_type t, c) )
-      (List.map Id.to_string args) typs c in
+    let c = List.fold_right2 (fun a t c -> mkLambda (Context.nameR a, get_coq_type t, c))
+      args typs c in
     let ty = gen_fix_type (env,i) args in
     let recdec = 
       ([|(Context.nameR fn)|], [|ty|], [|c|]) in
