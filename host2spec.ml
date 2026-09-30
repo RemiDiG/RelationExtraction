@@ -149,7 +149,7 @@ let filter_impargs_cstr h args typs =
 (* Parses a simple Coq term. *)
 let rec build_untyped_term (env, id_spec) prod term = 
 match Constr.kind term with
-  | Const (c,_) -> let i = Id.of_string (Constant.to_string c) in
+  | Const (c,_) -> let i = Constant.label c in
     let env = add_cstr_to_env env i term in
     MLTConst i, env
   | Rel i -> let n = get_name (List.nth prod (i-1)) in
