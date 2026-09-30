@@ -49,14 +49,14 @@ type 't ps_atom =
     (* match 't with | string (pident list) => *)
   | LetDum of (pident * 't)
     (* pident.pi_spec_name must be None *)
-  | CaseDum of ('t * string * pident list)
+  | CaseDum of ('t * Id.t * pident list)
     (* all pident.pi_spec_name must be None *)
   | OutputTerm of 't option
 
 (* A execution path of the function. *)
 type 't ps_branch = {
-  psb_prop_name : string option;
-  psb_branch : ('t ps_atom * string option) list;
+  psb_prop_name : Id.t option;
+  psb_branch : ('t ps_atom * Id.t option) list;
                            (* a name used in proof generation *)
 }
 

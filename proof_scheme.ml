@@ -45,12 +45,12 @@ type 't ps_atom =
   | LetVar of (pident * 't * prem_orig)
   | CaseConstr of ('t * Id.t * pident list * prem_orig)
   | LetDum of (pident * 't)
-  | CaseDum of ('t * string * pident list)
+  | CaseDum of ('t * Id.t * pident list)
   | OutputTerm of 't option
 
 type 't ps_branch = {
-  psb_prop_name : string option;
-  psb_branch : ('t ps_atom * string option) list;
+  psb_prop_name : Id.t option;
+  psb_branch : ('t ps_atom * Id.t option) list;
 }
 
 type 't proof_scheme = {
@@ -68,7 +68,7 @@ let pp_pident pi = match pi.pi_spec_name with
 
 let pp_proof_scheme pp_t ps = concat_list (List.map (fun b ->
     begin match b.psb_prop_name with
-      | Some pn -> pn
+      | Some pn -> Id.to_string pn
       | None -> "%default%" end ^ ": " ^
     concat_list (List.map (fun (a, _) -> match a with
       | LetVar (pi, t, po) -> "LetVar (" ^ pp_pident pi ^ ", " ^ pp_t t ^ ", " ^ 
@@ -76,7 +76,7 @@ let pp_proof_scheme pp_t ps = concat_list (List.map (fun b ->
       | LetDum (pi, t) -> "LetDum (" ^ pp_pident pi ^ ", " ^ pp_t t ^ ")"
       | CaseConstr (t, s, pil, po) -> "CaseConstr (" ^ pp_t t ^ ", " ^ Id.to_string s ^ ", (" ^ 
          concat_list (List.map pp_pident pil) ", " ^ "), " ^ name_to_string po.po_prem_name ^ ")"
-      | CaseDum (t, s, pil) -> "CaseDum (" ^ pp_t t ^ ", " ^ s ^ ", (" ^ 
+      | CaseDum (t, s, pil) -> "CaseDum (" ^ pp_t t ^ ", " ^ Id.to_string s ^ ", (" ^ 
          concat_list (List.map pp_pident pil) ", " ^ "))"
       | OutputTerm (Some t) -> "OutputTerm (" ^ pp_t t ^ ")"
       | OutputTerm (None) -> "OutputTerm (None)"

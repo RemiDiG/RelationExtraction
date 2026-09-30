@@ -574,7 +574,7 @@ let build_proof_scheme fixfun =
         if b then
           p, (CaseConstr (t, cstr, List.map 
             (fun i -> mk_pa_var i None) il, mk_po pm_n), None)::al
-        else p, (CaseDum (t, Id.to_string cstr, List.map 
+        else p, (CaseDum (t, cstr, List.map 
                (fun i -> mk_pa_var i None) il), None)::al) pall
       ) iltl cstr_list)
     | FixLetin (i, t, next_t, anlet) -> let pall = rec_ps next_t an in
@@ -594,7 +594,7 @@ let build_proof_scheme fixfun =
   let pall = rec_ps fixfun.fixfun_body [] in
   let branches = List.map (fun (p, al) -> let p = match p with
       | None -> None
-      | Some p -> Some (name_to_string p) in
+      | Some p -> Some (Id.of_string (name_to_string p)) in
     {psb_prop_name = p; psb_branch = al}) pall in
   { scheme_branches = branches; }
 

@@ -161,7 +161,7 @@ let pp_tac_info ti =
 
 (* A set of tactics to be applied in order to prove a subgoal. *)
 type tacts = 
-  | Prop_tacs of tac_info list * string
+  | Prop_tacs of tac_info list * Id.t
   | Tac_list of tac_atom list
 
 (* Unused (09/03/2026)
@@ -381,7 +381,7 @@ let make_proof (id_po : Id.t) (fixfun_correct : Id.t) (env, id) lemma prover ps 
         let ai_tac = Tac_list (List.flatten aint) in
         let n_tac = Tac_list (List.flatten norm) in
         let ap_tac = Tac_list (List.flatten apro) in
-        let prop_tac = Tac_list [APPLYPROP (Id.of_string prop)] in (* TODO[21/09/2026] fresh *)
+        let prop_tac = Tac_list [APPLYPROP prop] in
         let lemma = apply_tacs lemma bi_tac in
         let lemma = apply_tacs lemma intros_tac in
         let lemma = apply_tacs lemma ai_tac in
@@ -651,7 +651,7 @@ let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
       let prop_name = 
         match branch.psb_prop_name with Some n -> n | _ -> assert false in
       let init_order = 
-        get_init_prem_order (env, id) (Id.of_string prop_name) in
+        get_init_prem_order (env, id) prop_name in
       let branch_order, _ = get_branch_prem_order branch.psb_branch in
       let rec order_prem pml init branch = match init with 
         | [] -> []
