@@ -29,6 +29,8 @@ open Names
 
 (* Fresh id. *)
 val fresh_id : string -> Id.t
+(* Reinitialise the identifiers *)
+val reset_seen_id : unit -> unit
 (* Name to string, with the empty string "" for Anonymous*)
 val name_to_string : Name.t -> string
 (* Turn a Name into an option of Id *)

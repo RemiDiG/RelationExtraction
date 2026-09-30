@@ -52,6 +52,9 @@ let rec find_func_name ind_ref modes = match modes with
 
 (* Main routine *)
 let extract_relation_common ord ind_ref modes =
+  (* Reset the created identifiers, to not be polluted by a previous run. *)
+  let () = reset_seen_id () in
+  
   (* Initial henv *)
   let ind_refs, ind_grefs = List.split (List.map (fun (_, ind_ref, _, _) ->
     let ind = Globnames.destIndRef (global ind_ref) in
