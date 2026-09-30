@@ -420,9 +420,7 @@ let find_let_in_cstr (v : Id.t) n _ cstr =
   | Some n -> if v = n then Some cstr else None
   | None -> None
 
-let find_fa_name = fun n _ _ -> match n with
-  | Some n -> Some (Id.to_string n)
-  | None -> None
+let find_fa_name = fun n _ _ -> n
 
 
 (***************)
