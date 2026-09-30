@@ -139,7 +139,7 @@ let gen_fix_type (env,id) args =
   let in_types = get_in_types (env, id) in
   let out_type = get_out_type true (env, id) in
   List.fold_right2 ( fun at an typs -> 
-    mkProd (Context.nameR (Id.of_string an), get_coq_type at, typs)
+    mkProd (Context.nameR an, get_coq_type at, typs)
   ) in_types args out_type
 
 (* Generates and registers Coq Fixpoints. *)
@@ -151,7 +151,7 @@ let gen_fixpoint env =
     let c = List.fold_right2 ( fun a t c -> 
       mkLambda (Context.nameR (Id.of_string a), get_coq_type t, c) )
       (List.map Id.to_string args) typs c in
-    let ty = gen_fix_type (env,i) (List.map Id.to_string args) in
+    let ty = gen_fix_type (env,i) args in
     let recdec = 
       ([|(Context.nameR fn)|], [|ty|], [|c|]) in
     let fi = match fix_get_recursion_style env i with
