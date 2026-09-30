@@ -432,8 +432,9 @@ let add_ml_counter env f =
   let (mlt, typ) = f.mlfun_body in
   let coq_nat = Some (find_coq_constr_s "Corelib.Init.Datatypes.nat") in
   let nat_typ = CTSum [Id.of_string "O"; Id.of_string "S"], coq_nat in
-  let fcount = MLTVar (Id.of_string "fcounter"), nat_typ in
-  let fcount_pat = MLPVar (Id.of_string "fcounter"), nat_typ in
+  let fcount_id = fresh_id "fcounter" in
+  let fcount = MLTVar fcount_id, nat_typ in
+  let fcount_pat = MLPVar fcount_id, nat_typ in
   let rec adapt_func_calls (mlt, typ) = match mlt with
     | MLTTuple tl -> MLTTuple (List.map adapt_func_calls tl), typ
     | MLTRecord (il, tl) -> MLTRecord (il, List.map adapt_func_calls tl), typ
@@ -458,8 +459,7 @@ let add_ml_counter env f =
         ((MLPConstr (Id.of_string "S", [fcount_pat]), nat_typ), 
                 (adapt_func_calls (mlt, typ)), [])
       ] in
-      (MLTMatch (fcount, [], ptal), typ), 
-        (Id.of_string "fcounter")::f.mlfun_args
+      (MLTMatch (fcount, [], ptal), typ), fcount_id::f.mlfun_args
     | _ -> adapt_func_calls (mlt, typ), f.mlfun_args in
   { mlfun_name = fname;
     mlfun_body = mlt';
