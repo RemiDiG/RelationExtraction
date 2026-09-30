@@ -46,10 +46,10 @@ let glob_to_global glb =
   { glob = glb; inst = InfvInst.empty } (* TODO should it really be InfvIbst.empty everywhere? *)
 
 (* Makes a dummy Coq global_reference. *)
-let mk_dummy_cst (env, id_spec) id =
+let mk_dummy_cst (env, id_spec) (id: Id.t) =
   let pred_glb = get_indgref env id_spec in
   let mod_path = Extraction_plugin.Table.modpath_of_r (glob_to_global pred_glb) in
-  let lbl = Obj.magic (Id.to_string id) in
+  let lbl = Obj.magic id in
   (* Dummy universes... *)
   Constr.mkConstU (to_puniverses (Constant.make2 mod_path lbl))
 
