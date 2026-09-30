@@ -545,9 +545,9 @@ let build_fix_env env =
     else build_until_the_end nenv in
   build_until_the_end {env with extr_fix_env = build_initial_fix_env env}
 
-let mk_pa_var fn sn = {
-  pi_func_name = fn;
-  pi_spec_name = sn;
+let mk_pa_var (fn: Id.t) (sn: Id.t option) = {
+  pi_func_name = Id.to_string fn;
+  pi_spec_name = match sn with | Some i -> Some (Id.to_string i) | None -> None;
 }
 
 let rec list_exists_assoc f l = match l with
@@ -561,7 +561,7 @@ let mk_po pm_n_opt = match pm_n_opt with
 let build_proof_scheme fixfun = 
   let rec rec_ps (ft, (ty, cty)) an = match ft with
     | FixCase (t, anmatch, iltl) -> let cstr_list = match t with
-        | (_, (CTSum cl, _)) -> List.map Id.to_string cl
+        | (_, (CTSum cl, _)) -> cl
         | _ -> CErrors.anomaly ~label:"RelationExtraction"
                  (str "Missing type information") in
       List.flatten (List.map2 (fun (il, next_t, anpat) cstr ->
@@ -571,10 +571,10 @@ let build_proof_scheme fixfun =
             | Some pn -> a.pa_prop_name = pn, Some a.pa_prem_name
             | None -> false, None) anmatch in
         if b then
-          p, (CaseConstr (t, cstr, List.map 
-            (fun i -> mk_pa_var (Id.to_string i) None) il, mk_po pm_n), None)::al
-        else p, (CaseDum (t, cstr, List.map 
-               (fun i -> mk_pa_var (Id.to_string i) None) il), None)::al) pall
+          p, (CaseConstr (t, Id.to_string cstr, List.map 
+            (fun i -> mk_pa_var i None) il, mk_po pm_n), None)::al
+        else p, (CaseDum (t, Id.to_string cstr, List.map 
+               (fun i -> mk_pa_var i None) il), None)::al) pall
       ) iltl cstr_list)
     | FixLetin (i, t, next_t, anlet) -> let pall = rec_ps next_t an in
       List.map (fun (p, al) -> let b, pm_n = list_exists_assoc (fun a -> 
@@ -582,8 +582,8 @@ let build_proof_scheme fixfun =
           | Some pn -> a.pa_prop_name = pn, Some a.pa_prem_name
           | None -> false, None) anlet in
         if b then
-        p, (LetVar (mk_pa_var (Id.to_string i) None, t, mk_po pm_n), None)::al
-      else p, (LetDum (mk_pa_var (Id.to_string i) None, t), None)::al) pall
+        p, (LetVar (mk_pa_var i None, t, mk_po pm_n), None)::al
+      else p, (LetDum (mk_pa_var i None, t), None)::al) pall
     | _ -> begin match an with 
       | [] -> [None, [OutputTerm None, None]]
       | ({pa_prop_name = pn; pa_renamings = _})::_ -> 
