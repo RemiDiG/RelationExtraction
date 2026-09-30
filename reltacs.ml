@@ -341,12 +341,12 @@ let rec build_tac_atom ta = match ta with
     Auto.default_auto
 
 (* Proves a goal, with a given scheme prover. *)
-let make_proof (id_po: Id.t) (env, id) lemma prover ps =
+let make_proof (id_po : Id.t) (fixfun_correct : Id.t) (env, id) lemma prover ps =
   if debug_print_tacs then
     let (fixfun, _) = extr_get_fixfun env id in
     let fn = Id.to_string fixfun.fixfun_name in
     let in_s = concat_list (List.map Id.to_string fixfun.fixfun_args) " " in
-    let lem = "Lemma " ^ fn ^ "_correct_printed : forall " ^ in_s ^ " " ^ Id.to_string id_po ^ ", " ^
+    let lem = "Lemma " ^ Id.to_string fixfun_correct ^ "_printed : forall " ^ in_s ^ " " ^ Id.to_string id_po ^ ", " ^
               fn ^ " " ^ in_s ^ " = " ^ Id.to_string id_po ^ " -> " ^ Id.to_string id ^ " " ^ in_s ^
               " " ^ Id.to_string id_po ^ "." in
     Printf.eprintf "\n\n\n%s\nProof.\n" lem
@@ -404,8 +404,8 @@ let make_proof (id_po: Id.t) (env, id) lemma prover ps =
 
 let isEq sigma constr =
   if EConstr.isInd sigma constr then
-    let ind,_ = EConstr.destInd sigma constr in
-    let _,oid = Inductive.lookup_mind_specif (Global.env ()) ind in
+    let ind, _ = EConstr.destInd sigma constr in
+    let _, oid = Inductive.lookup_mind_specif (Global.env ()) ind in
     (Id.to_string oid.mind_typename = "eq")
   else false
 
@@ -492,9 +492,8 @@ let mk_ti_ai_n tal1 tal2 = {
 (*   no logical connectors                               *)
 (*********************************************************)
 
-let simple_pc_intro (id_po: Id.t) (env, id) _ =
-  let f_name = (fst (extr_get_fixfun env id)).fixfun_name in (* TODO[21/09/2026] fresh? or fixfun already created fresh? *)
-  let f_name = Id.of_string ((Id.to_string f_name) ^ "_ind") in (* TODO[21/09/2026] fresh instead? but this is sensitive! should be the same as in proofgen.ml *)
+let simple_pc_intro (fixfun_ind : Id.t) (id_po : Id.t) (env, id) _ =
+  (* fixfun_ind is the name of the induction scheme *)
   Tac_list [
     (* intros predicate arguments *)
     INTROSUNTILZERO;
@@ -503,7 +502,7 @@ let simple_pc_intro (id_po: Id.t) (env, id) _ =
     (* rewrite H (or subst H or change right with left) *)
     SUBST id_po;
     (* apply ind scheme *)
-    APPLY f_name
+    APPLY fixfun_ind
   ]
 
 let simple_pc_concl _ _ = Tac_list [] (* TODO 04/09/2026 useless? *)
@@ -530,8 +529,8 @@ let get_init_prem_order (env, id) prop_name =
   List.flatten (List.map get_pmterm_name_order prop.prop_prems)
   
 
-let simple_pc_branch premisse (env, id) branch sigma goal =
-  let fun_name = Id.to_string (fst (extr_get_fixfun env id)).fixfun_name in
+let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
+  let fun_name = (fst (extr_get_fixfun env id)).fixfun_name in
   let prop_name = match branch.psb_prop_name with Some n -> n 
     | _ -> assert false in
   let (hname_index, til, _, _, recvars) = 
@@ -546,14 +545,14 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
             begin match pmn with
               | None ->
               begin match t with
-                | FixFun(f, _) -> let f = Id.to_string f in
+                | FixFun(f, _) ->
                   if f = fun_name then None, Some n
                   else Some f, Some n
                 | _ -> None, Some n
               end
               | Some pmn when n <> pmn -> 
                 begin match t with
-                  | FixFun(f, _) -> let f = Id.to_string f in
+                  | FixFun(f, _) ->
                     if f = fun_name then None, Some n
                     else Some f, Some n
                   | _ -> None, Some n
@@ -562,15 +561,15 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
             end
           end
       | _ -> None, pmn in
-    if dep_pred <> None then 
-      let dep_pred = match dep_pred with Some n -> n | _ -> assert false in
+    if dep_pred <> None then (* In this case dep_pred = Some fun_name *)
+      let () = assert (dep_pred = Some fun_name) in (* TODO[30/09/2026] to remove *)
       let hrec = fresh_id "HREC" in
       let i, tacs, hn, rv = match at with
         | LetVar (pi, (_, (_, Some t)), _) -> 
           let v = pi.pi_func_name in
           let i, _ = goal_iterator premisse false true false (find_let_in_cstr v) sigma goal (last_i+1) in
           let hn = (*fresh_string_id "HLREC_" () in *) v in
-          i, [ASSERTEQUAL (hrec, v, LocInHyp (hn, hyp_def), EConstr.of_constr t); AUTO; (* TODO[21/09/2026] fresh names *)
+          i, [ASSERTEQUAL (hrec, v, LocInHyp (hn, hyp_def), EConstr.of_constr t); AUTO;
               SYMMETRY hrec], hn, [v,hrec]
         | CaseConstr (_, _, _, _) ->
           let i, (_, _) = goal_iterator premisse false false true 
@@ -578,7 +577,7 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
           i, [], hrec, []
         | _ -> assert false (* TODO? *) in
 
-      let ti = mk_ti_n (tacs@[APPLYPROPIN (Id.of_string (dep_pred ^ "_correct"), hrec)]) in (* TODO[21/09/2026] fresh names *)
+      let ti = mk_ti_n (tacs@[APPLYPROPIN (fixfun_correct, hrec)]) in
       ((i, hn)::hname_index, ti::til, pmn, i, recvars@rv)
     else match at with
       | LetVar (pi, (_, (_, Some t)), _) 
@@ -675,13 +674,13 @@ let simple_pc_branch premisse (env, id) branch sigma goal =
   }
 
 (* Very basic correction prover. *)
-let simple_pc (id_po: Id.t) (id_rec: Id.t) : scheme_prover =
+let simple_pc (fixfun_ind : Id.t) (id_po : Id.t) (id_rec : Id.t) (fixfun_correct : Id.t) : scheme_prover =
   {
-  prov_intro = simple_pc_intro id_po;
-  prov_branch = simple_pc_branch id_rec;
+  prov_intro = simple_pc_intro fixfun_ind id_po;
+  prov_branch = simple_pc_branch id_rec fixfun_correct;
   prov_concl = simple_pc_concl;
   }
 
 (* Proves a lemma with a simple scheme prover. *)
-let make_proof_simple (id_po: Id.t) (env, id) lemma ps (id_rec: Id.t) =
-  make_proof id_po (env, id) lemma (simple_pc id_po id_rec) ps
+let make_proof_simple (fixfun_ind : Id.t) (id_po: Id.t) (id_rec: Id.t) (fixfun_correct : Id.t) (env, id) lemma ps =
+  make_proof id_po fixfun_correct (env, id) lemma (simple_pc fixfun_ind id_po id_rec fixfun_correct) ps

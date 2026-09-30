@@ -33,12 +33,14 @@ open Names
 open Libnames
 open Util
 
-let build_ind_scheme fun_name =
+let build_ind_scheme fun_name fun_ind_name =
+  (* fun_name is the identifier of the function we are working on
+     fun_ind_name is the name of the induction hypothesis *)
   (* Get the name that FunInd give to the induction hypothesis. Copy-pasted from FunInd's files. *)
   let name = Namegen.next_ident_away_in_goal (Global.env ()) (Id.of_string "H") (Id.Set.empty) in
   if false then Printf.printf "\n%s\n%!" (Id.to_string name) else (); (* TODO[29/09/2026] debugging *)
-  let ref_func = qualid_of_ident (Id.of_string fun_name) in
-  let ih_ind = CAst.make (Id.of_string (fun_name ^ "_ind")) in
+  let ref_func = qualid_of_ident fun_name in
+  let ih_ind = CAst.make (fun_ind_name) in
   let make_fscheme () =
     Funind_plugin.Gen_principle.build_scheme
       [ih_ind, ref_func, UnivGen.QualityOrSet.Qual (Sorts.Quality.QConstant Sorts.Quality.QProp)] in
@@ -93,9 +95,16 @@ let gen_correction_proof env (id: Id.t) : unit =
   let mode = List.hd (extr_get_modes env id) in
   let compl = fix_get_completion_status env fixfun.fixfun_name in
   let full = is_full_extraction mode in
+  
+  (* Identifier for the induction scheme *)
+  let fixfun_ind = fresh_id (Id.to_string fixfun.fixfun_name ^ "_ind") in
+  (* Identifier for the lemma's name *)
+  let fixfun_correct = fresh_id (Id.to_string fixfun.fixfun_name ^ "_correct") in
+  (* TODO[30/09/2026] put these two directly in extr_get_fixfun? *)
+  (* TODO[30/09/2026] warning if this is not fresh? *)
 
-  (* functional scheme *)
-  let id_rec = build_ind_scheme (Id.to_string fixfun.fixfun_name) in
+  (* Functional scheme, and its identifier *)
+  let id_rec = build_ind_scheme fixfun.fixfun_name fixfun_ind in
   
   (* Lemma building *)
   let cstr = build_correct_lemma id_po env id fixfun in
@@ -103,9 +112,9 @@ let gen_correction_proof env (id: Id.t) : unit =
   (* Proof registering *)
   let proof_register ps : unit =
     let info = Declare.Info.make () in
-    let cinfo = Declare.CInfo.make ~name:(Id.of_string (Id.to_string fixfun.fixfun_name ^ "_correct")) ~typ:(EConstr.of_constr cstr) () in
+    let cinfo = Declare.CInfo.make ~name:fixfun_correct ~typ:(EConstr.of_constr cstr) () in
     let lemma = Declare.Proof.start ~cinfo ~info (Evd.from_env (Global.env())) in
-    let lemma = make_proof_simple id_po (env, id) lemma ps id_rec in
+    let lemma = make_proof_simple fixfun_ind id_po id_rec fixfun_correct (env, id) lemma ps in
     let (_ : _ list) = Declare.Proof.save_regular ~proof:lemma ~opaque:Vernacexpr.Transparent ~idopt:None in
     () in
 
