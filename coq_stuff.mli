@@ -27,16 +27,6 @@ open Pred
 (* Rocq dependencies *)
 open Names
 
-(* Coq types. *)
-type htyp = Constr.types option
-
-(* Coq environment. *)
-type henv = {
-  ind_refs : (Id.t * Libnames.qualid) list;
-  ind_grefs : (Id.t * Names.GlobRef.t) list;
-  cstrs : (Id.t * Constr.constr) list;
-}
-
 (* Functions to manipulate Coq data. *)
 val coq_functions : (htyp, henv) host_functions
 

@@ -37,7 +37,7 @@ exception RelExtImcompleteFunction
    Functions are completed if needed. *)
 val build_all_fixfuns : 
   (constr option Host_stuff.host_term_type Host_stuff.host_term_type,
-  Coq_stuff.henv Host_stuff.host_env Host_stuff.host_env) extract_env ->
+  henv Host_stuff.host_env Host_stuff.host_env) extract_env ->
   (constr option Host_stuff.host_term_type Host_stuff.host_term_type,
-  Coq_stuff.henv Host_stuff.host_env Host_stuff.host_env) extract_env 
+  henv Host_stuff.host_env Host_stuff.host_env) extract_env 
 

@@ -22,7 +22,6 @@
 
 (* Internal dependencies *)
 open Pred
-open Coq_stuff
 
 (* Generates & prtints a MiniML functions list. *)
 val gen_miniml : (htyp, henv) extract_env -> unit

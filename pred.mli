@@ -304,3 +304,14 @@ val make_trees : ('t, 'h) extract_env -> ('t, 'h) extract_env
 val make_ml_funs : ('t, 'h) extract_env -> ('t, 'h) extract_env
 
 val get_out_terms_func : ('t, 'h) extract_env -> 't ml_term -> 't ml_term list
+
+
+(* Coq types. *)
+type htyp = Constr.types option
+
+(* Coq environment. *)
+type henv = {
+  ind_refs : (Id.t * Libnames.qualid) list;
+  ind_grefs : (Id.t * Names.GlobRef.t) list;
+  cstrs : (Id.t * Constr.constr) list;
+}

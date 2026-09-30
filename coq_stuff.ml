@@ -32,14 +32,6 @@ open Util
 open Pp
 open Context.Rel.Declaration
 
-type htyp = Constr.types option
-
-type henv = {
-  ind_refs : (Id.t * Libnames.qualid) list;
-  ind_grefs : (Id.t * Names.GlobRef.t) list;
-  cstrs : (Id.t * Constr.constr) list;
-}
-
 let find_coq_constr_s (s : string) =
   UnivGen.constr_of_monomorphic_global (Global.env ()) (locate (qualid_of_string s))
 

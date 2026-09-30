@@ -23,7 +23,6 @@
 (* Internal dependencies *)
 open Proof_scheme
 open Pred
-open Coq_stuff
 
 (* Rocq dependencies *)
 open Names

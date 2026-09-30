@@ -28,11 +28,11 @@ open Proof_scheme
 (* Rocq dependencies *)
 open Names
 
-exception RelationExtractionError of string
-
 (*********)
 (* Utils *)
 (*********)
+
+exception RelationExtractionError of string
 
 exception Impossible
 
@@ -1075,3 +1075,16 @@ let make_ml_funs env =
   let ml_funs = List.map ( fun (id_tree, tree) ->
     id_tree, code_from_tree env id_tree tree ) env.extr_trees in
   { env with extr_mlfuns = ml_funs }
+
+
+(* htyp & henv *)
+
+type htyp = Constr.types option
+
+type henv = {
+  ind_refs : (Id.t * Libnames.qualid) list;
+  ind_grefs : (Id.t * Names.GlobRef.t) list;
+  cstrs : (Id.t * Constr.constr) list;
+}
+
+(* TODO specialize previous types? *)

@@ -22,7 +22,6 @@
 
 (* Internal dependencies *)
 open Pred
-open Coq_stuff
 
 (* Rocq dependencies *)
 open Names
