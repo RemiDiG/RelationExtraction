@@ -530,7 +530,7 @@ let get_init_prem_order (env, id) prop_name =
   List.flatten (List.map get_pmterm_name_order prop.prop_prems)
   
 
-let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
+let simple_pc_branch premisse (env, id) branch sigma goal =
   let fun_name = (fst (extr_get_fixfun env id)).fixfun_name in
   let prop_name = match branch.psb_prop_name with Some n -> n 
     | _ -> assert false in
@@ -562,8 +562,8 @@ let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
             end
           end
       | _ -> None, pmn in
-    if dep_pred <> None then (* In this case dep_pred = Some fun_name *)
-      let () = assert (dep_pred = Some fun_name) in (* TODO[30/09/2026] to remove *)
+    if dep_pred <> None then
+      let dep_pred = match dep_pred with Some n -> n | _ -> assert false in
       let hrec = fresh_id "HREC" in
       let i, tacs, hn, rv = match at with
         | LetVar (pi, (_, (_, Some t)), _) -> 
@@ -578,7 +578,8 @@ let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
           i, [], hrec, []
         | _ -> assert false (* TODO? *) in
 
-      let ti = mk_ti_n (tacs@[APPLYPROPIN (fixfun_correct, hrec)]) in
+      let dep_pred_correct = fresh_id (Id.to_string dep_pred ^ "_correct") in
+      let ti = mk_ti_n (tacs@[APPLYPROPIN (dep_pred_correct, hrec)]) in
       ((i, hn)::hname_index, ti::til, pmn, i, recvars@rv)
     else match at with
       | LetVar (pi, (_, (_, Some t)), _) 
@@ -676,13 +677,13 @@ let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
   }
 
 (* Very basic correction prover. *)
-let simple_pc (fixfun_ind : Id.t) (id_po : Id.t) (id_rec : Id.t) (fixfun_correct : Id.t) : scheme_prover =
+let simple_pc (fixfun_ind : Id.t) (id_po : Id.t) (id_rec : Id.t) : scheme_prover =
   {
   prov_intro = simple_pc_intro fixfun_ind id_po;
-  prov_branch = simple_pc_branch id_rec fixfun_correct;
+  prov_branch = simple_pc_branch id_rec;
   prov_concl = simple_pc_concl;
   }
 
 (* Proves a lemma with a simple scheme prover. *)
 let make_proof_simple (fixfun_ind : Id.t) (id_po: Id.t) (id_rec: Id.t) (fixfun_correct : Id.t) (env, id) lemma ps =
-  make_proof id_po fixfun_correct (env, id) lemma (simple_pc fixfun_ind id_po id_rec fixfun_correct) ps
+  make_proof id_po fixfun_correct (env, id) lemma (simple_pc fixfun_ind id_po id_rec) ps
