@@ -493,7 +493,7 @@ let mk_ti_ai_n tal1 tal2 = {
 (*   no logical connectors                               *)
 (*********************************************************)
 
-let simple_pc_intro (fixfun_ind : Id.t) (id_po : Id.t) (env, id) _ =
+let simple_pc_intro (fixfun_ind : Id.t) (id_po : Id.t) _ _ =
   (* fixfun_ind is the name of the induction scheme *)
   Tac_list [
     (* intros predicate arguments *)
@@ -620,6 +620,7 @@ let simple_pc_branch premisse fixfun_correct (env, id) branch sigma goal =
             goal_iterator premisse true false false find_fa_name sigma goal nb_h in
 (*old*)(*          if i = nb_h then n, p_h*)
 (* modified for proof printing. TODO: find a solution to keep real names? *)
+(* TODO[30/09/2026] reuse n directly, as a fresh_id? to test *)
 (*new*)          if i = nb_h then fresh_id "na", p_h
           else raise Not_found
         with Not_found -> let n = fresh_id "HREC" in n, n::p_h in

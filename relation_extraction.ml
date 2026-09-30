@@ -51,7 +51,7 @@ let rec find_func_name ind_ref modes = match modes with
   | [] -> raise Not_found
 
 (* Main routine *)
-let extract_relation_common dep ord ind_ref modes =
+let extract_relation_common ord ind_ref modes =
   (* Initial henv *)
   let ind_refs, ind_grefs = List.split (List.map (fun (_, ind_ref, _, _) ->
     let ind = Globnames.destIndRef (global ind_ref) in
@@ -111,7 +111,7 @@ let extract_relation_common dep ord ind_ref modes =
   env
 
 let extract_relation_miniml ~opaque_access dep ord ind_ref modes =
-  let env = extract_relation_common dep ord ind_ref modes in
+  let env = extract_relation_common ord ind_ref modes in
   (* Before generating the MiniML code, we first extract all the dependences *)
   let () = if dep then extract_dependencies ~opaque_access:opaque_access env.extr_henv else () in
   Minimlgen.gen_miniml env
@@ -134,13 +134,13 @@ let relation_extraction_order ~opaque_access modes =
 
 let relation_extraction_fixpoint modes =
   let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  let env = extract_relation_common false false ind_refs modes in
+  let env = extract_relation_common false ind_refs modes in
   let env = build_all_fixfuns env in
   gen_fixpoint env
 
 let relation_extraction_fixpoint_order modes =
   let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  let env = extract_relation_common false true ind_refs modes in
+  let env = extract_relation_common true ind_refs modes in
   let env = build_all_fixfuns env in
   gen_fixpoint env
 
