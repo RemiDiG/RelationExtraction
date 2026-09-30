@@ -113,7 +113,7 @@ let extract_relation_common dep ord ind_ref modes =
 let extract_relation_miniml ~opaque_access dep ord ind_ref modes =
   let env = extract_relation_common dep ord ind_ref modes in
   (* Before generating the MiniML code, we first extract all the dependences *)
-  let _ = if dep then extract_dependencies ~opaque_access:opaque_access env.extr_henv else () in
+  let () = if dep then extract_dependencies ~opaque_access:opaque_access env.extr_henv else () in
   Minimlgen.gen_miniml env
 
 let relation_extraction_single ~opaque_access modes =

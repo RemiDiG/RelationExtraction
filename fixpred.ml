@@ -587,7 +587,7 @@ let build_proof_scheme fixfun =
       else p, (LetDum (mk_pa_var i None, t), None)::al) pall
     | _ -> begin match an with 
       | [] -> [None, [OutputTerm None, None]]
-      | ({pa_prop_name = pn; pa_renamings = _})::_ -> 
+      | ({pa_prem_name = _; pa_prop_name = pn; pa_renamings = _})::_ -> 
         (* a list with more than one element can occur in relaxed extraction *)
         [Some pn, [OutputTerm (Some (ft, (ty, cty))), None]]
     end in

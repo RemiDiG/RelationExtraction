@@ -55,18 +55,21 @@ type 'a goal_finder = Id.t option -> EConstr.constr -> 'a option
 *)
 (* TODO: check that forall term = type ? *)
 let goal_iterator (premisse: Id.t) fa li pr f sigma goal start =
+  (* premisse is rec hyp name *)
   let rec rec_it i term = match EConstr.kind sigma term with
-    | Prod ({Context.binder_name = Name n}, c, c_next) when (fa || pr) && i >= start &&
-        n <> premisse (* premisse is rec hyp name *) ->
+    | Prod ({Context.binder_name = Name n; Context.binder_relevance = _}, c, c_next)
+      when (fa || pr) && i >= start && n <> premisse ->
       begin match f (Some n) sigma c with
       | Some res -> i, res
       | None -> rec_it (i+1) c_next end
-    | Prod ({Context.binder_name = Anonymous}, c, c_next) when pr && i >= start ->
+    | Prod ({Context.binder_name = Anonymous; Context.binder_relevance = _}, c, c_next)
+      when pr && i >= start ->
       begin match f None sigma c with
       | Some res -> i, res
       | None -> rec_it (i+1) c_next end
     | Prod (_, _, c_next) -> rec_it (i+1) c_next
-    | LetIn ({Context.binder_name = Name n}, c, _, c_next) when li && i >= start -> 
+    | LetIn ({Context.binder_name = Name n; Context.binder_relevance = _}, c, _, c_next)
+      when li && i >= start -> 
       begin match f (Some n) sigma c with
       | Some res -> i, res
       | None -> rec_it (i+1) c_next end
