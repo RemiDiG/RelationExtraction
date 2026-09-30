@@ -127,11 +127,11 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
   | MLTTuple tl -> MLtuple (List.map (gen_term (env, id_spec) default bind) tl)
   | MLTConstr (id, tl) -> 
     let cstr = get_cstr (env, id_spec) id in
-    let ref,_ = Constr.destRef cstr in
+    let ref, _ = Constr.destRef cstr in
     let ref = glob_to_global ref in
-    MLcons (Tglob (ref, []), ref,
-      List.map (gen_term (env, id_spec) default bind) tl)
-  | MLTConst id -> let s = Id.to_string id in
+    MLcons (Tglob (ref, []), ref, List.map (gen_term (env, id_spec) default bind) tl)
+  | MLTConst id ->
+    let s = Id.to_string id in
     let ref,_ = try let i = String.rindex s '#' in
         let n_name = String.sub s (i+1) (String.length s - i - 1) in
         mk_dummy_glb (env, id_spec) (Id.of_string n_name)
@@ -150,12 +150,12 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
   | MLTATrue -> get_true ()
   | MLTAFalse -> get_false ()
   | MLTMatch (t, _, ptl) ->
-  let t = gen_term (env, id_spec) default bind t in
-  let pats = List.map (fun (p, t, _) ->
-    let pat, nbind = gen_pat (env, id_spec) bind [] p in
-    let term = gen_term (env, id_spec) default ((List.rev nbind)@bind) t in
-    (List.map ml_id_of_id nbind, pat, term)) ptl in
-  MLcase (Tunknown, t, Array.of_list pats)
+    let t = gen_term (env, id_spec) default bind t in
+    let pats = List.map (fun (p, t, _) ->
+      let pat, nbind = gen_pat (env, id_spec) bind [] p in
+      let term = gen_term (env, id_spec) default ((List.rev nbind)@bind) t in
+      (List.map ml_id_of_id nbind, pat, term)) ptl in
+    MLcase (Tunknown, t, Array.of_list pats)
   | MLTALin cl -> 
     let cli = List.map (function ((MLTVar v1, _), (MLTVar v2, _)) -> v1, v2
       | _ -> assert false
