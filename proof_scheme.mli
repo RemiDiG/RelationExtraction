@@ -23,6 +23,9 @@
 (* Rocq dependencies *)
 open Names
 
+(* Concat list for pretty printers *)
+val concat_list : string list -> string -> string
+
 (*****************)
 (* Proof schemes *)
 (*****************)

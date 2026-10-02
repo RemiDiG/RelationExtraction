@@ -116,11 +116,6 @@ type tac_atom =
 
 (* Pretty printers. *)
 
-let rec concat_list l sep = match l with
-  | [] -> ""
-  | [a] -> a
-  | a::tl -> a ^ sep ^ (concat_list tl sep)
-
 let pp_coq_constr_loc ccl = match ccl with
   | CoqConstr _ -> "[constr]"
   | LocInHyp (h, _) -> "[in hyp: " ^ Id.to_string h ^ "]"

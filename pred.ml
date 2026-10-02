@@ -36,11 +36,6 @@ exception RelationExtractionError of string
 
 exception Impossible
 
-let rec concat_list l sep = match l with
-  | [] -> ""
-  | [a] -> a
-  | a::tl -> a ^ sep ^ (concat_list tl sep)
-
 let flatmap f l = List.flatten ((List.map f) l)
 
 
@@ -146,11 +141,6 @@ type 'htyp untyped_ml_term =
   | MLTASome of 'htyp ml_term | MLTANone
   | MLTADefault
 and 'htyp ml_term = ('htyp untyped_ml_term, 'htyp) typed
-
-let rec concat_list l sep = match l with
-  | [] -> ""
-  | [a] -> a
-  | a::tl -> a ^ sep ^ (concat_list tl sep)
 
 let rec pp_untyped_ml_pat pat : string = match pat with
   | MLPVar i -> Id.to_string i

@@ -26,6 +26,11 @@ open Ident
 (* Rocq dependencies *)
 open Names
 
+let rec concat_list l sep = match l with
+  | [] -> ""
+  | [a] -> a
+  | a::tl -> a ^ sep ^ (concat_list tl sep)
+
 (*****************)
 (* Proof schemes *)
 (*****************)
@@ -56,11 +61,6 @@ type 't ps_branch = {
 type 't proof_scheme = {
   scheme_branches : 't ps_branch list;
 }
-
-let rec concat_list l sep = match l with
-  | [] -> ""
-  | [a] -> a
-  | a::tl -> a ^ sep ^ (concat_list tl sep)
 
 let pp_pident pi = match pi.pi_spec_name with
   | None -> Id.to_string pi.pi_func_name
