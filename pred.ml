@@ -44,7 +44,7 @@ let flatmap f l = List.flatten ((List.map f) l)
 (*************************)
 
 type annot_atom = {
-  pa_prop_name : Name.t;
+  pa_prop_name : Id.t;
   pa_prem_name : Name.t;
   pa_renamings : (Name.t * Name.t) list;
 }
@@ -52,7 +52,7 @@ type annot_atom = {
 type pannot = annot_atom list
 
 let pp_pannot an = "{" ^ concat_list 
-  (List.map (fun a -> name_to_string a.pa_prop_name ^ "(" ^ 
+  (List.map (fun a -> Id.to_string a.pa_prop_name ^ "(" ^ 
    name_to_string a.pa_prem_name ^ ")") an) "&" ^ "}"
 
 let option_name_to_id opt_name = match opt_name with
@@ -60,7 +60,7 @@ let option_name_to_id opt_name = match opt_name with
   | Some id -> Name id
 
 let mk_an prop_name prem_name = 
-  [{ pa_prop_name = option_name_to_id prop_name; 
+  [{ pa_prop_name = prop_name; 
      pa_prem_name = option_name_to_id prem_name; 
      pa_renamings = [] }]
 
@@ -773,9 +773,9 @@ then
   try let (nt, prop) = match tnl with (* rename inputs (matching term) *)
     | tn::_ -> rename_inputs_if_possible env nt tn prop
     | [] -> (nt, prop) in
-  let tn = TreeOutput (nt, prop.prop_concl, mk_an (Some prop.prop_name) pm_n, kv) in (*cath*)
+  let tn = TreeOutput (nt, prop.prop_concl, mk_an prop.prop_name pm_n, kv) in (*cath*)
   let rec io_rec tnl = match tnl with (* try to insert tn in the right place *)
-    | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an (Some prop.prop_name) pm_n, kv)]] (*cath*)
+    | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an prop.prop_name pm_n, kv)]] (*cath*)
       (* we can always insert at the end because 
                                         all the tests have been done before *)
     | ((TreeOutput (nti, _, _, _) | (TreeNode (nti, _, _, _))) as tni)::tntl -> (*cath*)
@@ -802,7 +802,7 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
     match tnl_acc with
       | [] -> (* no matching nt, insert alone *)
         let kv' = mca_add_vars env kv nt in
-        List.map (fun nchild -> [TreeNode (nt, nchild, mk_an (Some prop.prop_name) pm_n, kv)]) (*cath*)
+        List.map (fun nchild -> [TreeNode (nt, nchild, mk_an prop.prop_name pm_n, kv)]) (*cath*)
           (choose_prop_prem env id_spec prem_selector kv' prop [])
       | (TreeNode (nti, child, ani, _) as tni)::acc_tail -> (*cath*)
         if nt_partial_ordering env id_spec nti nt then
@@ -816,13 +816,13 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
           (* nt can be inserted alone, before tni *)
           let kv' = mca_add_vars env kv nt in
           List.map ( fun nchild -> 
-              (TreeNode (nt, nchild, mk_an (Some prop.prop_name) pm_n, kv))::tnl_acc ) (*cath*)
+              (TreeNode (nt, nchild, mk_an prop.prop_name pm_n, kv))::tnl_acc ) (*cath*)
             (choose_prop_prem env id_spec prem_selector kv' prop [])
         else (* try to insert nt into tni *)
         ( try let rnt, rprop = rename_outputs_if_possible env nt tni prop in
           let kv' = mca_add_vars env kv rnt in
           List.map ( fun nchild -> 
-              (TreeNode (nti, nchild, an_add_prop ani (Some prop.prop_name) pm_n, kv)):: (*cath*)
+              (TreeNode (nti, nchild, an_add_prop ani prop.prop_name pm_n, kv)):: (*cath*)
                 acc_tail )
             (choose_prop_prem env id_spec prem_selector kv' rprop child)
          with Impossible -> [])
@@ -1051,7 +1051,7 @@ let code_from_tree env id_tree tree =
   let args_types = select_args_types pred_args_types mode in
   let fun_id = get_pred_name env id_tree mode in
   let pats = List.map (gen_pat env id_tree) tree in
-  let an = flatmap (fun p -> mk_an (Some p.prop_name) None) spec.spec_props in
+  let an = flatmap (fun p -> mk_an p.prop_name None) spec.spec_props in
   {
     mlfun_name = fun_id;
     mlfun_args = args;

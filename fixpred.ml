@@ -593,10 +593,7 @@ let build_proof_scheme fixfun =
         [Some pn, [OutputTerm (Some (ft, (ty, cty))), None]]
     end in
   let pall = rec_ps fixfun.fixfun_body [] in
-  let branches = List.map (fun (p, al) -> let p = match p with
-      | None -> None
-      | Some p -> Some (Id.of_string (name_to_string p)) in
-    {psb_prop_name = p; psb_branch = al}) pall in
+  let branches = List.map (fun (p, al) -> {psb_prop_name = p; psb_branch = al}) pall in
   { scheme_branches = branches; }
 
 (* Build all fix functions. *)
