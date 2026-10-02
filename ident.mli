@@ -27,11 +27,21 @@ open Names
 (* Identifiers *)
 (***************)
 
-(* Fresh id. *)
+(* Fresh identifier *)
 val fresh_id : string -> Id.t
 (* Reinitialise the identifiers *)
 val reset_seen_id : unit -> unit
+(* Initialize the identifiers *)
+val init_seen_id : unit -> unit
 (* Name to string, with the empty string "" for Anonymous*)
 val name_to_string : Name.t -> string
 (* Turn a Name into an option of Id *)
 val name_to_option_id : Name.t -> Id.t option
+
+(* Get identifiers for Rocq's contructors *)
+val get_id_O : unit -> Id.t
+val get_id_S : unit -> Id.t
+val get_id_true : unit -> Id.t
+val get_id_false : unit -> Id.t
+val get_id_Some : unit -> Id.t
+val get_id_None : unit -> Id.t

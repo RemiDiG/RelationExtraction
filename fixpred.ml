@@ -339,15 +339,15 @@ let rec transform_pat_constrs (lpat, ty) = match lpat with
   | MLPTuple pl -> MLPTuple (transform_pat_constrs_list pl), ty
   | MLPRecord (il, pl) -> MLPRecord (il, transform_pat_constrs_list pl), ty
   | MLPConstr (i, pl) -> MLPConstr (i, transform_pat_constrs_list pl), ty
-  | MLPATrue -> MLPConstr (Id.of_string "true", []), 
-    (CTSum [Id.of_string "true"; Id.of_string "false"], 
+  | MLPATrue -> MLPConstr (get_id_true (), []), 
+    (CTSum [get_id_true (); get_id_false ()], 
      Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-  | MLPAFalse -> MLPConstr (Id.of_string "false", []), 
-    (CTSum [Id.of_string "true"; Id.of_string "false"], 
+  | MLPAFalse -> MLPConstr (get_id_false (), []), 
+    (CTSum [get_id_true (); get_id_false ()], 
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
   | MLPASome p -> 
-    MLPConstr (Id.of_string "Some", [transform_pat_constrs p]), ty
-  | MLPANone -> MLPConstr (Id.of_string "None", []), ty
+    MLPConstr (get_id_Some (), [transform_pat_constrs p]), ty
+  | MLPANone -> MLPConstr (get_id_None (), []), ty
   | _ -> lpat, ty
 and transform_pat_constrs_list lpat_list =
   List.map transform_pat_constrs lpat_list
@@ -362,19 +362,20 @@ let rec transform_constrs (lterm, ty) = match lterm with
   | MLTMatch (t, an, ptl) -> MLTMatch (transform_constrs t, an,
     List.map (fun (p, t, an) -> 
       transform_pat_constrs p, transform_constrs t, an) ptl), ty
-  | MLTATrue -> MLTConstr (Id.of_string "true", []), 
-    (CTSum [Id.of_string "true"; Id.of_string "false"],
+  | MLTATrue -> MLTConstr (get_id_true (), []), 
+    (CTSum [get_id_true (); get_id_false ()],
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-  | MLTAFalse -> MLTConstr (Id.of_string "false", []), 
-    (CTSum [Id.of_string "true"; Id.of_string "false"], 
+  | MLTAFalse -> MLTConstr (get_id_false (), []), 
+    (CTSum [get_id_true (); get_id_false ()], 
       Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-  | MLTASome t -> MLTConstr (Id.of_string "Some", [transform_constrs t]), ty
-  | MLTANone -> MLTConstr (Id.of_string "None", []), ty
+  | MLTASome t -> MLTConstr (get_id_Some (), [transform_constrs t]), ty
+  | MLTANone -> MLTConstr (get_id_None (), []), ty
   | _ -> lterm, ty
 and transform_constrs_list lterm_list =
   List.map transform_constrs lterm_list
 
 (* We must add this constructors: true, false, Some, None *)
+(* TODO[02/10/2026] but not S nor O? *)
 let add_standard_constr_to_spec env = 
   let true_cstr = find_coq_constr_s "Corelib.Init.Datatypes.true"
   and false_cstr = find_coq_constr_s "Corelib.Init.Datatypes.false"
@@ -382,8 +383,8 @@ let add_standard_constr_to_spec env =
   and none_cstr = find_coq_constr_s "Corelib.Init.Datatypes.None"
   in 
 let henv = { env.extr_henv with cstrs =
-    (Id.of_string "true", true_cstr)::(Id.of_string "false", false_cstr)::
-    (Id.of_string "None", none_cstr)::(Id.of_string "Some", some_cstr)::
+    (get_id_true (), true_cstr)::(get_id_false (), false_cstr)::
+    (get_id_None (), none_cstr)::(get_id_Some (), some_cstr)::
     env.extr_henv.cstrs } in
   { env with extr_henv = henv }
 
@@ -397,7 +398,7 @@ let complete_fun_with_option env f =
         match ty with
         | _, Some ctyp ->
           let ctyp = Some (mkApp (opt, [|ctyp|])) in
-          let typ = (CTSum [Id.of_string "Some"; Id.of_string "None"], 
+          let typ = (CTSum [get_id_Some (); get_id_None ()], 
             ctyp) in
           MLTASome (lterm, ty), typ
         | _ -> assert false
@@ -407,7 +408,7 @@ let complete_fun_with_option env f =
 
      let opt = find_coq_constr_s "Corelib.Init.Datatypes.option" in
      let ctyp = Some (mkApp (opt, [|ctyp|])) in
-     let typ = (CTSum [Id.of_string "Some"; Id.of_string "None"], ctyp) in
+     let typ = (CTSum [get_id_Some (); get_id_None ()], ctyp) in
      MLTMatch ((MLTFun(i,args,m), typ), an,
        List.map (fun (p, t, an) -> match p with
          | MLPWild, _ -> p, cfwo_rec t, an
@@ -432,7 +433,7 @@ let add_ml_counter env f =
   let fname = f.mlfun_name in
   let (mlt, typ) = f.mlfun_body in
   let coq_nat = Some (find_coq_constr_s "Corelib.Init.Datatypes.nat") in
-  let nat_typ = CTSum [Id.of_string "O"; Id.of_string "S"], coq_nat in
+  let nat_typ = CTSum [get_id_O (); get_id_S ()], coq_nat in
   let fcount_id = fresh_id "fcounter" in
   let fcount = MLTVar fcount_id, nat_typ in
   let fcount_pat = MLPVar fcount_id, nat_typ in
@@ -455,9 +456,9 @@ let add_ml_counter env f =
     | _ -> mlt, typ in
   let mlt', args' = match fix_get_recursion_style env fname with 
     | FixCount -> let ptal = [
-        ((MLPConstr (Id.of_string "O", []), nat_typ), 
-                (MLTConstr (Id.of_string "None", []), typ), []);
-        ((MLPConstr (Id.of_string "S", [fcount_pat]), nat_typ), 
+        ((MLPConstr (get_id_O (), []), nat_typ), 
+                (MLTConstr (get_id_None (), []), typ), []);
+        ((MLPConstr (get_id_S (), [fcount_pat]), nat_typ), 
                 (adapt_func_calls (mlt, typ)), [])
       ] in
       (MLTMatch (fcount, [], ptal), typ), fcount_id::f.mlfun_args

@@ -52,8 +52,8 @@ let rec find_func_name ind_ref modes = match modes with
 
 (* Main routine *)
 let extract_relation_common ord ind_ref modes =
-  (* Reset the created identifiers, to not be polluted by a previous run. *)
-  let () = reset_seen_id () in
+  (* Initialize identifiers for some Rocq constructors *)
+  let () = init_seen_id () in
   
   (* Initial henv *)
   let ind_refs, ind_grefs = List.split (List.map (fun (_, ind_ref, _, _) ->
@@ -111,6 +111,10 @@ let extract_relation_common ord ind_ref modes =
   (*Printf.eprintf "%s\n" (pp_extract_env env); *)
   let env = Pred.make_ml_funs env in
   (* Printf.eprintf "%s\n" *)
+
+  (* Reset the created identifiers, to not be polluted by a previous run. *)
+  let () = reset_seen_id () in
+  
   env
 
 let extract_relation_miniml ~opaque_access dep ord ind_ref modes =

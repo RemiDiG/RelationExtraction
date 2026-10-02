@@ -266,7 +266,7 @@ let rec build_premisse (env, id_spec) named_prod term =
         (fake_type env prem_term) with
         | [_, ty] -> ty
         | [] ->
-          (CTSum [Id.of_string "true"; Id.of_string "false"], 
+          (CTSum [get_id_true (); get_id_false ()], 
             Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
         | _ -> unknown_type env in
       (PMTerm ((prem_term, prem_term_type), Some (fresh_id "Pm")))::pred_terms, env
