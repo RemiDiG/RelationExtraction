@@ -37,7 +37,6 @@ exception RelationExtractionError of string
 type annot_atom = {
   pa_prop_name : Id.t;
   pa_prem_name : Name.t;
-  pa_renamings : (Name.t * Name.t) list; (* new & old variable name *)
 }
 
 (* An annot_atom for each constructor (of the Inductive). *)

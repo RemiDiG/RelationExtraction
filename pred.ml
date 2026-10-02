@@ -46,7 +46,6 @@ let flatmap f l = List.flatten ((List.map f) l)
 type annot_atom = {
   pa_prop_name : Id.t;
   pa_prem_name : Name.t;
-  pa_renamings : (Name.t * Name.t) list;
 }
 
 type pannot = annot_atom list
@@ -61,8 +60,7 @@ let option_name_to_id opt_name = match opt_name with
 
 let mk_an prop_name prem_name = 
   [{ pa_prop_name = prop_name; 
-     pa_prem_name = option_name_to_id prem_name; 
-     pa_renamings = [] }]
+     pa_prem_name = option_name_to_id prem_name; }]
 
 let an_add_prop an prop_name prem_name = (mk_an prop_name prem_name)@an
 
