@@ -344,10 +344,10 @@ let build_prop (env, id_spec) prop_name prop_type =
   let prems = List.map snd named_prems in
   let prems, env = build_prems (env, id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 
-    | Name id -> true, Name id
-    | Anonymous -> false, Anonymous) named_prod in (* TODO[29/09/2026] anonymous previously was "" *)
+    | Name id -> true, id
+    | Anonymous -> false, fresh_id "anon") named_prod in
   {
-    prop_name = Name prop_name;
+    prop_name = prop_name;
     prop_vars = vars;
     prop_prems = prems;
     prop_concl = concl

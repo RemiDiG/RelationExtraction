@@ -133,8 +133,8 @@ type 'htyp premisse =
 
 (* A property (or constructor) of a specification. *)
 type 'htyp property = {
-  prop_name : Name.t;
-  prop_vars : Name.t list;
+  prop_name : Id.t;
+  prop_vars : Id.t list;
   prop_prems : 'htyp premisse list;
   prop_concl : 'htyp ml_term;
 }

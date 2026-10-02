@@ -524,9 +524,7 @@ let rec get_pmterm_name_order pm = match pm with
 
 let get_init_prem_order (env, id) prop_name = 
   let spec = extr_get_spec env id in
-  let prop = List.find (fun prop -> match prop.prop_name with 
-    | Name pn -> pn = prop_name 
-    | Anonymous -> false) spec.spec_props in
+  let prop = List.find (fun prop -> prop.prop_name = prop_name) spec.spec_props in
   List.flatten (List.map get_pmterm_name_order prop.prop_prems)
   
 

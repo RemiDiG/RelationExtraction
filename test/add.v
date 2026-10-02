@@ -11,6 +11,7 @@ Inductive add : n -> n -> n -> Prop :=
 Axiom (H : Prop).  (* no bug if H not fresh *)
 Axiom (po : Prop). (* no bug if po not fresh *)
 Axiom (add12_correct : Prop).
+Axiom (true : Prop).
 (* Axiom (add12 : Prop). *) (* TODO bug if add12 not fresh *)
 
 Extraction Relation (add [1 2]).

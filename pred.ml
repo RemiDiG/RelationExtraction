@@ -216,8 +216,8 @@ type 'htyp premisse =
   | PMChoice of 'htyp premisse list * Id.t option
 
 type 'htyp property = {
-  prop_name : Name.t;
-  prop_vars : Name.t list;
+  prop_name : Id.t;
+  prop_vars : Id.t list;
   prop_prems : 'htyp premisse list;
   prop_concl : 'htyp ml_term;
 }
@@ -235,12 +235,11 @@ let rec pp_premisse prem = match prem with
   | PMAnd (pml, _) -> "(" ^ concat_list (List.map pp_premisse pml) " && " ^ ")"
   | PMChoice (pml, _) -> "(" ^ concat_list (List.map pp_premisse pml) " | " ^ ")"
 
-let pp_property prop = begin match prop.prop_name with
-    | Anonymous -> ""
-    | Name i -> Id.to_string i ^ ": " end ^ 
+let pp_property prop =
+  Id.to_string prop.prop_name ^ ": " ^ 
   begin match prop.prop_vars with 
     | [] -> ""
-    | _ -> "\\-∕ " ^ concat_list (List.map name_to_string prop.prop_vars) " " ^ 
+    | _ -> "\\-∕ " ^ concat_list (List.map Id.to_string prop.prop_vars) " " ^ 
       ": " end ^
   begin match prop.prop_prems with
     | [] -> ""
@@ -784,9 +783,9 @@ then
   try let (nt, prop) = match tnl with (* rename inputs (matching term) *)
     | tn::_ -> rename_inputs_if_possible env nt tn prop
     | [] -> (nt, prop) in
-  let tn = TreeOutput (nt, prop.prop_concl, mk_an (name_to_option_id prop.prop_name) pm_n, kv) in (*cath*)
+  let tn = TreeOutput (nt, prop.prop_concl, mk_an (Some prop.prop_name) pm_n, kv) in (*cath*)
   let rec io_rec tnl = match tnl with (* try to insert tn in the right place *)
-    | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an (name_to_option_id prop.prop_name) pm_n, kv)]] (*cath*)
+    | [] -> [[TreeOutput (nt, prop.prop_concl, mk_an (Some prop.prop_name) pm_n, kv)]] (*cath*)
       (* we can always insert at the end because 
                                         all the tests have been done before *)
     | ((TreeOutput (nti, _, _, _) | (TreeNode (nti, _, _, _))) as tni)::tntl -> (*cath*)
@@ -813,7 +812,7 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
     match tnl_acc with
       | [] -> (* no matching nt, insert alone *)
         let kv' = mca_add_vars env kv nt in
-        List.map (fun nchild -> [TreeNode (nt, nchild, mk_an (name_to_option_id prop.prop_name) pm_n, kv)]) (*cath*)
+        List.map (fun nchild -> [TreeNode (nt, nchild, mk_an (Some prop.prop_name) pm_n, kv)]) (*cath*)
           (choose_prop_prem env id_spec prem_selector kv' prop [])
       | (TreeNode (nti, child, ani, _) as tni)::acc_tail -> (*cath*)
         if nt_partial_ordering env id_spec nti nt then
@@ -827,13 +826,13 @@ let rec insertion_recursor env id_spec prem_selector pm_n prop kv nt tnl =
           (* nt can be inserted alone, before tni *)
           let kv' = mca_add_vars env kv nt in
           List.map ( fun nchild -> 
-              (TreeNode (nt, nchild, mk_an (name_to_option_id prop.prop_name) pm_n, kv))::tnl_acc ) (*cath*)
+              (TreeNode (nt, nchild, mk_an (Some prop.prop_name) pm_n, kv))::tnl_acc ) (*cath*)
             (choose_prop_prem env id_spec prem_selector kv' prop [])
         else (* try to insert nt into tni *)
         ( try let rnt, rprop = rename_outputs_if_possible env nt tni prop in
           let kv' = mca_add_vars env kv rnt in
           List.map ( fun nchild -> 
-              (TreeNode (nti, nchild, an_add_prop ani (name_to_option_id prop.prop_name) pm_n, kv)):: (*cath*)
+              (TreeNode (nti, nchild, an_add_prop ani (Some prop.prop_name) pm_n, kv)):: (*cath*)
                 acc_tail )
             (choose_prop_prem env id_spec prem_selector kv' rprop child)
          with Impossible -> [])
@@ -903,12 +902,12 @@ let tree_from_spec env prem_selector id_spec =
   let trees = List.fold_left (fun tree_list prop -> 
     match tree_list with
     | [] -> begin match insert_prop_concl env id_spec prem_selector prop [] with
-              | [] -> raise (RelationExtractionProp (name_to_option_id prop.prop_name, ""))
+              | [] -> raise (RelationExtractionProp (Some prop.prop_name, ""))
               | l -> l
             end
     | _ -> begin match flatmap 
            (insert_prop_concl env id_spec prem_selector prop) tree_list with
-        | [] -> raise (RelationExtractionProp (name_to_option_id prop.prop_name, ""))
+        | [] -> raise (RelationExtractionProp (Some prop.prop_name, ""))
         | l -> l
       end
   ) [] spec.spec_props in
@@ -1062,7 +1061,7 @@ let code_from_tree env id_tree tree =
   let args_types = select_args_types pred_args_types mode in
   let fun_id = get_pred_name env id_tree mode in
   let pats = List.map (gen_pat env id_tree) tree in
-  let an = flatmap (fun p -> mk_an (name_to_option_id p.prop_name) None) spec.spec_props in
+  let an = flatmap (fun p -> mk_an (Some p.prop_name) None) spec.spec_props in
   {
     mlfun_name = fun_id;
     mlfun_args = args;
