@@ -132,7 +132,7 @@ and gen_term (env, id_spec) default bind (t,_) = match t with
     MLcons (Tglob (ref, []), ref, List.map (gen_term (env, id_spec) default bind) tl)
   | MLTConst id ->
     let s = Id.to_string id in
-    let ref,_ = try let i = String.rindex s '#' in
+    let ref, _ = try let i = String.rindex s '#' in
         let n_name = String.sub s (i+1) (String.length s - i - 1) in
         mk_dummy_glb (env, id_spec) (Id.of_string n_name)
       with Not_found | Invalid_argument _ ->

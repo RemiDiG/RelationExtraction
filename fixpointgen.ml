@@ -21,6 +21,7 @@
 (****************************************************************************)
 
 (* Internal dependencies *)
+open Ident
 open Pred
 open Coq_stuff
 open Proofgen
@@ -72,12 +73,12 @@ let _extract_type_from_option ctyp = match Constr.kind ctyp with
 (* Generates a Coq Constr. *)
 let rec gen_constr (env, id) (fn: Id.t) (bind: Id.t list) (fterm,_) = match fterm with
   | FixVar i -> mkRel (Minimlgen.get_rel i bind)
-  | FixConstr (i, [t,(ty,Some cty)]) when Id.to_string i = "Some" -> 
+  | FixConstr (i, [t,(ty,Some cty)]) when i = get_id_Some () -> 
     let some = find_coq_constr_s "Corelib.Init.Datatypes.Some" in
     let args = Array.of_list 
       [cty ; (gen_constr (env, id) fn bind (t,(ty,Some cty)))] in
     mkApp (some, args)
-  | FixConstr (i, []) when Id.to_string i = "None" -> 
+  | FixConstr (i, []) when i = get_id_None () -> 
     let none = find_coq_constr_s "Corelib.Init.Datatypes.None" in
     let args = Array.of_list 
       [(* debug TODO: not always out_type ?*) get_out_type false (env, id)] in
