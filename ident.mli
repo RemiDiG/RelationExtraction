@@ -35,8 +35,6 @@ val reset_seen_id : unit -> unit
 val init_seen_id : unit -> unit
 (* Name to string, with the empty string "" for Anonymous*)
 val name_to_string : Name.t -> string
-(* Turn a Name into an option of Id *)
-val name_to_option_id : Name.t -> Id.t option
 
 (* Get identifiers for Rocq's contructors *)
 val get_id_O : unit -> Id.t

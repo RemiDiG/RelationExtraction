@@ -46,12 +46,6 @@ let name_to_string (n : Name.t) : string =
   | Anonymous -> ""
   | Name id -> Id.to_string id
 
-(* TODO[29/09/2026] Use Name instead of option?? *)
-let name_to_option_id (n : Name.t) : Id.t option =
-  match n with
-  | Anonymous -> None
-  | Name i -> Some i
-
 (* Identifiers for Rocq's constructors *)
 (* TODO[02/10/2026] Use Rocq.lib_ref instead *)
 let id_O = ref (Id.of_string "bug")
