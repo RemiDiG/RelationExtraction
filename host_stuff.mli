@@ -20,26 +20,27 @@
 (*                 Pierre-Nicolas Tollitte <tollitte@ensiie.fr>             *)
 (****************************************************************************)
 
-(* Host is the host language (Coq or Focalize). In order to generate 
-   functions, we need to keep information from these languages. Some part 
+(* Rocq dependencies *)
+open Names
+
+(* Host is the host language, Rocq. In order to generate 
+   functions, we need to keep information from this language. Some part 
    (mostly typing information) is kept into the AST we manipulate by compiling 
    the predicates and the remaining part is kept into an host environment. 
 *)
 
-(* Type information for a term. This is kept into the AST. *)
-type 'htyp host_term_type = 'htyp
-val th : 'htyp -> 'htyp host_term_type
-val ht : 'htyp host_term_type -> 'htyp
+(* Host types. Type information for a term. This is kept into the AST. *)
+type host_term_type = Constr.types option
 
-(* Environment for host stuff. *)
-type 'henv host_env = 'henv
-val he : 'henv -> 'henv host_env
-val eh : 'henv host_env -> 'henv
-
-(* Functions for host langage manipulations. *)
-type ('htyp, 'henv) host_functions = {
-  h_get_fake_type : unit -> 'htyp host_term_type;
-  h_get_bool_type : unit -> string list * 'htyp host_term_type;
+(* Host environment. *)
+type host_env = {
+  ind_refs : (Id.t * Libnames.qualid) list;
+  ind_grefs : (Id.t * Names.GlobRef.t) list;
+  cstrs : (Id.t * Constr.constr) list;
 }
 
-
+(* Functions for host langage manipulations. *)
+type host_functions = {
+  h_get_fake_type : unit -> host_term_type;
+  h_get_bool_type : unit -> string list * host_term_type;
+}

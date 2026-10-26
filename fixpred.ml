@@ -21,6 +21,7 @@
 (****************************************************************************)
 
 (* Internal dependencies *)
+open Host_stuff
 open Ident
 open Proof_scheme
 open Pred

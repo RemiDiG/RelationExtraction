@@ -28,10 +28,10 @@ open Pred
 open Names
 
 (* Functions to manipulate Coq data. *)
-val coq_functions : (htyp, henv) host_functions
+val coq_functions : host_functions
 
 (* Extraction of dependencies *)
-val extract_dependencies : opaque_access:Global.indirect_accessor -> henv -> unit
+val extract_dependencies : opaque_access:Global.indirect_accessor -> host_env -> unit
 
 (*********)
 (* Utils *)

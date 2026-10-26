@@ -71,21 +71,11 @@ let an_add_prop an prop_name prem_name = (mk_an prop_name prem_name)@an
 (* Types *)
 (*********)
 
-(* htyp & henv *)
-
-type htyp = Constr.types option
-
-type henv = {
-  ind_refs : (Id.t * Libnames.qualid) list;
-  ind_grefs : (Id.t * Names.GlobRef.t) list;
-  cstrs : (Id.t * Constr.constr) list;
-}
-
 type clear_type = 
   | CTTuple of clear_type list
   | CTSum of Id.t list
   | CTNone
-type term_type = (clear_type * htyp host_term_type)
+type term_type = (clear_type * host_term_type)
 type 't typed = ('t * term_type)
 
 let rec pp_clear_type t = match t with
@@ -369,8 +359,8 @@ type extract_env = {
   extr_trees : (Id.t * tree) list;
   extr_mlfuns : (Id.t * ml_fun) list;
   extr_fixfuns : (Id.t * (fix_fun * fix_term proof_scheme)) list;
-  extr_henv : henv host_env;
-  extr_hf : (htyp, henv) host_functions;
+  extr_henv : host_env;
+  extr_hf : host_functions;
   extr_fix_env : ((Id.t * Id.t) * (bool * recursion_style)) list;
 }
 

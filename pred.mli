@@ -47,22 +47,12 @@ type pannot = annot_atom list
 (* Types *)
 (*********)
 
-(* Coq types. *)
-type htyp = Constr.types option
-
-(* Coq environment. *)
-type henv = {
-  ind_refs : (Id.t * Libnames.qualid) list;
-  ind_grefs : (Id.t * Names.GlobRef.t) list;
-  cstrs : (Id.t * Constr.constr) list;
-}
-
 (* Generic type of a term *)
 type clear_type = 
   | CTTuple of clear_type list (* Types of tuple's elements. *)
   | CTSum of Id.t list (* List of constructors of a sum type. *)
   | CTNone (* No type information. *)
-type term_type = (clear_type * htyp host_term_type)
+type term_type = (clear_type * host_term_type)
 type 't typed = ('t * term_type)
 
 
@@ -262,9 +252,9 @@ type extract_env = {
   (* List of fix functions compiled from the ml functions. *)
   extr_fixfuns : (Id.t * (fix_fun * fix_term proof_scheme)) list;
   (* Environment for the host language stuff. *)
-  extr_henv : henv host_env;
+  extr_henv : host_env;
   (* Functions for the host language stuff. *)
-  extr_hf : (htyp, henv) host_functions;
+  extr_hf : host_functions;
   (* Info for fixpoints generation. Ids are the spec id & the fun name. *)
   (* bool : has the function been completed with option type? This can be 
             because the function is incomplete or the recursion kind is
