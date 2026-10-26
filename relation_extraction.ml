@@ -131,33 +131,25 @@ let extract_relation_miniml ~opaque_access dep ord ind_ref modes =
   let () = if dep then extract_dependencies ~opaque_access:opaque_access env.extr_henv else () in
   Minimlgen.gen_miniml env
 
-let relation_extraction_single ~opaque_access modes =
+let relation_extraction_single_bool (b : bool) ~opaque_access modes =
   let (_, ind_ref, _, _) = List.hd modes in
-  extract_relation_miniml ~opaque_access:opaque_access false false [ind_ref] modes
+  extract_relation_miniml ~opaque_access:opaque_access false b [ind_ref] modes
+let relation_extraction_single = relation_extraction_single_bool false
+let relation_extraction_single_order = relation_extraction_single_bool true
 
-let relation_extraction_single_order ~opaque_access modes =
-  let (_, ind_ref, _, _) = List.hd modes in
-  extract_relation_miniml ~opaque_access:opaque_access false true [ind_ref] modes
-
-let relation_extraction ~opaque_access modes =
+let relation_extraction_bool (b : bool) ~opaque_access modes =
   let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  extract_relation_miniml ~opaque_access:opaque_access true false ind_refs modes
+  extract_relation_miniml ~opaque_access:opaque_access true b ind_refs modes
+let relation_extraction = relation_extraction_bool false
+let relation_extraction_order = relation_extraction_bool true
 
-let relation_extraction_order ~opaque_access modes =
+let relation_extraction_fixpoint_bool (b : bool) modes =
   let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  extract_relation_miniml ~opaque_access:opaque_access true true ind_refs modes
-
-let relation_extraction_fixpoint modes =
-  let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  let env = extract_relation_common false ind_refs modes in
+  let env = extract_relation_common b ind_refs modes in
   let env = build_all_fixfuns env in
   gen_fixpoint env
-
-let relation_extraction_fixpoint_order modes =
-  let ind_refs = List.map (fun (_, ind_ref, _, _) -> ind_ref) modes in
-  let env = extract_relation_common true ind_refs modes in
-  let env = build_all_fixfuns env in
-  gen_fixpoint env
+let relation_extraction_fixpoint = relation_extraction_fixpoint_bool false
+let relation_extraction_fixpoint_order = relation_extraction_fixpoint_bool true
 
 (* DEBUG HINT: Displaying a constant idr:
 let cstr = constr_of_global (global idr) in
