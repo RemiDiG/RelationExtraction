@@ -43,5 +43,5 @@ type host_env = {
 }
 
 (* Functions for host langage manipulations. *)
-let coq_get_fake_type () = None
-let coq_get_bool_type () = (["true"; "false"], Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
+let rocq_get_fake_type () = None
+let rocq_get_bool_type () = (["true"; "false"], Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))

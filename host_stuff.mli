@@ -44,5 +44,5 @@ type host_env = {
 }
 
 (* Functions to manipulate Rocq data. *)
-val coq_get_fake_type : unit -> host_term_type
-val coq_get_bool_type : unit -> string list * host_term_type
+val rocq_get_fake_type : unit -> host_term_type
+val rocq_get_bool_type : unit -> string list * host_term_type
