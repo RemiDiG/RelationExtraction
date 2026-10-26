@@ -23,12 +23,6 @@
 (* Internal dependencies *)
 open Pred
 
-(* Rocq dependencies *)
-open Constr
-
 (* Generates Coq Fixpoints and register them in the Coq environment. *)
-val gen_fixpoint :
-  (constr option Host_stuff.host_term_type Host_stuff.host_term_type,
-  henv Host_stuff.host_env Host_stuff.host_env) extract_env 
-   -> unit
+val gen_fixpoint : extract_env -> unit
 

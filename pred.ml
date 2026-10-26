@@ -71,12 +71,22 @@ let an_add_prop an prop_name prem_name = (mk_an prop_name prem_name)@an
 (* Types *)
 (*********)
 
+(* htyp & henv *)
+
+type htyp = Constr.types option
+
+type henv = {
+  ind_refs : (Id.t * Libnames.qualid) list;
+  ind_grefs : (Id.t * Names.GlobRef.t) list;
+  cstrs : (Id.t * Constr.constr) list;
+}
+
 type clear_type = 
   | CTTuple of clear_type list
   | CTSum of Id.t list
   | CTNone
-type 'htyp term_type = (clear_type * 'htyp host_term_type)
-type ('t, 'htyp) typed = ('t * 'htyp term_type)
+type term_type = (clear_type * htyp host_term_type)
+type 't typed = ('t * term_type)
 
 let rec pp_clear_type t = match t with
   | CTTuple ctl -> "(" ^ concat_list (List.map pp_clear_type ctl) ", " ^ ")"
@@ -90,16 +100,16 @@ let pp_term_type (ct, _) = pp_clear_type ct
 (* ML Terms *)
 (************)
 
-type 'htyp untyped_ml_pat =
+type untyped_ml_pat =
   | MLPVar of Id.t
-  | MLPTuple of 'htyp ml_pat list
-  | MLPRecord of Id.t list * 'htyp ml_pat list
-  | MLPConstr of Id.t * 'htyp ml_pat list
+  | MLPTuple of ml_pat list
+  | MLPRecord of Id.t list * ml_pat list
+  | MLPConstr of Id.t * ml_pat list
   | MLPConst of Id.t
   | MLPWild
   | MLPATrue | MLPAFalse
-  | MLPASome of 'htyp ml_pat | MLPANone
-and 'htyp ml_pat = ('htyp untyped_ml_pat, 'htyp) typed
+  | MLPASome of ml_pat | MLPANone
+and ml_pat = untyped_ml_pat typed
 
 type mode_option = 
   | MInput
@@ -124,21 +134,21 @@ let string_of_mode_full mode =
     | MSkip::tl_mode -> rec_som tl_mode i in
   rec_som mode 1
 
-type 'htyp untyped_ml_term =
+type untyped_ml_term =
   | MLTVar of Id.t
-  | MLTTuple of 'htyp ml_term list
-  | MLTRecord of Id.t list * 'htyp ml_term list
-  | MLTConstr of Id.t * 'htyp ml_term list
+  | MLTTuple of ml_term list
+  | MLTRecord of Id.t list * ml_term list
+  | MLTConstr of Id.t * ml_term list
   | MLTConst of Id.t
-  | MLTFun of Id.t * 'htyp ml_term list * mode option
-  | MLTFunNot of Id.t * 'htyp ml_term list * mode option
-  | MLTMatch of 'htyp ml_term * pannot * 
-    ('htyp ml_pat * 'htyp ml_term * pannot) list
-  | MLTALin of ('htyp ml_term * 'htyp ml_term) list
+  | MLTFun of Id.t * ml_term list * mode option
+  | MLTFunNot of Id.t * ml_term list * mode option
+  | MLTMatch of ml_term * pannot * 
+    (ml_pat * ml_term * pannot) list
+  | MLTALin of (ml_term * ml_term) list
   | MLTATrue | MLTAFalse
-  | MLTASome of 'htyp ml_term | MLTANone
+  | MLTASome of ml_term | MLTANone
   | MLTADefault
-and 'htyp ml_term = ('htyp untyped_ml_term, 'htyp) typed
+and ml_term = untyped_ml_term typed
 
 let rec pp_untyped_ml_pat pat : string = match pat with
   | MLPVar i -> Id.to_string i
@@ -196,24 +206,24 @@ let pp_ml_term t = pp_ml_term_aux "" t
 (* Specifications *)
 (******************)
 
-type 'htyp premisse =
-  | PMTerm of 'htyp ml_term * Id.t option
-  | PMNot of 'htyp premisse * Id.t option
-  | PMOr of 'htyp premisse list * Id.t option
-  | PMAnd of 'htyp premisse list * Id.t option
-  | PMChoice of 'htyp premisse list * Id.t option
+type premisse =
+  | PMTerm of ml_term * Id.t option
+  | PMNot of premisse * Id.t option
+  | PMOr of premisse list * Id.t option
+  | PMAnd of premisse list * Id.t option
+  | PMChoice of premisse list * Id.t option
 
-type 'htyp property = {
+type property = {
   prop_name : Id.t;
   prop_vars : Id.t list;
-  prop_prems : 'htyp premisse list;
-  prop_concl : 'htyp ml_term;
+  prop_prems : premisse list;
+  prop_concl : ml_term;
 }
 
-type 'htyp spec = {
+type spec = {
   spec_name : Id.t;
-  spec_args_types : 'htyp term_type list;
-  spec_props : 'htyp property list;
+  spec_args_types : term_type list;
+  spec_props : property list;
 } 
 
 let rec pp_premisse prem = match prem with
@@ -244,10 +254,10 @@ let pp_spec spec = "Specification " ^ Id.to_string spec.spec_name ^ ": " ^
 (* ML functions *)
 (****************)
 
-type 'htyp ml_fun = {
+type ml_fun = {
   mlfun_name : Id.t;
   mlfun_args : Id.t list;
-  mlfun_body : 'htyp ml_term;
+  mlfun_body : ml_term;
 }
 
 let pp_ml_fun f =
@@ -259,26 +269,26 @@ let pp_ml_fun f =
 (* Fix functions *)
 (*****************)
 
-type 'htyp fix_untyped_term =
+type fix_untyped_term =
   | FixVar of Id.t
 (*  | FixRecord of Id.t list * fix_term list*)
-  | FixConstr of Id.t * 'htyp fix_term list
+  | FixConstr of Id.t * fix_term list
   | FixConst of Id.t
-  | FixFun of Id.t * 'htyp fix_term list
-  | FixFunNot of Id.t * 'htyp fix_term list
-  | FixCase of 'htyp fix_term * pannot * 
-      (Id.t list * 'htyp fix_term * pannot) list
-  | FixLetin of Id.t * 'htyp fix_term * 'htyp fix_term * pannot
-  | FixSome of 'htyp fix_term
+  | FixFun of Id.t * fix_term list
+  | FixFunNot of Id.t * fix_term list
+  | FixCase of fix_term * pannot * 
+      (Id.t list * fix_term * pannot) list
+  | FixLetin of Id.t * fix_term * fix_term * pannot
+  | FixSome of fix_term
   | FixNone
   | FixTrue 
   | FixFalse 
-and 'htyp fix_term = ('htyp fix_untyped_term, 'htyp) typed
+and fix_term = fix_untyped_term typed
 
-type 'htyp fix_fun = {
+type fix_fun = {
   fixfun_name : Id.t;
   fixfun_args : Id.t list;
-  fixfun_body : 'htyp fix_term;
+  fixfun_body : fix_term;
 }
 
 let rec pp_fix_untyped_term inc t = match t with
@@ -318,17 +328,17 @@ let pp_fix_fun fixfun =
 (*********)
 
 (* Tree node content *)
-type 'htyp node_type =
-  | NTPrem of 'htyp ml_term
-  | NTConcl of 'htyp ml_term
+type node_type =
+  | NTPrem of ml_term
+  | NTConcl of ml_term
 
 (* Tree structure *)
-type 'htyp tree_node =
-  | TreeNode of ('htyp node_type * 'htyp tree_node list * pannot * Id.t list) (*ajout de kv cath*)
-  | TreeOutput of ('htyp node_type * 'htyp ml_term * pannot * Id.t list) (*ajout de kv cath*) 
+type tree_node =
+  | TreeNode of (node_type * tree_node list * pannot * Id.t list) (*ajout de kv cath*)
+  | TreeOutput of (node_type * ml_term * pannot * Id.t list) (*ajout de kv cath*) 
                                (* ml_term is a conclusion *)
 
-type 'htyp tree = 'htyp tree_node list
+type tree = tree_node list
 
 let pp_node_type nt = match nt with
   | NTPrem mlt -> pp_ml_term mlt
@@ -352,15 +362,15 @@ type recursion_style =
   | StructRec of int
   | FixCount
 
-type ('htyp, 'henv) extract_env = {
+type extract_env = {
   extr_modes : (Id.t * mode list) list;
   extr_extractions : (Id.t * (Id.t option * bool * recursion_style option)) list;
-  extr_specs : (Id.t * 'htyp spec) list;
-  extr_trees : (Id.t * 'htyp tree) list;
-  extr_mlfuns : (Id.t * 'htyp ml_fun) list;
-  extr_fixfuns : (Id.t * ('htyp fix_fun * ('htyp fix_term) proof_scheme)) list;
-  extr_henv : 'henv host_env;
-  extr_hf : ('htyp, 'henv) host_functions;
+  extr_specs : (Id.t * spec) list;
+  extr_trees : (Id.t * tree) list;
+  extr_mlfuns : (Id.t * ml_fun) list;
+  extr_fixfuns : (Id.t * (fix_fun * fix_term proof_scheme)) list;
+  extr_henv : henv host_env;
+  extr_hf : (htyp, henv) host_functions;
   extr_fix_env : ((Id.t * Id.t) * (bool * recursion_style)) list;
 }
 
@@ -1024,16 +1034,3 @@ let make_ml_funs env =
   let ml_funs = List.map ( fun (id_tree, tree) ->
     id_tree, code_from_tree env id_tree tree ) env.extr_trees in
   { env with extr_mlfuns = ml_funs }
-
-
-(* htyp & henv *)
-
-type htyp = Constr.types option
-
-type henv = {
-  ind_refs : (Id.t * Libnames.qualid) list;
-  ind_grefs : (Id.t * Names.GlobRef.t) list;
-  cstrs : (Id.t * Constr.constr) list;
-}
-
-(* TODO specialize previous types htyp and henv? *)

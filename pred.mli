@@ -47,13 +47,23 @@ type pannot = annot_atom list
 (* Types *)
 (*********)
 
+(* Coq types. *)
+type htyp = Constr.types option
+
+(* Coq environment. *)
+type henv = {
+  ind_refs : (Id.t * Libnames.qualid) list;
+  ind_grefs : (Id.t * Names.GlobRef.t) list;
+  cstrs : (Id.t * Constr.constr) list;
+}
+
 (* Generic type of a term *)
 type clear_type = 
   | CTTuple of clear_type list (* Types of tuple's elements. *)
   | CTSum of Id.t list (* List of constructors of a sum type. *)
   | CTNone (* No type information. *)
-type 'htyp term_type = (clear_type * 'htyp host_term_type)
-type ('t, 'htyp) typed = ('t * 'htyp term_type)
+type term_type = (clear_type * htyp host_term_type)
+type 't typed = ('t * term_type)
 
 
 (************)
@@ -67,12 +77,12 @@ type mode_option =
   | MSkip (* used for host language stuff, must be ignored *)
 type mode = mode_option list
 
-type 'htyp untyped_ml_pat =
+type untyped_ml_pat =
 (* Standard constructions *)
   | MLPVar of Id.t
-  | MLPTuple of 'htyp ml_pat list
-  | MLPRecord of Id.t list * 'htyp ml_pat list
-  | MLPConstr of Id.t * 'htyp ml_pat list
+  | MLPTuple of ml_pat list
+  | MLPRecord of Id.t list * ml_pat list
+  | MLPConstr of Id.t * ml_pat list
   | MLPConst of Id.t
   | MLPWild
 
@@ -80,41 +90,41 @@ type 'htyp untyped_ml_pat =
   (* Used for linearization. *)
   | MLPATrue | MLPAFalse
   (* Used by the fixpred library. *)
-  | MLPASome of 'htyp ml_pat | MLPANone
-and 'htyp ml_pat = ('htyp untyped_ml_pat, 'htyp) typed
+  | MLPASome of ml_pat | MLPANone
+and ml_pat = untyped_ml_pat typed
 
-type 'htyp untyped_ml_term =
+type untyped_ml_term =
 (* -- Begin: used by the specification -- *)
   | MLTVar of Id.t
-  | MLTTuple of 'htyp ml_term list
-  | MLTRecord of Id.t list * 'htyp ml_term list
-  | MLTConstr of Id.t * 'htyp ml_term list
+  | MLTTuple of ml_term list
+  | MLTRecord of Id.t list * ml_term list
+  | MLTConstr of Id.t * ml_term list
   | MLTConst of Id.t
-  | MLTFun of Id.t * 'htyp ml_term list * mode option
-  | MLTFunNot of Id.t * 'htyp ml_term list * mode option
+  | MLTFun of Id.t * ml_term list * mode option
+  | MLTFunNot of Id.t * ml_term list * mode option
     (* MLTFun can be used to store function or inductive relations
        The "mode option" must be None for function and Some (...) for 
        predicates. *)
 (* -- End: used by the specification -- *)
-  | MLTMatch of 'htyp ml_term * pannot * 
-    ('htyp ml_pat * 'htyp ml_term * pannot) list
+  | MLTMatch of ml_term * pannot * 
+    (ml_pat * ml_term * pannot) list
 
 (* Additionnal stuff *)
   (* Used for linearization. ml_terms are always variables. *)
-  | MLTALin of ('htyp ml_term * 'htyp ml_term) list
+  | MLTALin of (ml_term * ml_term) list
   (* Output of a complete extraction (only LTrue is used) : *)
   | MLTATrue | MLTAFalse
   (* Used by the fixpred library. *)
-  | MLTASome of 'htyp ml_term | MLTANone
+  | MLTASome of ml_term | MLTANone
   (* Default case in pattern matching *)
   | MLTADefault
-and 'htyp ml_term = ('htyp untyped_ml_term, 'htyp) typed
+and ml_term = untyped_ml_term typed
 
 (* Pretty printer *)
-val pp_ml_term : 'htyp ml_term -> string
+val pp_ml_term : ml_term -> string
 (*DEBUG*)
-val pp_ml_pat : 'htyp ml_pat -> string
-val pp_ml_untyped_term : string -> 'htyp untyped_ml_term -> string
+val pp_ml_pat : ml_pat -> string
+val pp_ml_untyped_term : string -> untyped_ml_term -> string
 
 
 (******************)
@@ -122,30 +132,30 @@ val pp_ml_untyped_term : string -> 'htyp untyped_ml_term -> string
 (******************)
 
 (* A premisse in a property (or constructor) of a specification. *)
-type 'htyp premisse =
-  | PMTerm of 'htyp ml_term * Id.t option
-  | PMNot of 'htyp premisse * Id.t option
-  | PMOr of 'htyp premisse list * Id.t option
-  | PMAnd of 'htyp premisse list * Id.t option
-  | PMChoice of 'htyp premisse list * Id.t option
+type premisse =
+  | PMTerm of ml_term * Id.t option
+  | PMNot of premisse * Id.t option
+  | PMOr of premisse list * Id.t option
+  | PMAnd of premisse list * Id.t option
+  | PMChoice of premisse list * Id.t option
 (* The ident is used to tag premisses and follow them. *)
 
 (* A property (or constructor) of a specification. *)
-type 'htyp property = {
+type property = {
   prop_name : Id.t;
   prop_vars : Id.t list;
-  prop_prems : 'htyp premisse list;
-  prop_concl : 'htyp ml_term;
+  prop_prems : premisse list;
+  prop_concl : ml_term;
 }
 
 (* Type of a specification. *)
-type 'htyp spec = {
+type spec = {
   spec_name : Id.t;
-  spec_args_types : 'htyp term_type list;
-  spec_props : 'htyp property list;
+  spec_args_types : term_type list;
+  spec_props : property list;
 } 
 
-val pp_spec : 'htyp spec -> string
+val pp_spec : spec -> string
 
 (* Finds a premisse or a term from the premisse id (may raise Not_found if the
    premisse does not exists or if it is not a term). *)
@@ -158,51 +168,51 @@ val find_prem_term_by_name : 'htyp spec -> ident -> 'htyp ml_term *)
 (****************)
 
 (* A function in the ML-like intermediate language. *)
-type 'htyp ml_fun = {
+type ml_fun = {
   mlfun_name : Id.t;
   mlfun_args : Id.t list;
-  mlfun_body : 'htyp ml_term;
+  mlfun_body : ml_term;
 }
 
 (* Pretty printer *)
-val pp_ml_fun : 'htyp ml_fun -> string
+val pp_ml_fun : ml_fun -> string
 
 
 (*****************)
 (* Fix functions *)
 (*****************)
 
-type 'htyp fix_untyped_term =
+type fix_untyped_term =
 (* Standard constructions. *)
   | FixVar of Id.t
 (*  | FixRecord of ident list * fix_term list*)
-  | FixConstr of Id.t * 'htyp fix_term list
+  | FixConstr of Id.t * fix_term list
   | FixConst of Id.t
-  | FixFun of Id.t * 'htyp fix_term list
-  | FixFunNot of Id.t * 'htyp fix_term list
-  | FixCase of 'htyp fix_term * pannot * 
-               (Id.t list * 'htyp fix_term * pannot) list
-  | FixLetin of Id.t * 'htyp fix_term * 'htyp fix_term * pannot
+  | FixFun of Id.t * fix_term list
+  | FixFunNot of Id.t * fix_term list
+  | FixCase of fix_term * pannot * 
+               (Id.t list * fix_term * pannot) list
+  | FixLetin of Id.t * fix_term * fix_term * pannot
 (* In letin, pannot contains props concerned by the letin,
    in match it contains props concerned by the pattern matching,
    in patterns, it contains the list of active props (props that can still
    appear in the output. *)
 
 (* To be converted as standard constructions. *)
-  | FixSome of 'htyp fix_term
+  | FixSome of fix_term
   | FixNone
   | FixTrue 
   | FixFalse 
-and 'htyp fix_term = ('htyp fix_untyped_term, 'htyp) typed
+and fix_term = fix_untyped_term typed
 
-type 'htyp fix_fun = {
+type fix_fun = {
   fixfun_name : Id.t;
   fixfun_args : Id.t list;
-  fixfun_body : 'htyp fix_term;
+  fixfun_body : fix_term;
 }
 
-val pp_fix_term : 'htyp fix_term -> string
-val pp_fix_fun : 'htyp fix_fun -> string
+val pp_fix_term : fix_term -> string
+val pp_fix_fun : fix_fun -> string
 
 
 (*********)
@@ -211,10 +221,10 @@ val pp_fix_fun : 'htyp fix_fun -> string
 
 (* Predicate tree. Used to represent an inductive predicate before the code
    generation. *)
-type 'htyp tree
+type tree
 
 (* Pretty printer *)
-val pp_tree : 'htyp tree -> string
+val pp_tree : tree -> string
 
 
 (**************)
@@ -231,7 +241,7 @@ type recursion_style =
    One function or several mutualy recursive functions can be extracted.
    The mode of some other predicates can be given but they wont be extracted.
 *)
-type ('htyp, 'henv) extract_env = {
+type extract_env = {
   (* List of modes given of every predicates. If a predicate is not present in
      this list, we assume that it is already extracted in full mode. *)
   extr_modes : (Id.t * mode list) list;
@@ -244,17 +254,17 @@ type ('htyp, 'henv) extract_env = {
   extr_extractions : (Id.t * (Id.t option * bool * recursion_style option)) 
                                                                            list;
   (* List of specification of the extracted predicates. *)
-  extr_specs : (Id.t * 'htyp spec) list;
+  extr_specs : (Id.t * spec) list;
   (* List of predicate trees built from the specification. *)
-  extr_trees : (Id.t * 'htyp tree) list;
+  extr_trees : (Id.t * tree) list;
   (* List of ml functions translated from the predicate trees. *)
-  extr_mlfuns : (Id.t * 'htyp ml_fun) list;
+  extr_mlfuns : (Id.t * ml_fun) list;
   (* List of fix functions compiled from the ml functions. *)
-  extr_fixfuns : (Id.t * ('htyp fix_fun * ('htyp fix_term) proof_scheme)) list;
+  extr_fixfuns : (Id.t * (fix_fun * fix_term proof_scheme)) list;
   (* Environment for the host language stuff. *)
-  extr_henv : 'henv host_env;
+  extr_henv : henv host_env;
   (* Functions for the host language stuff. *)
-  extr_hf : ('htyp, 'henv) host_functions;
+  extr_hf : (htyp, henv) host_functions;
   (* Info for fixpoints generation. Ids are the spec id & the fun name. *)
   (* bool : has the function been completed with option type? This can be 
             because the function is incomplete or the recursion kind is
@@ -264,53 +274,42 @@ type ('htyp, 'henv) extract_env = {
   extr_fix_env : ((Id.t * Id.t) * (bool * recursion_style)) list;
 }
 
-val extr_get_modes : ('t, 'h) extract_env -> Id.t -> mode list
-val extr_get_spec : ('t, 'h) extract_env -> Id.t -> 't spec
-val extr_get_spec_ord : ('t, 'h) extract_env -> Id.t -> bool
-val extr_get_tree : ('t, 'h) extract_env -> Id.t -> 't tree
-val extr_get_mlfun : ('t, 'h) extract_env -> Id.t -> 't ml_fun
-val extr_get_fixfun : ('t, 'h) extract_env -> Id.t -> ('t fix_fun * ('t fix_term) proof_scheme)
+val extr_get_modes : extract_env -> Id.t -> mode list
+val extr_get_spec : extract_env -> Id.t -> spec
+val extr_get_spec_ord : extract_env -> Id.t -> bool
+val extr_get_tree : extract_env -> Id.t -> tree
+val extr_get_mlfun : extract_env -> Id.t -> ml_fun
+val extr_get_fixfun : extract_env -> Id.t -> (fix_fun * fix_term proof_scheme)
 
 (* Gets the recursion style of a function that was specified by the user. *)
-val get_user_recursion_style : ('t, 'h) extract_env -> Id.t -> recursion_style option
+val get_user_recursion_style : extract_env -> Id.t -> recursion_style option
 
 (* Gets the completion status of a function (for the fixpred library). *)
-val fix_get_completion_status : ('t, 'h) extract_env -> Id.t -> bool
+val fix_get_completion_status : extract_env -> Id.t -> bool
 (* Gets the recursion style of a function (for the fixpred library). *)
-val fix_get_recursion_style : ('t, 'h) extract_env -> Id.t -> recursion_style
+val fix_get_recursion_style : extract_env -> Id.t -> recursion_style
 (* Sets the completion status of a function (for the fixpred library). *)
-val fix_set_completion_status : ('t, 'h) extract_env -> Id.t -> bool -> ('t, 'h) extract_env
+val fix_set_completion_status : extract_env -> Id.t -> bool -> extract_env
 (* Sets the recursion style of a function (for the fixpred library). *)
-val fix_set_recursion_style : ('t, 'h) extract_env -> Id.t -> recursion_style -> ('t, 'h) extract_env
+val fix_set_recursion_style : extract_env -> Id.t -> recursion_style -> extract_env
 
 
 (* Tests if the recursion style of a function is FixCount. *)
-val is_rec_style_count : ('t, 'h) extract_env -> Id.t -> bool
+val is_rec_style_count : extract_env -> Id.t -> bool
 
-val pp_extract_env : ('t, 'h) extract_env -> string
+val pp_extract_env : extract_env -> string
 
 (* Get a fake type. *)
-val unknown_type : ('htyp, 'henv) extract_env -> 'htyp term_type
+val unknown_type : extract_env -> term_type
 
 (* Type a term with a fake type. *)
-val fake_type : ('htyp, 'henv) extract_env -> 't -> ('t, 'htyp) typed
+val fake_type : extract_env -> 't -> 't typed
 
 (* Extraction aborted because it's impossible to insert the property 
    in the tree. The string is the reason. *)
 exception RelationExtractionProp of Id.t option * string
-val make_trees : ('t, 'h) extract_env -> ('t, 'h) extract_env
+val make_trees : extract_env -> extract_env
 
-val make_ml_funs : ('t, 'h) extract_env -> ('t, 'h) extract_env
+val make_ml_funs : extract_env -> extract_env
 
-val get_out_terms_func : ('t, 'h) extract_env -> 't ml_term -> 't ml_term list
-
-
-(* Coq types. *)
-type htyp = Constr.types option
-
-(* Coq environment. *)
-type henv = {
-  ind_refs : (Id.t * Libnames.qualid) list;
-  ind_grefs : (Id.t * Names.GlobRef.t) list;
-  cstrs : (Id.t * Constr.constr) list;
-}
+val get_out_terms_func : extract_env -> ml_term -> ml_term list

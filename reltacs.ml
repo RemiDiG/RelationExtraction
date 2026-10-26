@@ -153,12 +153,12 @@ type prover_result = {
 (* The type of a prover for extracted functions. *)
 type scheme_prover = {
   prov_intro :
-    ((htyp, henv) extract_env * Id.t) -> (htyp fix_term) proof_scheme -> tacts;
+    (extract_env * Id.t) -> fix_term proof_scheme -> tacts;
   prov_branch :
-    ((htyp, henv) extract_env * Id.t) -> (htyp fix_term) ps_branch
+    (extract_env * Id.t) -> fix_term ps_branch
       -> Evd.evar_map -> EConstr.constr -> prover_result;
   prov_concl : 
-    ((htyp, henv) extract_env * Id.t) -> (htyp fix_term) proof_scheme -> tacts;
+    (extract_env * Id.t) -> fix_term proof_scheme -> tacts;
 }
 
 (* Coq useful functions. *)

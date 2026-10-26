@@ -29,5 +29,5 @@ open Names
 
 (* Proves a lemma with a simple scheme prover. *)
 val make_proof_simple : Id.t -> Id.t -> Id.t -> Id.t ->
-                        ((htyp, henv) extract_env * Id.t) -> Declare.Proof.t ->
-                        (htyp fix_term) proof_scheme -> Declare.Proof.t
+                        (extract_env * Id.t) -> Declare.Proof.t ->
+                        fix_term proof_scheme -> Declare.Proof.t

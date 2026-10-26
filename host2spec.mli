@@ -24,4 +24,4 @@
 open Pred
 
 (* Normalization of Coq specifications. *)
-val find_specifications : (htyp, henv) extract_env -> (htyp, henv) extract_env
+val find_specifications : extract_env -> extract_env

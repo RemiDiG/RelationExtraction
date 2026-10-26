@@ -31,5 +31,5 @@ open Names
 (********************)
 
 (* Try to generate the correction lemma and the associated tactical proof. *)
-val gen_correction_proof : (htyp, henv) extract_env -> Id.t -> unit
+val gen_correction_proof : extract_env -> Id.t -> unit
 
