@@ -65,14 +65,6 @@ let find_it_constrs constr =
   let _, idc = Inductive.lookup_mind_specif (Global.env ()) ind in
   Array.to_list idc.mind_consnames
 
-(* Gets type of one inductive body. *)
-(*
-let get_prod_type_from_oib oib =
-  match oib.mind_arity with
-      | RegularArity a -> a.mind_user_arity
-      | _ -> CErrors.user_err (str "[RelationExtraction] Non monomorphic arity")
-*)
-
 (* TODO: make compatibility with mutual inductives (see the <Rel _> case) *)
 (* Finds type of a constructor. For each argument of this constructor:
      - the list of constructors of the argument type.

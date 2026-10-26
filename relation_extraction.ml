@@ -53,7 +53,7 @@ let rec find_func_name ind_ref modes = match modes with
 
 
 (* Extraction of dependencies *)
-let extract_dependencies ~(opaque_access: Global.indirect_accessor) (henv:host_env) : unit  =
+let extract_dependencies ~(opaque_access : Global.indirect_accessor) (henv : host_env) : unit  =
   (* We need a list of references; Extraction missing an entry point with GlobRef.t ?? *)
   let refl = List.map (fun (_, c) -> 
     match Constr.kind c with

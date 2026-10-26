@@ -36,6 +36,9 @@ open Context.Rel.Declaration
 let find_coq_constr_s (s : string) =
   UnivGen.constr_of_monomorphic_global (Global.env ()) (locate (qualid_of_string s))
 
+let find_coq_constr_i (i : Id.t) =
+  find_coq_constr_s (Id.to_string i)
+
 let coq_get_fake_type () = None
 
 let coq_get_bool_type () = (["true"; "false"], Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
@@ -65,15 +68,6 @@ let rec list_mem_option x l = match l with
   | Some (a::tl) -> x = a || list_mem_option x (Some tl)
   | Some [] -> false
   | _ -> true (* TODO [31/03/2026] x is present in None?! *)
-
-
-(* Gets the type of one inductive body *)
-(*
-let get_user_arity = function
-  | Declarations.RegularArity m -> m.Declarations.mind_user_arity
-  | _ -> CErrors.user_err (Pp.str "Cannot deal with polymorphic inductive arity")
-  *)
-  (* TODO same as Host2spec.get_prod_type_from_oib? *)
 
 let make_mode ind_glb user_mode =
   let ind, _ = Constr.destInd (UnivGen.constr_of_monomorphic_global (Global.env ()) ind_glb) in
@@ -148,9 +142,6 @@ let get_out_type opt (env, id) =
       Constr.mkApp (opt, [|t|])
       else t
     | _ -> CErrors.anomaly ~label:"RelationExtraction" (str "Missing type information")
-
-let find_coq_constr_i i = 
-  find_coq_constr_s (Id.to_string i)
 
 let to_puniverses x =
 	(x, UVars.Instance.empty) (* TODO should the universe always be empty? *)
