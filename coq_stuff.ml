@@ -38,8 +38,7 @@ let find_coq_constr_s (s : string) =
 
 let coq_get_fake_type () = None
 
-let coq_get_bool_type () = (["true"; "false"], 
-  Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
+let coq_get_bool_type () = (["true"; "false"], Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
 
 let coq_functions = {
   h_get_fake_type = coq_get_fake_type;
@@ -56,10 +55,6 @@ let extract_dependencies ~opaque_access henv =
          Constrextern.extern_reference Names.Id.Set.empty (fst (Constr.destRef c))
       | _ -> assert false
   ) henv.cstrs in
-  (* Not required anymore (Coq bool is mapped to OCaml bool) *)
-  (*let refl = (Libnames.Qualid 
-    (Util.dummy_loc, Libnames.qualid_of_string "Corelib.Init.Datatypes.bool"))::
-    refl in *)
   Extraction_plugin.Extract_env.full_extraction ~opaque_access:opaque_access None refl
 
 
