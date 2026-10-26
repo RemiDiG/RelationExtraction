@@ -63,11 +63,8 @@ let get_cstr (env, id_spec) id =
   mk_dummy_cst (env, id_spec) id
 
 
-(* References on Coq types. *)
+(* References on Coq types. *)(* TODO[26/10/2026] unify with coq_stuff? *)
 let bool_glb () = locate (qualid_of_string "Corelib.Init.Datatypes.bool")
-(* Unused (09/03/2026)
-let get_booleq () = MLglob (locate (qualid_of_string "Coq.Bool.Bool.eqb"))
-*)
 let get_false () = MLcons (Tglob (glob_to_global (bool_glb ()), []),
                      glob_to_global (locate (qualid_of_string "Corelib.Init.Datatypes.false")), [])
 let get_true () = MLcons (Tglob (glob_to_global (bool_glb ()), []), 
@@ -203,12 +200,6 @@ let miniml_init =
   let init_done = ref false in
   fun () ->
     if not !init_done then
-(*    let _ = Library.require_library 
-        [(Util.dummy_loc, qualid_of_string "Coq.Bool.Bool")] (Some false) in *)
-(*    let _ = Extract_env.simple_extraction (Qualid 
-        (Util.dummy_loc, qualid_of_string "Corelib.Init.Datatypes.bool")) in*)
-(*      let _ = Printf.printf "(* Required by relation extraction. *)\n%s\n\n"
-        "let ocaml_beq = fun x y -> if x = y then True else False" in*)
       let bool_ref = qualid_of_string "Corelib.Init.Datatypes.bool" in
       let _ = Extraction_plugin.Table.extract_inductive bool_ref "bool" ["true"; "false"] None in
       init_done := true;
@@ -271,4 +262,3 @@ let gen_miniml env =
   let mpt = Extraction_plugin.Table.modpath_of_r (glob_to_global glb) in
   let mls = [mpt, [id, SEdecl mld]] in 
   Feedback.msg_info (print_one_decl (Extraction_plugin.Common.State.make ~modular:false ~library:false ~keywords:Names.Id.Set.empty ()) mls mpt mld) (* TODO modular, library and keywords??? *)
-  

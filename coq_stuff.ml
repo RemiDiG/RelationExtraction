@@ -55,7 +55,7 @@ let rec gen_param_args nb =
   else (gen_param_args (nb-1))@[nb]
 
 let adapt_mode ind_ref mode = 
-  let ind,_ = Constr.destInd (UnivGen.constr_of_monomorphic_global (Global.env ()) (Nametab.global ind_ref)) in
+  let ind, _ = Constr.destInd (UnivGen.constr_of_monomorphic_global (Global.env ()) (Nametab.global ind_ref)) in
   let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
   let parameters = oib.Declarations.mind_arity_ctxt in
   let fil = List.filter (get_name %> Names.Name.is_name) parameters in
@@ -145,4 +145,3 @@ let get_out_type opt (env, id) =
 
 let to_puniverses x =
 	(x, UVars.Instance.empty) (* TODO should the universe always be empty? *)
-

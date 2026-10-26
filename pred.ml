@@ -852,8 +852,7 @@ let insert_prop_concl env id_spec prem_selector prop tnl =
       insertion_recursor env id_spec prem_selector None prop [] nt tnl
 
 (* TODO: optimization when there is no overlapping constructor to add after the
- * current one. It may be possible to test with nt_partial_ordering...
- *)
+ * current one. It may be possible to test with nt_partial_ordering... *)
 (* Build a tree from a specification *)
 let tree_from_spec env prem_selector id_spec =
   let spec = extr_get_spec env id_spec in
@@ -874,9 +873,6 @@ let tree_from_spec env prem_selector id_spec =
     | _ -> assert false
 
 let tree_from_spec_with_quick_try env id_spec =
-(*  try tree_from_spec env select_one_prem_quick id_spec
-  with _ ->*)
-    (* Quick algorithm failed. Trying the exhaustive one... *)
     tree_from_spec env select_one_prem id_spec
 
 let make_trees env =
