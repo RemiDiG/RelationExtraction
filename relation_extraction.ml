@@ -84,19 +84,16 @@ let extract_relation_common ord ind_ref modes =
   let henv = { ind_refs = ind_refs; ind_grefs = ind_grefs; cstrs = [] } in
   
   (* Extractions *)
-  let ids = List.map (fun ind_ref -> id_of_globref (global ind_ref), ind_ref) ind_ref in
-  let extractions = List.map (fun (id, ind_ref) ->
+  let extractions = List.map (fun ind_ref ->
+    let id = id_of_globref (global ind_ref) in
     let (fn, rs) = find_func_name ind_ref modes in
-  id, (fn, ord, rs)) ids in
+    id, (fn, ord, rs)) ind_ref in
 
   (* Modes *)
-  let modes = List.map (fun (_, ind_ref, mode, _) ->
+  let modes = List.map (fun (_, ind_ref, mode, _) -> (* TODO[26/10/2026] half of modes unused? *)
     let ind_glb = global ind_ref in
-    let ind = Globnames.destIndRef ind_glb in
-    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    let id = oib.mind_typename in
-    (id, [make_mode ind_glb (Some (adapt_mode ind_ref mode))]) 
-  ) modes in
+    let id = id_of_globref ind_glb in
+    (id, [make_mode ind_glb (Some (adapt_mode ind_ref mode))])) modes in
   let eq_modes = [[MSkip;MInput;MOutput]; [MSkip;MOutput;MInput]; [MSkip;MInput;MInput]] in
   let modes = (Names.Id.of_string "eq", eq_modes)::modes in (* TODO[29/09/2026] "eq" ... *)
 
@@ -109,7 +106,7 @@ let extract_relation_common ord ind_ref modes =
     extr_mlfuns = [];
     extr_fixfuns = [];
     extr_henv = henv;
-    extr_hf = coq_functions;
+    extr_hf = coq_functions; (* TODO[26/10/2026] use only the global variable? *)
     extr_fix_env = [];
   } in
   let env = find_specifications empty_env in
@@ -122,6 +119,7 @@ let extract_relation_common ord ind_ref modes =
   in
   if debug then Printf.eprintf "%s\n" (pp_extract_env env) else ();
   let env = Pred.make_ml_funs env in
+  if debug then Printf.eprintf "%s\n" (pp_extract_env env) else ();
 
   (* Reset the created identifiers, to not be polluted by a previous run. *)
   let () = reset_seen_id () in
