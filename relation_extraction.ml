@@ -66,6 +66,8 @@ let extract_dependencies ~(opaque_access : Global.indirect_accessor) (henv : hos
 
 (* Main routine *)
 let extract_relation_common ord ind_ref modes =
+  let debug = false in
+  
   (* Initialize identifiers for some Rocq constructors *)
   let () = init_seen_id () in
   
@@ -81,10 +83,8 @@ let extract_relation_common ord ind_ref modes =
   let ids = List.map (fun ind_ref ->
     let ind = Globnames.destIndRef (global ind_ref) in
     let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-  (*let idrs = List.map (fun oib -> Ident (dummy_loc, oib.mind_typename)) 
-             oibs in*)
-  (*TODO: add irds to ind_refs if they are not present ? 
-          ie no mode given, or fail ? *)
+  (*let idrs = List.map (fun oib -> Ident (dummy_loc, oib.mind_typename)) oibs in*)
+  (*TODO: add irds to ind_refs if they are not present ? ie no mode given, or fail ? *)
     oib.mind_typename, ind_ref
   ) ind_ref in
   let extractions = List.map (fun (id, ind_ref) ->
@@ -115,16 +115,15 @@ let extract_relation_common ord ind_ref modes =
     extr_fix_env = [];
   } in
   let env = find_specifications empty_env in
-  (*Printf.eprintf "%s\n" (pp_extract_env env);*)
+  if debug then Printf.eprintf "%s\n" (pp_extract_env env) else ();
   let env = try Pred.make_trees env with
     | RelationExtractionProp (Some p_id, s) -> CErrors.user_err
       (str ("[RelationExtraction] Extraction failed at " ^ Names.Id.to_string p_id ^ ": " ^ s))
     | RelationExtractionProp (None, s) -> CErrors.user_err
       (str ("[RelationExtraction] Extraction failed: " ^ s))
   in
-  (*Printf.eprintf "%s\n" (pp_extract_env env); *)
+  if debug then Printf.eprintf "%s\n" (pp_extract_env env) else ();
   let env = Pred.make_ml_funs env in
-  (* Printf.eprintf "%s\n" *)
 
   (* Reset the created identifiers, to not be polluted by a previous run. *)
   let () = reset_seen_id () in
