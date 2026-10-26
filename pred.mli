@@ -252,8 +252,6 @@ type extract_env = {
   extr_fixfuns : (Id.t * (fix_fun * fix_term proof_scheme)) list;
   (* Environment for the host language stuff. *)
   extr_henv : host_env;
-  (* Functions for the host language stuff. *)
-  extr_hf : host_functions;
   (* Info for fixpoints generation. Ids are the spec id & the fun name. *)
   (* bool : has the function been completed with option type? This can be 
             because the function is incomplete or the recursion kind is

@@ -354,7 +354,6 @@ type extract_env = {
   extr_mlfuns : (Id.t * ml_fun) list;
   extr_fixfuns : (Id.t * (fix_fun * fix_term proof_scheme)) list;
   extr_henv : host_env;
-  extr_hf : host_functions;
   extr_fix_env : ((Id.t * Id.t) * (bool * recursion_style)) list;
 }
 
@@ -423,7 +422,7 @@ let pp_extract_env env =
   "(********* Extracted functions *********)\n\n" ^
   concat_list (List.map pp_ml_fun (List.map snd env.extr_mlfuns)) "\n\n" 
   
-let unknown_type env = CTNone, env.extr_hf.h_get_fake_type ()
+let unknown_type env = CTNone, coq_functions.h_get_fake_type ()
 let fake_type env t = t, unknown_type env
 
 exception RelationExtractionProp of Id.t option * string
@@ -944,7 +943,7 @@ let gen_match_term env nt = match nt with
     else
       let fn = get_pred_name env pn m in
       let ty = if List.for_all ((!=) MOutput) m then 
-        let cl, t = env.extr_hf.h_get_bool_type () in
+        let cl, t = coq_functions.h_get_bool_type () in
         (CTSum (List.map Id.of_string cl), t)
       else ty in
       (MLTFun (fn, in_terms, None), ty)

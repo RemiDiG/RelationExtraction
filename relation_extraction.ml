@@ -106,7 +106,6 @@ let extract_relation_common ord ind_ref modes =
     extr_mlfuns = [];
     extr_fixfuns = [];
     extr_henv = henv;
-    extr_hf = coq_functions; (* TODO[26/10/2026] use only the global variable? *)
     extr_fix_env = [];
   } in
   let env = find_specifications empty_env in
