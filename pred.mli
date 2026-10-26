@@ -93,8 +93,7 @@ type untyped_ml_term =
   | MLTFun of Id.t * ml_term list * mode option
   | MLTFunNot of Id.t * ml_term list * mode option
     (* MLTFun can be used to store function or inductive relations
-       The "mode option" must be None for function and Some (...) for 
-       predicates. *)
+       The "mode option" must be None for function and Some (...) for predicates. *)
 (* -- End: used by the specification -- *)
   | MLTMatch of ml_term * pannot * 
     (ml_pat * ml_term * pannot) list

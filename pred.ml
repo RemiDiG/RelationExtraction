@@ -107,22 +107,17 @@ type mode_option =
   | MSkip
 type mode = mode_option list
 
-let string_of_mode mode = 
-  if List.for_all (fun mo -> mo != MOutput) mode then "_full"
-  else let rec rec_som mode i =  match mode with
+let string_of_mode_full mode = 
+  let rec rec_som mode i = match mode with
     | [] -> ""
     | MInput::tl_mode -> (string_of_int i) ^ (rec_som tl_mode (i+1))
     | MOutput::tl_mode -> rec_som tl_mode (i+1)
     | MSkip::tl_mode -> rec_som tl_mode i in
   rec_som mode 1
 
-let string_of_mode_full mode = 
-  let rec rec_som mode i =  match mode with
-    | [] -> ""
-    | MInput::tl_mode -> (string_of_int i) ^ (rec_som tl_mode (i+1))
-    | MOutput::tl_mode -> rec_som tl_mode (i+1)
-    | MSkip::tl_mode -> rec_som tl_mode i in
-  rec_som mode 1
+let string_of_mode mode =
+  if List.for_all (fun mo -> mo != MOutput) mode then "_full"
+  else string_of_mode_full mode
 
 type untyped_ml_term =
   | MLTVar of Id.t
@@ -132,8 +127,7 @@ type untyped_ml_term =
   | MLTConst of Id.t
   | MLTFun of Id.t * ml_term list * mode option
   | MLTFunNot of Id.t * ml_term list * mode option
-  | MLTMatch of ml_term * pannot * 
-    (ml_pat * ml_term * pannot) list
+  | MLTMatch of ml_term * pannot * (ml_pat * ml_term * pannot) list
   | MLTALin of (ml_term * ml_term) list
   | MLTATrue | MLTAFalse
   | MLTASome of ml_term | MLTANone
