@@ -342,12 +342,6 @@ let rec pp_tree_node inc tn = match tn with
 
 let pp_tree tree = concat_list (List.map (pp_tree_node "") tree) "\n"
 
-(* Unused (09/03/2026)
-let get_kv nt = 
-  match nt with
-  TreeNode (_, _, _, kv) -> kv 
-  | _ -> failwith "no kv in TreeOutput node" 
-*)
 
 
 (**************)
@@ -613,15 +607,6 @@ let rec test_det_terms (t1,_) (t2,_) = match (t1, t2) with
 let test_det_nt env nt1 nt2 =
   List.exists2 test_det_terms (get_out_terms env nt1) (get_out_terms env nt2)
 
-(* determinism test between nt and first nt of each tn *)
-(* Unused (09/03/2026)
-let test_det env nt tnl = List.for_all
-  (fun tn -> let nt2 = (match tn with
-    | TreeNode (nt, _, _, _) -> nt (*cath*)
-    | TreeOutput (nt, _, _, _) -> nt (*cath*)
-                        ) in test_det_nt env nt nt2) tnl
-*)
-
 (* Return true if t1 is an instance of t2, false else. *)
 let terms_ordering env nt1 nt2 =
   let rec test_unif ((t1,_), (t2,_)) = match t1, t2 with
@@ -663,14 +648,6 @@ let mca_check env kv nt = match nt with
   | NTConcl _ -> true
   | NTPrem _ -> included (get_in_vars env nt) kv
 
-(* Check that output variables of premises are not known to avoid redefinition
-   of variables *)
-(* Unused (09/03/2026)
-let mca_check_prem_output env kv nt = match nt with
-    | NTConcl _ -> true
-    | NTPrem _ -> List.for_all (fun v -> not(List.mem v kv)) (get_out_vars env nt)
-*)
-
 (* Mode coherency analysis for a predicate term *)
 (* Check that variables needed by the output are known *)
 (* Unused (09/03/2026)
@@ -691,13 +668,6 @@ let select_one_prem prop =
       (List.map (fun (p2, prems) -> (p2, p::prems)) (select_rec ptail)) in
   List.map (fun (p, prems) -> (p, {prop with prop_prems = prems}))
   (select_rec prop.prop_prems)
-(* Quick version, but not exhaustive ! *)
-(* Unused (09/03/2026)
-let select_one_prem_quick prop = 
-  match prop.prop_prems with
-    | [] -> []
-    | p::ptail -> [(p, {prop with prop_prems = ptail})]
-*)
 
 (* try to rename inputs of a node type when this is necessary *)
 let rename_inputs_if_needed env nt tnl prop = match tnl with
@@ -973,14 +943,6 @@ let rec lin_pat pat vars i lins = match pat with
     ((MLPConstr (id, npatl), ty), nvars, ni, nlins)
   | _ -> (pat, vars, i, lins)
 in lin_pat pat vars i lins
-
-(* Unused (09/03/2026)
-let rec select_out_args_types types mode = match types, mode with
-  | (_::tl_ty, MInput::tl_mode) -> select_out_args_types tl_ty tl_mode
-  | (ty::tl_ty, MOutput::tl_mode) -> ty::(select_out_args_types tl_ty tl_mode)
-  | (_::tl_ty, MSkip::tl_mode) -> select_out_args_types tl_ty tl_mode
-  | _ -> []
-*)
 
 let gen_match_term env nt = match nt with
   | NTPrem (MLTFun (_, _, None), _) -> gen_tuple env (get_in_terms env nt)

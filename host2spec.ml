@@ -340,7 +340,7 @@ let build_prop (env, id_spec) prop_name prop_type =
   let named_prod, concl = decompose_prod prop_type in
   let concl, env = build_concl (env, id_spec) named_prod concl in
   let named_prems = List.filter (fun (x, _) -> Context.binder_name x = Anonymous) named_prod in
-  (* TODO nécessite forme prenex, un warning ici serait adapté *)
+  (* TODO[2026] nécessite forme prenex, un warning ici serait adapté *)
   let prems = List.map snd named_prems in
   let prems, env = build_prems (env, id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 
