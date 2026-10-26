@@ -64,6 +64,11 @@ let extract_dependencies ~(opaque_access : Global.indirect_accessor) (henv : hos
   Extraction_plugin.Extract_env.full_extraction ~opaque_access:opaque_access None refl
 
 
+let id_of_globref (ind_glb : Names.GlobRef.t) : Names.Id.t =
+  let ind = Globnames.destIndRef ind_glb in
+  let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
+  oib.mind_typename
+
 (* Main routine *)
 let extract_relation_common ord ind_ref modes =
   let debug = false in
@@ -73,20 +78,13 @@ let extract_relation_common ord ind_ref modes =
   
   (* Initial henv *)
   let ind_refs, ind_grefs = List.split (List.map (fun (_, ind_ref, _, _) ->
-    let ind = Globnames.destIndRef (global ind_ref) in
-    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-    let id = oib.mind_typename in
-    (id, ind_ref), (id, global ind_ref)) modes) in
+    let ind_glb = global ind_ref in
+    let id = id_of_globref ind_glb in
+    (id, ind_ref), (id, ind_glb)) modes) in
   let henv = { ind_refs = ind_refs; ind_grefs = ind_grefs; cstrs = [] } in
   
   (* Extractions *)
-  let ids = List.map (fun ind_ref ->
-    let ind = Globnames.destIndRef (global ind_ref) in
-    let _, oib = Inductive.lookup_mind_specif (Global.env ()) ind in
-  (*let idrs = List.map (fun oib -> Ident (dummy_loc, oib.mind_typename)) oibs in*)
-  (*TODO: add irds to ind_refs if they are not present ? ie no mode given, or fail ? *)
-    oib.mind_typename, ind_ref
-  ) ind_ref in
+  let ids = List.map (fun ind_ref -> id_of_globref (global ind_ref), ind_ref) ind_ref in
   let extractions = List.map (fun (id, ind_ref) ->
     let (fn, rs) = find_func_name ind_ref modes in
   id, (fn, ord, rs)) ids in

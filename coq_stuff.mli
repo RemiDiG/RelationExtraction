@@ -21,7 +21,6 @@
 (****************************************************************************)
 
 (* Internal dependencies *)
-open Host_stuff
 open Pred
 
 (* Rocq dependencies *)
