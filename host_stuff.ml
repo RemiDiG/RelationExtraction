@@ -43,16 +43,5 @@ type host_env = {
 }
 
 (* Functions for host langage manipulations. *)
-type host_functions = {
-  h_get_fake_type : unit -> host_term_type;
-  h_get_bool_type : unit -> string list * host_term_type;
-}
-
 let coq_get_fake_type () = None
-
 let coq_get_bool_type () = (["true"; "false"], Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-
-let coq_functions = {
-  h_get_fake_type = coq_get_fake_type;
-  h_get_bool_type = coq_get_bool_type;
-}

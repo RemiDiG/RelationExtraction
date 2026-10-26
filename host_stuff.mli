@@ -43,11 +43,6 @@ type host_env = {
   cstrs : (Id.t * Constr.constr) list;
 }
 
-(* Functions for host langage manipulations. *)
-type host_functions = {
-  h_get_fake_type : unit -> host_term_type;
-  h_get_bool_type : unit -> string list * host_term_type;
-}
-
 (* Functions to manipulate Rocq data. *)
-val coq_functions : host_functions
+val coq_get_fake_type : unit -> host_term_type
+val coq_get_bool_type : unit -> string list * host_term_type
