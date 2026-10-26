@@ -21,33 +21,14 @@
 (****************************************************************************)
 
 (* Internal dependencies *)
-open Ident
 open Host_stuff
+open Ident
 open Pred
 
 (* Rocq dependencies *)
-open Names
-open Libnames
-open Nametab
 open Util
 open Pp
 open Context.Rel.Declaration
-
-let find_coq_constr_s (s : string) =
-  UnivGen.constr_of_monomorphic_global (Global.env ()) (locate (qualid_of_string s))
-
-let find_coq_constr_i (i : Id.t) =
-  find_coq_constr_s (Id.to_string i)
-
-let coq_get_fake_type () = None
-
-let coq_get_bool_type () = (["true"; "false"], Some (find_coq_constr_s "Corelib.Init.Datatypes.bool"))
-
-let coq_functions = {
-  h_get_fake_type = coq_get_fake_type;
-  h_get_bool_type = coq_get_bool_type;
-}
-
 
 (* Generates mode arguments for nb parameters. *)
 let rec gen_param_args nb =

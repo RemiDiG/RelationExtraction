@@ -24,6 +24,7 @@
 open Ident
 open Proof_scheme
 open Pred
+open Host_stuff
 open Coq_stuff
 
 (* Rocq dependencies *)
@@ -161,7 +162,7 @@ type scheme_prover = {
     (extract_env * Id.t) -> fix_term proof_scheme -> tacts;
 }
 
-(* Coq useful functions. *)
+(* Rocq useful functions. *)
 
 let get_goal =
   let goal = ref (EConstr.mkRel 1) in
@@ -203,7 +204,7 @@ let replace_in hid cstr_pat cstr = Equality.replace_in_clause_maybe_by None cstr
 
 let print_subgoals lemma = Feedback.msg_notice (Printer.pr_open_subgoals (Declare.Proof.get lemma))
 
-(* Makes real Coq tactics and applies them. *)
+(* Makes real Rocq tactics and applies them. *)
 let rec build_tac_atom ta = match ta with
   | INTROS idl -> 
     if debug_print_tacs then Printf.eprintf "intros %s.\n" (concat_list (List.map Id.to_string idl) " ")

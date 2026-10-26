@@ -29,6 +29,10 @@ open Names
    the predicates and the remaining part is kept into an host environment. 
 *)
 
+(* Find a Coq constr from its name (as an ident or a string) *)
+val find_coq_constr_i : Id.t -> Constr.constr
+val find_coq_constr_s : string -> Constr.constr
+
 (* Host types. Type information for a term. This is kept into the AST. *)
 type host_term_type = Constr.types option
 
@@ -44,3 +48,6 @@ type host_functions = {
   h_get_fake_type : unit -> host_term_type;
   h_get_bool_type : unit -> string list * host_term_type;
 }
+
+(* Functions to manipulate Rocq data. *)
+val coq_functions : host_functions

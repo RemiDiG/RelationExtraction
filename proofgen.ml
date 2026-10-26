@@ -21,6 +21,7 @@
 (****************************************************************************)
 
 (* Internal dependencies *)
+open Host_stuff
 open Ident
 open Pred
 open Coq_stuff

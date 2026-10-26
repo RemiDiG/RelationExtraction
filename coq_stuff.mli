@@ -27,9 +27,6 @@ open Pred
 (* Rocq dependencies *)
 open Names
 
-(* Functions to manipulate Coq data. *)
-val coq_functions : host_functions
-
 (*********)
 (* Utils *)
 (*********)
@@ -52,14 +49,8 @@ val get_out_type : bool -> extract_env * Id.t -> Constr.types
 (* Gets the Coq type from a term_type. *)
 val get_coq_type : term_type -> Constr.types
 
-(* Find a Coq constr from its name (as an ident or a string) *)
-val find_coq_constr_i : Id.t -> Constr.constr
-val find_coq_constr_s : string -> Constr.constr
-
-
 (* Prints a Coq constr. *)
 val pp_coq_constr : EConstr.constr -> string
-
 
 (* Add the empty universe, turning a type into a puniverse *)
 val to_puniverses : 'a -> 'a UVars.puniverses
