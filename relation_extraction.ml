@@ -51,6 +51,19 @@ let rec find_func_name ind_ref modes = match modes with
       else find_func_name ind_ref modes
   | [] -> raise Not_found
 
+
+(* Extraction of dependencies *)
+let extract_dependencies ~(opaque_access: Global.indirect_accessor) (henv:host_env) : unit  =
+  (* We need a list of references; Extraction missing an entry point with GlobRef.t ?? *)
+  let refl = List.map (fun (_, c) -> 
+    match Constr.kind c with
+      | Constr.Construct _ | Constr.Const _ ->
+         Constrextern.extern_reference Names.Id.Set.empty (fst (Constr.destRef c))
+      | _ -> assert false
+  ) henv.cstrs in
+  Extraction_plugin.Extract_env.full_extraction ~opaque_access:opaque_access None refl
+
+
 (* Main routine *)
 let extract_relation_common ord ind_ref modes =
   (* Initialize identifiers for some Rocq constructors *)

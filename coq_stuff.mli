@@ -30,9 +30,6 @@ open Names
 (* Functions to manipulate Coq data. *)
 val coq_functions : host_functions
 
-(* Extraction of dependencies *)
-val extract_dependencies : opaque_access:Global.indirect_accessor -> host_env -> unit
-
 (*********)
 (* Utils *)
 (*********)
