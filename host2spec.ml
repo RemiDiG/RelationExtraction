@@ -54,7 +54,7 @@ let add_cstr_to_env env id cstr =
   {env with extr_henv = {env.extr_henv with cstrs = cstrs'}}
 
 (* Gets the identifier of a binder *)
-let get_name (binder,_) = match Context.binder_name binder with
+let get_name (binder, _) = match Context.binder_name binder with
   | Name id -> id
   | _ -> CErrors.anomaly ~label:"RelationExtraction"
                         (str "Cannot find the name of a binder")
@@ -212,7 +212,7 @@ let build_concl (env, id_spec) named_prod term = match Constr.kind term with
 let isOr constr =
   if isInd constr then
     let ind, _ = destInd constr in
-    let _,oid = Inductive.lookup_mind_specif (Global.env ()) ind in
+    let _, oid = Inductive.lookup_mind_specif (Global.env ()) ind in
     (Id.to_string oid.mind_typename = "or")
   else false
 
@@ -220,7 +220,7 @@ let isOr constr =
 let isAnd constr =
   if isInd constr then
     let ind, _ = destInd constr in
-    let _,oid = Inductive.lookup_mind_specif (Global.env ()) ind in
+    let _, oid = Inductive.lookup_mind_specif (Global.env ()) ind in
     (Id.to_string oid.mind_typename = "and")
   else false
 
@@ -232,7 +232,7 @@ let isNot constr =
     let str' = try let i = String.rindex str '#' in
       String.sub str (i+1) (String.length str - i - 1)
     with Not_found | Invalid_argument _ -> str in
-    str' = "not" || str' = "Coq.Init.Logic.not"
+    str' = "not" || str' = "Coq.Init.Logic.not" (* TODO[27/10/2026] find the new name *)
   else false
 
 (* Parses a premisse of a predicate's constructor (or property). *)
@@ -316,8 +316,7 @@ let build_prem (env, id_spec) named_prod cstr = match Constr.kind cstr with
     end
   | _ -> ([], env)
 
-(* Parses the whole set of premisses of a predicate's constructor
-   (or property). *)
+(* Parses the whole set of premisses of a predicate's constructor (or property). *)
 let rec build_prems (env, id_spec) named_prod cstr_list = match cstr_list with
   | [] -> [], env
   | cstr::tail -> if isProd cstr then
@@ -333,7 +332,7 @@ let build_prop (env, id_spec) prop_name prop_type =
   let named_prod, concl = decompose_prod prop_type in
   let concl, env = build_concl (env, id_spec) named_prod concl in
   let named_prems = List.filter (fun (x, _) -> Context.binder_name x = Anonymous) named_prod in
-  (* TODO[2026] nécessite forme prenex, un warning ici serait adapté *)
+  (* TODO[2026] nécessite forme prenex, un warning ici serait adapté ; ou se passer de cette restriction ! *)
   let prems = List.map snd named_prems in
   let prems, env = build_prems (env, id_spec) named_prod prems in
   let vars = map_filter (fun (x, _) -> match Context.binder_name x with 

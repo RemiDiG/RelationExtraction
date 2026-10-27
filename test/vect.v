@@ -93,3 +93,16 @@ Inductive catFord : forall (n : nat), VectFord n -> forall (m : nat), VectFord m
 (* Fail Extraction Relation Fixpoint Relaxed (VectFord [1]). *)
 (* Fail Extraction Relation Fixpoint Relaxed (catFord [1 2 3 4]). *)
 
+
+(* Tests for non-prenex form. *)
+
+Inductive catListBool2 : ListBool -> ListBool -> ListBool -> Prop :=
+| nilListBool2 : forall (v : ListBool), catListBool2 v nilBool v
+| consListBool2 : forall (v u w : ListBool), catListBool2 v u w ->
+  forall (a : bool), catListBool2 v (consBool a u) (consBool a w)
+.
+
+(*
+Extraction Relation Fixpoint (catListBool2 [1 2] Struct 2).
+Extraction Relation (catListBool2 [1 2]).
+*)

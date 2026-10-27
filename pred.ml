@@ -587,7 +587,7 @@ else (nt, prop)
   
 (* Determinism check between terms *)
 let rec test_det_terms (t1,_) (t2,_) = match (t1, t2) with
-(* TODO: MLTFunNot can be used only with full mode or without mode (functions)*)
+(* TODO: MLTFunNot can be used only with full mode or without mode (functions) *)
   | (MLTATrue, MLTAFalse) | (MLTAFalse, MLTATrue) -> true
   | (MLTTuple tl1, MLTTuple tl2) | (MLTRecord (_, tl1), MLTRecord (_, tl2)) ->
     List.exists2 test_det_terms tl1 tl2
